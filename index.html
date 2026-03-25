@@ -664,9 +664,6 @@ body{
         <span id="photo-count-label" style="font-size:11px;color:var(--muted)">0 photo(s)</span>
       </div>
       <div id="rapport-photo-strip" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
-      <button onclick="showPhotoSource('rapport')" style="margin-top:8px;width:100%;background:var(--input);border:1.5px dashed var(--inputborder);border-radius:10px;padding:12px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;transition:border-color .2s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--inputborder)'">
-        <span style="font-size:18px">📷</span> Ajouter une photo au rapport
-      </button>
     </div>
 
     <!-- § Points GPS -->
@@ -1124,9 +1121,9 @@ body{
 <input type="file" id="photo-src-gallery" accept="image/*" style="display:none" onchange="handlePhotoSrcInput(this)">
 
 <!-- Modal: Collaborateurs -->
-<div class="modal" id="m-collab">
+<div class="modal" id="m-collab" onclick="if(event.target===this)closeModal('m-collab')">
   <div class="modal-box">
-    <div class="modal-hdr">
+    <div class="modal-hdr" style="position:sticky;top:0;background:var(--card2);z-index:10;padding-bottom:12px;margin-bottom:8px;border-bottom:1px solid var(--border)">
       <span class="modal-title">👥 Équipe / Collaborateurs</span>
       <button class="modal-close" onclick="closeModal('m-collab')">✕</button>
     </div>
@@ -2063,10 +2060,12 @@ async function handlePhotoSrcInput(input){
     const netId = ctx.substring(4);
     const n = S.currentRapport.networks.find(x => x.id === netId);
     if(n){
-      // Migrate legacy single photo to array
       if(!n.photos){ n.photos = n.photo ? [n.photo] : []; delete n.photo; }
       n.photos.push(compressed);
-      rapportChanged(); renderNetworks(); toast('📷 Photo ajoutée au réseau');
+      rapportChanged(); renderNetworks();
+      toast('📷 Photo ajoutée — 📍 GPS en cours…');
+      // Capture GPS automatique associée à ce réseau
+      captureGPSForNetwork(n.nature);
     }
   }
 }
@@ -2403,6 +2402,24 @@ async function deleteCurrentPhoto(){
 // ════════════════════════════════════════════
 //  GPS
 // ════════════════════════════════════════════
+function captureGPSForNetwork(networkName){
+  if(!navigator.geolocation){ return; }
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const idx = S.gpsPoints.filter(p=>p.rapportId===S.currentRapport?.id).length + 1;
+    const pt={id:uid(), rapportId:S.currentRapport?.id||'',
+      lat:pos.coords.latitude.toFixed(6), lng:pos.coords.longitude.toFixed(6),
+      accuracy:Math.round(pos.coords.accuracy),
+      description:`Point ${idx} – ${networkName}`,
+      timestamp:new Date().toLocaleString('fr-FR')};
+    await db.put('gps_points',pt);
+    S.gpsPoints.push(pt);
+    renderGPS();
+    toast(`📍 GPS enregistré pour ${networkName} (±${pt.accuracy}m)`);
+  }, ()=>{
+    // GPS échoué, pas de message intrusif
+  },{enableHighAccuracy:true,timeout:6000});
+}
+
 function captureGPS(){
   if(!navigator.geolocation){toast('❌ GPS non disponible sur cet appareil');return}
   toast('📡 Acquisition GPS…');
@@ -2725,26 +2742,35 @@ function exportPDF(){
   const fname=(c.name||'rapport').replace(/[^a-z0-9]/gi,'_').toLowerCase();
 
   function doGenerate(){
+    // Overlay blanc plein écran — html2canvas a besoin que le contenu soit visible
+    const overlay=document.createElement('div');
+    overlay.style.cssText='position:fixed;inset:0;background:#fff;z-index:9998;overflow:auto;';
     const container=document.createElement('div');
-    container.style.cssText='position:fixed;left:-9999px;top:0;width:210mm;background:#fff';
-    // Extract body content from the HTML string
+    container.style.cssText='width:800px;margin:0 auto;background:#fff;font-family:Arial,sans-serif;';
     const bodyMatch=html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
     container.innerHTML=bodyMatch?bodyMatch[1]:html;
-    document.body.appendChild(container);
-    window.html2pdf().set({
-      margin:[10,10,10,10],
-      filename:`rapport_${fname}.pdf`,
-      image:{type:'jpeg',quality:0.88},
-      html2canvas:{scale:2,useCORS:true,logging:false},
-      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-    }).from(container).save().then(()=>{
-      document.body.removeChild(container);
-      toast('✅ PDF téléchargé !');
-    }).catch(()=>{
-      document.body.removeChild(container);
-      toast('⚠️ Erreur PDF – ouverture impression de secours');
-      const win=window.open('','_blank'); win.document.write(html); win.document.close(); setTimeout(()=>win.print(),600);
-    });
+    // Injecter aussi le CSS du PDF
+    const styleMatch=html.match(/<style>([\s\S]*?)<\/style>/i);
+    if(styleMatch){ const s=document.createElement('style'); s.textContent=styleMatch[1]; container.prepend(s); }
+    overlay.appendChild(container);
+    document.body.appendChild(overlay);
+    toast('⏳ Génération PDF…');
+    setTimeout(()=>{
+      window.html2pdf().set({
+        margin:[12,12,12,12],
+        filename:`rapport_${fname}.pdf`,
+        image:{type:'jpeg',quality:0.90},
+        html2canvas:{scale:2,useCORS:true,logging:false,allowTaint:true},
+        jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+      }).from(container).save().then(()=>{
+        document.body.removeChild(overlay);
+        toast('✅ PDF téléchargé !');
+      }).catch(()=>{
+        document.body.removeChild(overlay);
+        toast('⚠️ Erreur PDF – ouverture impression de secours');
+        const win=window.open('','_blank'); if(win){win.document.write(html);win.document.close();setTimeout(()=>win.print(),600);}
+      });
+    },300);
   }
 
   if(window.html2pdf){ doGenerate(); return; }
@@ -3031,9 +3057,25 @@ async function openCollabModal(){
 }
 
 function copyCollabInviteCode(){
-  const code = document.getElementById('collab-invite-code').textContent;
-  if(code==='—') return;
-  navigator.clipboard.writeText(code).then(()=>toast('✅ Code copié : '+code)).catch(()=>{ prompt("Code d'invitation :",code); });
+  const code = document.getElementById('collab-invite-code').textContent.trim();
+  if(!code||code==='—'){ toast('⚠️ Code non disponible'); return; }
+  // Méthode 1 : Clipboard API moderne
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code)
+      .then(()=>toast('✅ Code copié : '+code))
+      .catch(()=>_fallbackCopy(code));
+  } else {
+    _fallbackCopy(code);
+  }
+}
+function _fallbackCopy(text){
+  // Méthode 2 : textarea sélectionné
+  const ta=document.createElement('textarea');
+  ta.value=text; ta.style.cssText='position:fixed;left:-9999px;opacity:0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand('copy'); toast('✅ Code copié : '+text); }
+  catch(){ prompt("Code d'invitation (copiez-le) :",text); }
+  document.body.removeChild(ta);
 }
 
 function shareCollabInvite(){
