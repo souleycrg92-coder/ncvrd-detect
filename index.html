@@ -279,7 +279,23 @@ body{
 }
 .mini-inp:focus{border-color:var(--accent)}
 
-/* ── PHOTO GRID ──────────────────────── */
+/* ── PERSON PICKER ───────────────────── */
+#person-picker-overlay{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.35);display:flex;align-items:flex-end;justify-content:center}
+#person-picker-panel{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:75vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,.2)}
+.picker-header{padding:14px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
+.picker-search{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;background:var(--input);color:var(--text);box-sizing:border-box;outline:none;margin-top:8px}
+.picker-list{overflow-y:auto;flex:1;padding:8px 0}
+.picker-cat{font-size:10px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.8px;padding:8px 16px 4px}
+.picker-item{display:flex;align-items:center;padding:10px 16px;cursor:pointer;transition:background .1s;gap:10px}
+.picker-item:hover,.picker-item:active{background:var(--card2)}
+.picker-item-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1e3a6e,#1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.picker-item-info{flex:1;min-width:0}
+.picker-item-name{font-size:13px;font-weight:700;color:var(--text)}
+.picker-item-poste{font-size:11px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.picker-item-contact{font-size:10px;color:var(--accent);margin-top:1px}
+.picker-btn{background:linear-gradient(135deg,#1e3a6e,#1d4ed8);color:#fff;border:none;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+
+/* ── PHOTO GRID ───────────────────────── */
 .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .photo-cell{
   aspect-ratio:1;border-radius:10px;overflow:hidden;position:relative;
@@ -627,7 +643,10 @@ body{
       <div class="acc-body">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <div style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.8px">Responsable projet</div>
-          <button onclick="prefillEquipeRegionale()" id="btn-equipe-region" style="display:none;background:linear-gradient(135deg,#1e3a6e,#1d4ed8);color:#fff;border:none;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">🏢 Équipe régionale</button>
+          <div style="display:flex;gap:6px">
+            <button onclick="showPersonPicker('resp',-1)" class="picker-btn">👤 Choisir</button>
+            <button onclick="prefillEquipeRegionale()" id="btn-equipe-region" style="display:none;background:linear-gradient(135deg,#1e3a6e,#1d4ed8);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">🏢 Équipe</button>
+          </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
           <div><span class="mini-lbl">NOM + PRÉNOM</span>
@@ -987,21 +1006,26 @@ body{
     </div>
     <!-- Onglets -->
     <div style="display:flex;border-bottom:2px solid var(--border);background:var(--card2)">
-      <button onclick="adminTab('agencies')" id="atab-agencies" style="flex:1;padding:12px 8px;font-size:13px;font-weight:700;border:none;background:transparent;cursor:pointer;color:var(--blue);border-bottom:3px solid var(--blue);font-family:inherit">🗺️ Régions</button>
-      <button onclick="adminTab('users')" id="atab-users" style="flex:1;padding:12px 8px;font-size:13px;font-weight:700;border:none;background:transparent;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;font-family:inherit">👤 Utilisateurs</button>
+      <button onclick="adminTab('agencies')" id="atab-agencies" style="flex:1;padding:11px 4px;font-size:12px;font-weight:700;border:none;background:transparent;cursor:pointer;color:var(--blue);border-bottom:3px solid var(--blue);font-family:inherit">🗺️ Régions</button>
+      <button onclick="adminTab('users')" id="atab-users" style="flex:1;padding:11px 4px;font-size:12px;font-weight:700;border:none;background:transparent;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;font-family:inherit">👤 Utilisateurs</button>
+      <button onclick="adminTab('params')" id="atab-params" style="flex:1;padding:11px 4px;font-size:12px;font-weight:700;border:none;background:transparent;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;font-family:inherit">⚙️ Paramètres</button>
     </div>
-    <!-- Recherche -->
-    <div style="padding:10px 14px 0">
+    <!-- Recherche (cachée sur l'onglet Paramètres) -->
+    <div id="admin-search-bar" style="padding:10px 14px 0">
       <input id="admin-search" placeholder="🔍 Rechercher un utilisateur ou une région…" oninput="adminSearch(this.value)"
         style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;background:var(--input);color:var(--text);box-sizing:border-box;outline:none">
     </div>
-    <!-- Contenu onglet Agences -->
+    <!-- Contenu onglet Régions -->
     <div id="admin-panel-agencies" style="padding:12px 14px 80px">
       <div id="admin-agencies-list"><div style="text-align:center;color:var(--muted);padding:30px;font-size:13px">Chargement…</div></div>
     </div>
     <!-- Contenu onglet Utilisateurs -->
     <div id="admin-panel-users" style="display:none;padding:12px 14px 80px">
       <div id="admin-users-list"><div style="text-align:center;color:var(--muted);padding:30px;font-size:13px">Chargement…</div></div>
+    </div>
+    <!-- Contenu onglet Paramètres -->
+    <div id="admin-panel-params" style="display:none;padding:12px 14px 80px">
+      <div id="admin-params-content"><div style="text-align:center;color:var(--muted);padding:30px;font-size:13px">Chargement…</div></div>
     </div>
   </div>
 
@@ -1382,20 +1406,28 @@ const REGION_DATA = {
   'Grand EST': {
     label: 'Région Grand EST',
     chefProjet: [
-      {nom:'BREDUILLIEARD Florian', poste:"Directeur d'Agence", contact:'07 87 59 71 80'},
-      {nom:'SCHASCHKOW Stephane',   poste:"Chargé d'affaire",   contact:'06 47 37 66 86'}
+      {nom:'BREDUILLIEARD Florian', poste:"Directeur d'Agence",            contact:'07 87 59 71 80'},
+      {nom:'SCHASCHKOW Stephane',   poste:"Chargé d'affaire",              contact:'06 47 37 66 86'}
     ],
     opDetection: [
-      {nom:'SCHAEFFER Lucas',  poste:'Technicien Détection - Géomètre'},
-      {nom:'MICHEL Grégoire',  poste:'Technicien Détection - Géomètre'},
-      {nom:'CARMET Mathieu',   poste:'Technicien Détection - Géomètre'},
-      {nom:'STUDER Noah',      poste:'Technicien Détection - Géomètre'}
+      {nom:'SCHAEFFER Lucas',  poste:'Technicien Détection - Géomètre',    contact:'07 49 68 77 38'},
+      {nom:'MICHEL Grégoire',  poste:'Technicien Détection - Géomètre',    contact:'07 68 47 54 69'},
+      {nom:'CARMET Mathieu',   poste:'Technicien Détection - Géomètre',    contact:'m.carmet@neoconceptvrd.fr'},
+      {nom:'STUDER Noah',      poste:'Technicien Détection - Géomètre',    contact:'n.studer@neoconcetvrd.fr'}
     ],
     opGeo: [
-      {nom:'SCHAEFFER Lucas',  poste:'Technicien Détection - Géomètre'},
-      {nom:'MICHEL Grégoire',  poste:'Technicien Détection - Géomètre'},
-      {nom:'CARMET Mathieu',   poste:'Technicien Détection - Géomètre'},
-      {nom:'STUDER Noah',      poste:'Technicien Détection - Géomètre'}
+      {nom:'SCHAEFFER Lucas',  poste:'Technicien Détection - Géomètre',    contact:'07 49 68 77 38'},
+      {nom:'MICHEL Grégoire',  poste:'Technicien Détection - Géomètre',    contact:'07 68 47 54 69'},
+      {nom:'CARMET Mathieu',   poste:'Technicien Détection - Géomètre',    contact:'m.carmet@neoconceptvrd.fr'},
+      {nom:'STUDER Noah',      poste:'Technicien Détection - Géomètre',    contact:'n.studer@neoconcetvrd.fr'}
+    ],
+    allPersonnel: [
+      {nom:'BREDUILLIEARD Florian', poste:"Directeur d'Agence",            contact:'07 87 59 71 80',  cat:'Chef de projet'},
+      {nom:'SCHASCHKOW Stephane',   poste:"Chargé d'affaire",              contact:'06 47 37 66 86',  cat:'Chef de projet'},
+      {nom:'SCHAEFFER Lucas',       poste:'Technicien Détection - Géomètre',contact:'07 49 68 77 38', cat:'Opérateur'},
+      {nom:'MICHEL Grégoire',       poste:'Technicien Détection - Géomètre',contact:'07 68 47 54 69', cat:'Opérateur'},
+      {nom:'CARMET Mathieu',        poste:'Technicien Détection - Géomètre',contact:'m.carmet@neoconceptvrd.fr', cat:'Opérateur'},
+      {nom:'STUDER Noah',           poste:'Technicien Détection - Géomètre',contact:'n.studer@neoconcetvrd.fr',  cat:'Opérateur'}
     ]
   },
   'IDF': {
@@ -1405,17 +1437,31 @@ const REGION_DATA = {
       {nom:'ANDOURI Rachid', poste:'Directeur Général',        contact:'07 84 02 52 49'}
     ],
     opDetection: [
-      {nom:'BOURRE Clément',          poste:'Référent Détection'},
-      {nom:'ESTEVES Stephan',         poste:'Référent Détection'},
-      {nom:'GOODRIDGE Jean-Paul',     poste:'Technicien Détection'},
-      {nom:'GOARA Aimen',             poste:'Technicien Détection - Géomètre'},
-      {nom:'FAHEEM AFZAL Muhammad',   poste:'Technicien Détection - Géomètre'}
+      {nom:'BOURRE Clément',          poste:'Référent Détection',              contact:'06 31 18 89 49'},
+      {nom:'ESTEVES Stephan',         poste:'Référent Détection',              contact:'06 76 65 96 69'},
+      {nom:'GOODRIDGE Jean-Paul',     poste:'Technicien Détection',            contact:'07 59 58 02 93'},
+      {nom:'GOARA Aimen',             poste:'Technicien Détection - Géomètre', contact:'02 99 65 87 85'},
+      {nom:'FAHEEM AFZAL Muhammad',   poste:'Technicien Détection - Géomètre', contact:'06 05 99 16 48'}
     ],
     opGeo: [
-      {nom:'BREUZARD ALEXANDR',        poste:'Technicien Géomètre – Topographe'},
-      {nom:'NGUYEN Vinh Loi',          poste:'Technicien Géomètre – Topographe'},
-      {nom:'CLODINE FLORENT Jordan',   poste:'Technicien Géomètre – Topographe'},
-      {nom:'KOFFI Jeanne',             poste:'Technicien Géomètre – Topographe'}
+      {nom:'BREUZARD ALEXANDR',       poste:'Technicien Géomètre – Topographe', contact:'06 64 75 00 81'},
+      {nom:'NGUYEN Vinh Loi',         poste:'Technicien Géomètre – Topographe', contact:'06 50 03 71 97'},
+      {nom:'CLODINE FLORENT Jordan',  poste:'Technicien Géomètre – Topographe', contact:'06 80 94 82 37'},
+      {nom:'KOFFI Jeanne',            poste:'Technicien Géomètre – Topographe', contact:'07 51 46 66 42'}
+    ],
+    allPersonnel: [
+      {nom:'BOURRE Maxime',          poste:'Responsable Opérationnel',         contact:'06 38 60 94 71',                         cat:'Chef de projet'},
+      {nom:'ANDOURI Rachid',         poste:'Directeur Général',                contact:'07 84 02 52 49',                         cat:'Chef de projet'},
+      {nom:'BOURRE Clément',         poste:'Référent Détection',               contact:'06 31 18 89 49',                         cat:'Opérateur'},
+      {nom:'ESTEVES Stephan',        poste:'Référent Détection',               contact:'06 76 65 96 69',                         cat:'Opérateur'},
+      {nom:'GOODRIDGE Jean-Paul',    poste:'Technicien Détection',             contact:'07 59 58 02 93',                         cat:'Opérateur'},
+      {nom:'GOARA Aimen',            poste:'Technicien Détection - Géomètre',  contact:'02 99 65 87 85',                         cat:'Opérateur'},
+      {nom:'FAHEEM AFZAL Muhammad',  poste:'Technicien Détection - Géomètre',  contact:'06 05 99 16 48',                         cat:'Opérateur'},
+      {nom:'BREUZARD ALEXANDR',      poste:'Technicien Géomètre – Topographe', contact:'06 64 75 00 81',                         cat:'Opérateur'},
+      {nom:'NGUYEN Vinh Loi',        poste:'Technicien Géomètre – Topographe', contact:'06 50 03 71 97',                         cat:'Opérateur'},
+      {nom:'CLODINE FLORENT Jordan', poste:'Technicien Géomètre – Topographe', contact:'06 80 94 82 37',                         cat:'Opérateur'},
+      {nom:'KOFFI Jeanne',           poste:'Technicien Géomètre – Topographe', contact:'07 51 46 66 42',                         cat:'Opérateur'},
+      {nom:'MEKBOUL Souleymane',     poste:'QHSE',                             contact:'souleymane.mekboul@neoconceptvrd.fr',    cat:'Autre'}
     ]
   }
 };
@@ -2100,32 +2146,25 @@ function rapportChanged(){
 // Operateurs
 function renderOperateurs(){
   const r=S.currentRapport;
+  const mkRow = (type, o, i) => `
+    <div class="net-row" style="margin-bottom:8px">
+      <div style="display:grid;grid-template-columns:auto 1fr 1fr auto;gap:6px;align-items:center">
+        <button class="picker-btn" onclick="showPersonPicker('${type}',${i})" title="Choisir dans la liste">👤</button>
+        <input class="mini-inp" value="${(o.nom||'').replace(/"/g,'&quot;')}" placeholder="NOM + PRÉNOM"
+          oninput="S.currentRapport.${type==='detection'?'opDetection':'opGeo'}[${i}].nom=this.value;rapportChanged()">
+        <input class="mini-inp" value="${(o.poste||'').replace(/"/g,'&quot;')}" placeholder="POSTE"
+          oninput="S.currentRapport.${type==='detection'?'opDetection':'opGeo'}[${i}].poste=this.value;rapportChanged()">
+        <button class="del-btn" onclick="removeOperateur('${type}',${i})">✕</button>
+      </div>
+    </div>`;
   // Détection
   const elD=document.getElementById('operateurs-detection-list');
-  if(elD) elD.innerHTML=(r.opDetection||[]).map((o,i)=>`
-    <div class="net-row" style="margin-bottom:8px">
-      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center">
-        <input class="mini-inp" value="${o.nom||''}" placeholder="NOM + PRÉNOM"
-          oninput="S.currentRapport.opDetection[${i}].nom=this.value;rapportChanged()">
-        <input class="mini-inp" value="${o.poste||''}" placeholder="POSTE"
-          oninput="S.currentRapport.opDetection[${i}].poste=this.value;rapportChanged()">
-        <button class="del-btn" onclick="removeOperateur('detection',${i})">✕</button>
-      </div>
-    </div>
-  `).join('') || '<div style="font-size:12px;color:var(--muted);padding:4px 0">Aucun opérateur</div>';
+  if(elD) elD.innerHTML=(r.opDetection||[]).map((o,i)=>mkRow('detection',o,i)).join('')
+    || '<div style="font-size:12px;color:var(--muted);padding:4px 0">Aucun opérateur</div>';
   // Géo
   const elG=document.getElementById('operateurs-geo-list');
-  if(elG) elG.innerHTML=(r.opGeo||[]).map((o,i)=>`
-    <div class="net-row" style="margin-bottom:8px">
-      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center">
-        <input class="mini-inp" value="${o.nom||''}" placeholder="NOM + PRÉNOM"
-          oninput="S.currentRapport.opGeo[${i}].nom=this.value;rapportChanged()">
-        <input class="mini-inp" value="${o.poste||''}" placeholder="POSTE"
-          oninput="S.currentRapport.opGeo[${i}].poste=this.value;rapportChanged()">
-        <button class="del-btn" onclick="removeOperateur('geo',${i})">✕</button>
-      </div>
-    </div>
-  `).join('') || '<div style="font-size:12px;color:var(--muted);padding:4px 0">Aucun opérateur</div>';
+  if(elG) elG.innerHTML=(r.opGeo||[]).map((o,i)=>mkRow('geo',o,i)).join('')
+    || '<div style="font-size:12px;color:var(--muted);padding:4px 0">Aucun opérateur</div>';
 }
 
 function addOperateurRow(type){
@@ -2141,6 +2180,112 @@ function removeOperateur(type,i){
   else r.opGeo.splice(i,1);
   renderOperateurs(); rapportChanged();
 }
+
+// ── Person Picker ──────────────────────────────────────────────────────────
+let _pickerState = { type:'resp', idx:-1 };
+
+function _getPickerPersonnel(){
+  // Essai 1 : région de l'utilisateur courant
+  const rd = getRegionData(currentUserProfile && currentUserProfile.teamName);
+  if(rd && rd.allPersonnel) return { label: rd.label, people: rd.allPersonnel };
+  // Fallback : toutes les régions
+  const all = [];
+  Object.values(REGION_DATA).forEach(r=>{ if(r.allPersonnel) all.push(...r.allPersonnel); });
+  return { label:'Toutes les régions', people: all };
+}
+
+function showPersonPicker(type, idx){
+  _pickerState = { type, idx };
+  const { label, people } = _getPickerPersonnel();
+  const title = type==='resp' ? 'Chef de projet' : type==='detection' ? 'Opérateur de détection' : 'Opérateur de géoréférencement';
+
+  // Regroupe par catégorie
+  const cats = {};
+  people.forEach(p=>{ const c=p.cat||'Autre'; if(!cats[c]) cats[c]=[]; cats[c].push(p); });
+
+  const listHTML = Object.entries(cats).map(([cat, members])=>`
+    <div class="picker-cat">${cat}</div>
+    ${members.map(p=>`
+      <div class="picker-item" onclick="selectPerson(${JSON.stringify(p.nom)},${JSON.stringify(p.poste)},${JSON.stringify(p.contact||'')})">
+        <div class="picker-item-avatar">${p.nom.charAt(0)}</div>
+        <div class="picker-item-info">
+          <div class="picker-item-name">${p.nom}</div>
+          <div class="picker-item-poste">${p.poste}</div>
+          ${p.contact?`<div class="picker-item-contact">${p.contact}</div>`:''}
+        </div>
+      </div>`).join('')}
+  `).join('');
+
+  const overlay = document.createElement('div');
+  overlay.id = 'person-picker-overlay';
+  overlay.innerHTML = `
+    <div id="person-picker-panel">
+      <div class="picker-header">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:15px;font-weight:800;color:var(--text)">👤 ${title}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${label}</div>
+          </div>
+          <button onclick="closePicker()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);padding:4px">✕</button>
+        </div>
+        <input class="picker-search" placeholder="🔍 Rechercher…" oninput="filterPickerList(this.value)" autofocus>
+      </div>
+      <div class="picker-list" id="picker-list-inner">${listHTML}</div>
+    </div>`;
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) closePicker(); });
+  document.body.appendChild(overlay);
+}
+
+function filterPickerList(q){
+  const inner = document.getElementById('picker-list-inner');
+  if(!inner) return;
+  const { people } = _getPickerPersonnel();
+  const fl = q.toLowerCase();
+  const filtered = fl ? people.filter(p=>
+    p.nom.toLowerCase().includes(fl)||
+    p.poste.toLowerCase().includes(fl)||
+    (p.contact||'').toLowerCase().includes(fl)
+  ) : people;
+  if(!filtered.length){ inner.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;font-size:13px">Aucun résultat</div>'; return; }
+  inner.innerHTML = filtered.map(p=>`
+    <div class="picker-item" onclick="selectPerson(${JSON.stringify(p.nom)},${JSON.stringify(p.poste)},${JSON.stringify(p.contact||'')})">
+      <div class="picker-item-avatar">${p.nom.charAt(0)}</div>
+      <div class="picker-item-info">
+        <div class="picker-item-name">${p.nom}</div>
+        <div class="picker-item-poste">${p.poste}</div>
+        ${p.contact?`<div class="picker-item-contact">${p.contact}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function selectPerson(nom, poste, contact){
+  const { type, idx } = _pickerState;
+  const r = S.currentRapport;
+  if(type==='resp'){
+    r.respNom = nom; r.respPoste = poste; r.respContact = contact;
+    const n=document.getElementById('r-resp-nom'), p=document.getElementById('r-resp-poste'), c=document.getElementById('r-resp-contact');
+    if(n) n.value=nom; if(p) p.value=poste; if(c) c.value=contact;
+  } else if(type==='detection'){
+    if(!r.opDetection) r.opDetection=[];
+    if(idx>=0 && idx<r.opDetection.length){ r.opDetection[idx].nom=nom; r.opDetection[idx].poste=poste; }
+    else { r.opDetection.push({nom,poste}); }
+    renderOperateurs();
+  } else {
+    if(!r.opGeo) r.opGeo=[];
+    if(idx>=0 && idx<r.opGeo.length){ r.opGeo[idx].nom=nom; r.opGeo[idx].poste=poste; }
+    else { r.opGeo.push({nom,poste}); }
+    renderOperateurs();
+  }
+  rapportChanged();
+  closePicker();
+  toast('✅ '+nom+' sélectionné');
+}
+
+function closePicker(){
+  const el=document.getElementById('person-picker-overlay');
+  if(el) el.remove();
+}
+// ───────────────────────────────────────────────────────────────────────────
 
 function updateRegionBtn(){
   const btn = document.getElementById('btn-equipe-region');
@@ -3558,17 +3703,138 @@ function adminTab(tab){
   _adminCurrentTab = tab;
   document.getElementById('admin-panel-agencies').style.display = tab==='agencies'?'block':'none';
   document.getElementById('admin-panel-users').style.display    = tab==='users'?'block':'none';
-  const aBtn=document.getElementById('atab-agencies'), uBtn=document.getElementById('atab-users');
+  document.getElementById('admin-panel-params').style.display   = tab==='params'?'block':'none';
+  const searchBar = document.getElementById('admin-search-bar');
+  if(searchBar) searchBar.style.display = tab==='params'?'none':'block';
+  const aBtn=document.getElementById('atab-agencies'), uBtn=document.getElementById('atab-users'), pBtn=document.getElementById('atab-params');
   const blue='var(--blue)', muted='var(--muted)';
   aBtn.style.color=tab==='agencies'?blue:muted; aBtn.style.borderBottomColor=tab==='agencies'?blue:'transparent';
   uBtn.style.color=tab==='users'?blue:muted;    uBtn.style.borderBottomColor=tab==='users'?blue:'transparent';
+  pBtn.style.color=tab==='params'?blue:muted;   pBtn.style.borderBottomColor=tab==='params'?blue:'transparent';
   if(tab==='agencies') renderAdminAgencies();
-  else renderAdminUsers();
+  else if(tab==='users') renderAdminUsers();
+  else renderAdminParams();
 }
 
 function adminSearch(val){
   if(_adminCurrentTab==='agencies') renderAdminAgencies(val);
-  else renderAdminUsers(val);
+  else if(_adminCurrentTab==='users') renderAdminUsers(val);
+}
+
+function renderAdminParams(){
+  const el = document.getElementById('admin-params-content');
+  if(!el) return;
+  if(!_adminData.loaded){ el.innerHTML='<div style="text-align:center;color:var(--muted);padding:30px">Chargement…</div>'; return; }
+
+  // ── Section 1 : Rôles disponibles ──────────────────────────────
+  const roleGroups = [
+    { label:'Rôles techniques', roles: ROLES_TECH },
+    { label:'Rôles administratifs', roles: ROLES_ADMIN_LIST }
+  ];
+
+  let rolesHTML = roleGroups.map(g=>{
+    const items = g.roles.map(r=>{
+      const count = _adminData.users.filter(u=>u.role===r).length;
+      const c = roleColor(r);
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--card2);border-radius:10px;margin-bottom:6px;border:1px solid var(--border)">
+        <span style="display:inline-flex;align-items:center;gap:8px">
+          <span style="display:inline-block;background:${c.bg};color:${c.color};border:1px solid ${c.border};border-radius:20px;padding:3px 11px;font-size:11px;font-weight:700">${r}</span>
+        </span>
+        <span style="font-size:12px;color:var(--muted);font-weight:600">${count} utilisateur${count!==1?'s':''}</span>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">${g.label}</div>
+      ${items}
+    </div>`;
+  }).join('');
+
+  // ── Section 2 : Appartenance régionale ─────────────────────────
+  const knownRegions = [
+    { key:'Grand EST', label:'Région Grand EST', emoji:'🗺️' },
+    { key:'IDF',       label:'Région IDF',       emoji:'🏙️' }
+  ];
+
+  // Groupe les utilisateurs par région (teamName)
+  const usersByTeam = {};
+  _adminData.users.forEach(u=>{
+    const key = u.teamId || 'sans-region';
+    if(!usersByTeam[key]) usersByTeam[key] = { name: u.teamName||'Sans région', users:[] };
+    usersByTeam[key].users.push(u);
+  });
+
+  const regionRows = _adminData.users.map(u=>{
+    const rd = getRegionData(u.teamName);
+    const regionLabel = rd ? rd.label : (u.teamName||'—');
+    const c = roleColor(u.role);
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--card2);border-radius:10px;margin-bottom:6px;border:1px solid var(--border)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.displayName||u.email||'—'}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap">
+          <span style="display:inline-block;background:${c.bg};color:${c.color};border:1px solid ${c.border};border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">${u.role||'—'}</span>
+          <span style="font-size:11px;color:var(--muted)">🗺️ ${regionLabel}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:5px;margin-left:8px">
+        <button onclick="adminChangeRole('${u.uid}')" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit" title="Changer le rôle">✏️</button>
+        <button onclick="adminMoveUser('${u.uid}')" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:8px;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit" title="Changer de région">↗️</button>
+      </div>
+    </div>`;
+  }).join('') || '<div style="font-size:12px;color:var(--muted);padding:8px 0">Aucun utilisateur.</div>';
+
+  el.innerHTML = `
+    <!-- Rôles -->
+    <div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span style="font-size:18px">🎭</span>
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--text)">Rôles disponibles</div>
+          <div style="font-size:11px;color:var(--muted)">${ROLES.length} rôles · ${_adminData.users.length} utilisateurs</div>
+        </div>
+      </div>
+      ${rolesHTML}
+    </div>
+
+    <!-- Appartenance régionale -->
+    <div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span style="font-size:18px">🗺️</span>
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--text)">Appartenance régionale</div>
+          <div style="font-size:11px;color:var(--muted)">Rôle et région de chaque utilisateur</div>
+        </div>
+      </div>
+      ${regionRows}
+    </div>
+
+    <!-- Régions connues -->
+    <div style="background:var(--card);border-radius:14px;padding:16px;border:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span style="font-size:18px">📍</span>
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--text)">Régions configurées</div>
+          <div style="font-size:11px;color:var(--muted)">Auto-remplissage des rapports activé</div>
+        </div>
+      </div>
+      ${knownRegions.map(reg=>{
+        const rd = REGION_DATA[reg.key];
+        const teamMatch = _adminData.teams.find(t=>getRegionData(t.name)===rd);
+        const members = teamMatch ? _adminData.users.filter(u=>u.teamId===teamMatch.id) : [];
+        return `<div style="background:linear-gradient(135deg,rgba(30,58,110,.05),rgba(29,78,216,.08));border:1px solid rgba(29,78,216,.15);border-radius:12px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:14px;font-weight:800;color:#1d4ed8">${reg.emoji} ${rd.label}</div>
+            <span style="font-size:11px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:20px;padding:2px 9px;font-weight:700">${members.length} membre${members.length!==1?'s':''}</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.6px">Chef de projet</div>
+          ${rd.chefProjet.map(p=>`<div style="font-size:12px;color:var(--text);padding:3px 0">👤 <strong>${p.nom}</strong> · ${p.poste} · ${p.contact}</div>`).join('')}
+          <div style="font-size:11px;color:var(--muted);margin:8px 0 6px;font-weight:700;text-transform:uppercase;letter-spacing:.6px">Opérateurs détection (${rd.opDetection.length})</div>
+          ${rd.opDetection.map(p=>`<div style="font-size:12px;color:var(--text);padding:2px 0">🔍 ${p.nom} · ${p.poste}</div>`).join('')}
+          <div style="font-size:11px;color:var(--muted);margin:8px 0 6px;font-weight:700;text-transform:uppercase;letter-spacing:.6px">Opérateurs géo (${rd.opGeo.length})</div>
+          ${rd.opGeo.map(p=>`<div style="font-size:12px;color:var(--text);padding:2px 0">📐 ${p.nom} · ${p.poste}</div>`).join('')}
+        </div>`;
+      }).join('')}
+    </div>
+  `;
 }
 
 function renderAdminAgencies(filter=''){
