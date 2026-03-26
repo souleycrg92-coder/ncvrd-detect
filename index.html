@@ -519,6 +519,19 @@ body{
           <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block"></span>
           Application terrain · Mode hors-ligne
         </div>
+        <!-- Badge agence -->
+        <div id="home-agency-badge" style="display:none;margin-top:12px;display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:5px 12px">
+          <span style="font-size:14px">🏢</span>
+          <div>
+            <div style="font-size:10px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.8px;line-height:1">Agence</div>
+            <div style="font-size:13px;font-weight:800;color:#fff;letter-spacing:.3px" id="home-agency-name">—</div>
+          </div>
+          <span style="width:1px;height:24px;background:rgba(255,255,255,.2);display:block"></span>
+          <div>
+            <div style="font-size:10px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.8px;line-height:1" id="home-user-role">Technicien</div>
+            <div style="font-size:13px;font-weight:700;color:#fff" id="home-user-name">—</div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="search-box">
@@ -921,16 +934,24 @@ body{
       <div class="profile-avatar" id="prof-avatar">👤</div>
       <div style="font-weight:800;font-size:18px" id="prof-name">—</div>
       <div style="font-size:13px;color:var(--muted);margin-top:2px" id="prof-email">—</div>
-      <div style="margin-top:8px" id="prof-role-badge"><span class="badge badge-orange">✏️ Technicien</span></div>
+      <div style="margin-top:8px" id="prof-role-badge"><span class="badge badge-orange">Technicien</span></div>
+    </div>
+    <!-- Bandeau Agence bien visible -->
+    <div style="margin:8px 14px 0;background:linear-gradient(135deg,#1e3a6e,#1d4ed8);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+      <div style="width:40px;height:40px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🏢</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.6)">Mon agence</div>
+        <div style="font-size:16px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="prof-company">—</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.6)">Code invitation</div>
+        <div style="font-family:monospace;font-size:15px;font-weight:800;color:#fff;letter-spacing:2px;cursor:pointer" id="prof-invite-code" onclick="copyInviteCode()">—</div>
+      </div>
     </div>
     <div class="acc-section" style="margin-top:10px">
       <div class="profile-stat">
-        <span class="ps-label">Entreprise</span>
-        <span class="ps-val" id="prof-company">—</span>
-      </div>
-      <div class="profile-stat">
         <span class="ps-label">Code équipe</span>
-        <span class="ps-val" id="prof-invite-code" style="font-family:monospace;font-weight:700;color:var(--accent);cursor:pointer" onclick="copyInviteCode()">—</span>
+        <span class="ps-val" id="prof-invite-code-2" style="font-family:monospace;font-weight:700;color:var(--accent);cursor:pointer" onclick="copyInviteCode()">—</span>
       </div>
       <div class="profile-stat">
         <span class="ps-label">Chantiers</span>
@@ -953,6 +974,33 @@ body{
     <button class="btn-big" style="background:#fee2e2;color:#dc2626;border:none;border-radius:14px;padding:14px;font-weight:700;font-size:15px;cursor:pointer;margin:0 14px 8px;display:block;width:calc(100% - 28px)" onclick="logoutUser()">🚪 Se déconnecter</button>
   </div>
 
+
+  <!-- ══════════════════ SCREEN ADMIN ══════════════════ -->
+  <div class="screen" id="s-admin">
+    <div style="background:linear-gradient(135deg,#1e3a6e,#1d4ed8);padding:22px 16px 18px">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">NCVRD Detect</div>
+      <div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:2px">⚙️ Panneau Admin</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.65)" id="admin-subtitle">Gestion des agences et utilisateurs</div>
+    </div>
+    <!-- Onglets -->
+    <div style="display:flex;border-bottom:2px solid var(--border);background:var(--card2)">
+      <button onclick="adminTab('agencies')" id="atab-agencies" style="flex:1;padding:12px 8px;font-size:13px;font-weight:700;border:none;background:transparent;cursor:pointer;color:var(--blue);border-bottom:3px solid var(--blue);font-family:inherit">🏢 Agences</button>
+      <button onclick="adminTab('users')" id="atab-users" style="flex:1;padding:12px 8px;font-size:13px;font-weight:700;border:none;background:transparent;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;font-family:inherit">👤 Utilisateurs</button>
+    </div>
+    <!-- Recherche -->
+    <div style="padding:10px 14px 0">
+      <input id="admin-search" placeholder="🔍 Rechercher un utilisateur ou une agence…" oninput="adminSearch(this.value)"
+        style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;background:var(--input);color:var(--text);box-sizing:border-box;outline:none">
+    </div>
+    <!-- Contenu onglet Agences -->
+    <div id="admin-panel-agencies" style="padding:12px 14px 80px">
+      <div id="admin-agencies-list"><div style="text-align:center;color:var(--muted);padding:30px;font-size:13px">Chargement…</div></div>
+    </div>
+    <!-- Contenu onglet Utilisateurs -->
+    <div id="admin-panel-users" style="display:none;padding:12px 14px 80px">
+      <div id="admin-users-list"><div style="text-align:center;color:var(--muted);padding:30px;font-size:13px">Chargement…</div></div>
+    </div>
+  </div>
 
   <!-- ─── LOGIN SCREEN ──────────────────── -->
   <div class="screen" id="s-login" style="display:none;min-height:100vh;background:linear-gradient(135deg,#1e3a6e 0%,#1d4ed8 100%);padding:0;overflow-y:auto">
@@ -998,17 +1046,30 @@ body{
             <label style="font-size:12px;font-weight:700;color:#3d4a5e;margin-bottom:6px;display:block">MOT DE PASSE</label>
             <input id="reg-password" type="password" placeholder="Minimum 6 caractères" style="width:100%;padding:12px 14px;border:1.5px solid #dde1ea;border-radius:10px;font-size:15px;font-family:Inter,sans-serif;box-sizing:border-box;outline:none">
           </div>
+          <div style="margin-bottom:12px">
+            <label style="font-size:12px;font-weight:700;color:#3d4a5e;margin-bottom:6px;display:block" id="reg-role-label">👷 MON RÔLE</label>
+            <select id="reg-role" style="width:100%;padding:12px 14px;border:1.5px solid #dde1ea;border-radius:10px;font-size:14px;font-family:Inter,sans-serif;box-sizing:border-box;outline:none;background:#fff;color:#3d4a5e;-webkit-appearance:none;appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22%237a8499%22><path fill-rule=%22evenodd%22 d=%22M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z%22/></svg>');background-repeat:no-repeat;background-position:right 12px center;background-size:20px;padding-right:40px">
+              <option value="" disabled selected>-- Choisissez votre rôle --</option>
+              <option value="Technicien Détection - Topographe">Technicien Détection - Topographe</option>
+              <option value="Technicien Détection">Technicien Détection</option>
+              <option value="Technicien Géomètre - Topographe">Technicien Géomètre - Topographe</option>
+              <option value="Assistant opérationnel">Assistant opérationnel</option>
+            </select>
+            <div id="reg-role-hint" style="font-size:11px;color:#7a8499;margin-top:5px"></div>
+          </div>
           <div style="margin-bottom:6px">
-            <label style="font-size:12px;font-weight:700;color:#3d4a5e;margin-bottom:6px;display:block">ENTREPRISE / ÉQUIPE</label>
+            <label style="font-size:12px;font-weight:700;color:#3d4a5e;margin-bottom:6px;display:block">🏢 AGENCE</label>
             <div style="display:flex;gap:8px;margin-bottom:8px">
-              <button id="opt-create" onclick="switchTeamOpt('create')" style="flex:1;padding:8px;border:2px solid #1d4ed8;border-radius:9px;background:#eff6ff;color:#1d4ed8;font-weight:700;font-size:12px;cursor:pointer;font-family:Inter,sans-serif">Créer une équipe</button>
-              <button id="opt-join" onclick="switchTeamOpt('join')" style="flex:1;padding:8px;border:2px solid #dde1ea;border-radius:9px;background:#fff;color:#7a8499;font-weight:700;font-size:12px;cursor:pointer;font-family:Inter,sans-serif">Rejoindre</button>
+              <button id="opt-create" onclick="switchTeamOpt('create')" style="flex:1;padding:8px;border:2px solid #1d4ed8;border-radius:9px;background:#eff6ff;color:#1d4ed8;font-weight:700;font-size:12px;cursor:pointer;font-family:Inter,sans-serif">Créer mon agence</button>
+              <button id="opt-join" onclick="switchTeamOpt('join')" style="flex:1;padding:8px;border:2px solid #dde1ea;border-radius:9px;background:#fff;color:#7a8499;font-weight:700;font-size:12px;cursor:pointer;font-family:Inter,sans-serif">Rejoindre une agence</button>
             </div>
             <div id="field-create-team">
-              <input id="reg-company" type="text" placeholder="NEOCONCEPT VRD" style="width:100%;padding:12px 14px;border:1.5px solid #dde1ea;border-radius:10px;font-size:15px;font-family:Inter,sans-serif;box-sizing:border-box;outline:none">
+              <input id="reg-company" type="text" placeholder="Ex : Agence Paris, Agence Lyon…" style="width:100%;padding:12px 14px;border:1.5px solid #dde1ea;border-radius:10px;font-size:15px;font-family:Inter,sans-serif;box-sizing:border-box;outline:none">
+              <div style="font-size:11px;color:#7a8499;margin-top:5px">Chaque agence dispose de son propre espace de données isolé.</div>
             </div>
             <div id="field-join-team" style="display:none">
-              <input id="reg-invitecode" type="text" placeholder="Code d'invitation (ex: ABC123)" style="width:100%;padding:12px 14px;border:1.5px solid #dde1ea;border-radius:10px;font-size:15px;font-family:Inter,sans-serif;box-sizing:border-box;outline:none;text-transform:uppercase">
+              <input id="reg-invitecode" type="text" placeholder="Code d'invitation de votre agence (ex: ABC123)" style="width:100%;padding:12px 14px;border:1.5px solid #dde1ea;border-radius:10px;font-size:15px;font-family:Inter,sans-serif;box-sizing:border-box;outline:none;text-transform:uppercase">
+              <div style="font-size:11px;color:#7a8499;margin-top:5px">Demandez le code d'invitation au responsable de votre agence.</div>
             </div>
           </div>
           <div id="reg-error" style="color:#dc2626;font-size:13px;margin-bottom:12px;display:none"></div>
@@ -1041,6 +1102,9 @@ body{
   </button>
   <button class="nav-btn" id="nav-profil" onclick="showScreen('s-profil')">
     <span class="nav-icon">👤</span>Profil
+  </button>
+  <button class="nav-btn" id="nav-admin" onclick="openAdmin()" style="display:none">
+    <span class="nav-icon">⚙️</span>Admin
   </button>
 </div>
 
@@ -1132,14 +1196,30 @@ body{
     <div id="collab-list" style="margin-bottom:14px;max-height:160px;overflow-y:auto">
       <div style="color:var(--muted);font-size:12px;text-align:center;padding:8px">Chargement…</div>
     </div>
-    <!-- Code d'invitation -->
-    <div class="form-label" style="margin-bottom:6px">Inviter un collaborateur</div>
-    <div class="info-box" style="margin:0 0 10px;font-size:11px">Partagez ce code à votre collègue. Il devra l'entrer lors de la création de son compte dans l'application.</div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-      <div style="flex:1;background:var(--input);border:1.5px solid var(--border);border-radius:10px;padding:12px;font-size:16px;font-weight:800;letter-spacing:3px;text-align:center;color:var(--blue)" id="collab-invite-code">—</div>
-      <button onclick="copyCollabInviteCode()" style="background:var(--blue);border:none;color:#fff;border-radius:10px;padding:12px 14px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;white-space:nowrap">📋 Copier</button>
+    <!-- Codes d'invitation -->
+    <div class="form-label" style="margin-bottom:6px">Codes d'invitation</div>
+    <div class="info-box" style="margin:0 0 10px;font-size:11px">Deux codes distincts : un pour les techniciens, un pour les administrateurs. Partagez le bon code selon le rôle de la personne.</div>
+
+    <!-- Code Techniciens -->
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">👷 Code Techniciens</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="flex:1;background:var(--input);border:1.5px solid var(--border);border-radius:10px;padding:11px;font-size:16px;font-weight:800;letter-spacing:3px;text-align:center;color:var(--blue)" id="collab-invite-code">—</div>
+        <button onclick="copyCollabCode('collab-invite-code')" style="background:var(--blue);border:none;color:#fff;border-radius:10px;padding:11px 13px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;white-space:nowrap">📋</button>
+      </div>
     </div>
-    <button onclick="shareCollabInvite()" style="width:100%;background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px">📤 Partager le lien d'invitation</button>
+
+    <!-- Code Admins -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">🔑 Code Administrateurs</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="flex:1;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:10px;padding:11px;font-size:16px;font-weight:800;letter-spacing:3px;text-align:center;color:#92400e" id="collab-admin-code">—</div>
+        <button onclick="copyCollabCode('collab-admin-code')" style="background:#f59e0b;border:none;color:#fff;border-radius:10px;padding:11px 13px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;white-space:nowrap">📋</button>
+      </div>
+      <div style="font-size:10.5px;color:#92400e;margin-top:4px;font-style:italic">Réservé aux Directeurs, Responsables et QHSE.</div>
+    </div>
+
+    <button onclick="shareCollabInvite()" style="width:100%;background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px">📤 Partager</button>
   </div>
 </div>
 
@@ -1273,6 +1353,43 @@ function generateInviteCode(){
   return Math.random().toString(36).substring(2,8).toUpperCase();
 }
 
+// Rôles disponibles et leurs couleurs associées
+// ── Rôles terrain (code invitation technicien) ──
+const ROLES_TECH = [
+  'Technicien Détection - Topographe',
+  'Technicien Détection',
+  'Technicien Géomètre - Topographe',
+  'Assistant opérationnel'
+];
+// ── Rôles administratifs (code invitation admin) ──
+const ROLES_ADMIN_LIST = [
+  'Responsable Opérationnel',
+  "Directeur d'agence",
+  'Directeur Général',
+  'QHSE'
+];
+const ROLES = [...ROLES_TECH, ...ROLES_ADMIN_LIST];
+// Ensemble des rôles ayant accès au panneau Admin
+const ADMIN_ROLES = new Set(['Responsable Opérationnel',"Directeur d'agence",'Directeur Général','QHSE']);
+function isAdminRole(role){ return ADMIN_ROLES.has(role); }
+
+function roleColor(role){
+  if(!role) return {bg:'rgba(234,88,12,.08)',color:'#c2410c',border:'rgba(234,88,12,.2)'};
+  if(role==='Directeur Général')                  return {bg:'rgba(124,58,237,.1)',color:'#6d28d9',border:'rgba(124,58,237,.25)'};
+  if(role==="Directeur d'agence")                 return {bg:'rgba(37,99,235,.1)',color:'#1d4ed8',border:'rgba(37,99,235,.25)'};
+  if(role==='Responsable Opérationnel')           return {bg:'rgba(5,150,105,.1)',color:'#065f46',border:'rgba(5,150,105,.25)'};
+  if(role==='QHSE')                               return {bg:'rgba(239,68,68,.1)',color:'#b91c1c',border:'rgba(239,68,68,.25)'};
+  if(role==='Technicien Géomètre - Topographe')   return {bg:'rgba(217,119,6,.1)',color:'#92400e',border:'rgba(217,119,6,.25)'};
+  if(role==='Technicien Détection - Topographe')  return {bg:'rgba(14,116,144,.1)',color:'#164e63',border:'rgba(14,116,144,.25)'};
+  if(role==='Technicien Détection')               return {bg:'rgba(234,88,12,.08)',color:'#c2410c',border:'rgba(234,88,12,.2)'};
+  if(role==='Assistant opérationnel')             return {bg:'rgba(100,116,139,.1)',color:'#475569',border:'rgba(100,116,139,.25)'};
+  return {bg:'rgba(234,88,12,.08)',color:'#c2410c',border:'rgba(234,88,12,.2)'};
+}
+function roleBadgeHTML(role){
+  const c=roleColor(role);
+  return `<span style="display:inline-block;background:${c.bg};color:${c.color};border:1px solid ${c.border};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700">${role||'—'}</span>`;
+}
+
 async function loginUser(){
   const email = document.getElementById('login-email').value.trim();
   const pwd   = document.getElementById('login-password').value;
@@ -1301,7 +1418,9 @@ async function registerUser(){
   const isJoin  = document.getElementById("field-join-team").style.display !== "none";
   errEl.style.display = 'none';
 
+  const role = document.getElementById('reg-role').value;
   if(!name||!email||!pwd){ errEl.textContent='Veuillez remplir tous les champs.'; errEl.style.display='block'; return; }
+  if(!role){ errEl.textContent='Veuillez sélectionner votre rôle.'; errEl.style.display='block'; return; }
   if(pwd.length < 6){ errEl.textContent="Le mot de passe doit faire au moins 6 caractères."; errEl.style.display='block'; return; }
 
   try {
@@ -1319,19 +1438,21 @@ async function registerUser(){
       teamName = teamDoc.data().name;
     } else {
       const company = document.getElementById('reg-company').value.trim();
-      if(!company){ errEl.textContent='Entrez le nom de votre entreprise.'; errEl.style.display='block'; return; }
+      if(!company){ errEl.textContent="Entrez le nom de votre agence."; errEl.style.display='block'; return; }
       teamId   = 'team_' + cred.user.uid.substring(0,8);
       teamName = company;
       await fdb.collection('teams').doc(teamId).set({
         name: company, createdBy: cred.user.uid,
-        inviteCode: generateInviteCode(), createdAt: Date.now()
+        inviteCode: generateInviteCode(),
+        adminInviteCode: generateInviteCode(),
+        createdAt: Date.now()
       });
     }
 
     await fdb.collection('users').doc(cred.user.uid).set({
       displayName: name, email: email,
       teamId: teamId, teamName: teamName,
-      role: 'technicien', createdAt: Date.now()
+      role: role, createdAt: Date.now()
     });
   } catch(e){
     const msgs = {
@@ -1381,6 +1502,67 @@ function switchTeamOpt(opt){
   document.getElementById('opt-join').style.border = isCreate ? '2px solid #dde1ea' : '2px solid #1d4ed8';
   document.getElementById('opt-join').style.background = isCreate ? '#fff' : '#eff6ff';
   document.getElementById('opt-join').style.color = isCreate ? '#7a8499' : '#1d4ed8';
+  // Si on passe en mode "rejoindre", on branche la détection du code
+  if(!isCreate){
+    const inp = document.getElementById('reg-invitecode');
+    if(inp && !inp._codeDetect){
+      inp._codeDetect = true;
+      inp.addEventListener('input', debounceCodeDetect);
+    }
+  }
+  // Si on crée une agence → on est forcément admin → proposer tous les rôles
+  if(isCreate){ updateRoleOptions('admin'); }
+}
+
+// Débounce pour ne pas appeler Firestore à chaque touche
+let _codeTimer = null;
+function debounceCodeDetect(){ clearTimeout(_codeTimer); _codeTimer = setTimeout(detectCodeType, 600); }
+
+async function detectCodeType(){
+  const code = (document.getElementById('reg-invitecode').value||'').trim().toUpperCase();
+  if(code.length < 4) return;
+  if(!FIREBASE_CONFIGURED){ updateRoleOptions('all'); return; }
+  try {
+    // Chercher si c'est un code tech
+    const snapT = await fdb.collection('teams').where('inviteCode','==',code).limit(1).get();
+    if(!snapT.empty){ updateRoleOptions('tech'); return; }
+    // Chercher si c'est un code admin
+    const snapA = await fdb.collection('teams').where('adminInviteCode','==',code).limit(1).get();
+    if(!snapA.empty){ updateRoleOptions('admin'); return; }
+    // Code inconnu
+    updateRoleOptions('unknown');
+  } catch(e){ updateRoleOptions('all'); }
+}
+
+function updateRoleOptions(type){
+  const sel = document.getElementById('reg-role');
+  const hint = document.getElementById('reg-role-hint');
+  const label = document.getElementById('reg-role-label');
+  if(!sel) return;
+  sel.innerHTML = '<option value="" disabled selected>-- Choisissez votre rôle --</option>';
+  if(type==='tech' || type==='all'){
+    ROLES_TECH.forEach(r=>{ const o=document.createElement('option'); o.value=r; o.textContent=r; sel.appendChild(o); });
+  }
+  if(type==='admin' || type==='all'){
+    ROLES_ADMIN_LIST.forEach(r=>{ const o=document.createElement('option'); o.value=r; o.textContent=r; sel.appendChild(o); });
+  }
+  if(type==='tech'){
+    label.textContent='👷 MON RÔLE (Technicien)';
+    hint.textContent='Code technicien détecté ✓';
+    hint.style.color='#15803d';
+  } else if(type==='admin'){
+    label.textContent='🔑 MON RÔLE (Administrateur)';
+    hint.textContent='Code administrateur détecté ✓';
+    hint.style.color='#92400e';
+  } else if(type==='unknown'){
+    label.textContent='👷 MON RÔLE';
+    hint.textContent='Code non reconnu — vérifiez le code saisi';
+    hint.style.color='#dc2626';
+    sel.innerHTML='<option value="" disabled selected>-- Code invalide --</option>';
+  } else {
+    label.textContent='👷 MON RÔLE';
+    hint.textContent='';
+  }
 }
 
 function copyInviteCode(){
@@ -1399,7 +1581,26 @@ async function updateProfileScreen(){
   document.getElementById('prof-name').textContent  = p.displayName || '—';
   document.getElementById('prof-email').textContent = p.email || '—';
   document.getElementById('prof-company').textContent = p.teamName || '—';
+  // Badge rôle coloré
+  const roleBadgeEl = document.getElementById('prof-role-badge');
+  if(roleBadgeEl && p.role) roleBadgeEl.innerHTML = roleBadgeHTML(p.role);
+  // Bouton Admin dans la nav : visible seulement pour les rôles admin
+  const navAdmin = document.getElementById('nav-admin');
+  if(navAdmin) navAdmin.style.display = isAdminRole(p.role) ? 'flex' : 'none';
+  // Badge agence dans l'accueil
+  const badge = document.getElementById('home-agency-badge');
+  const agName = document.getElementById('home-agency-name');
+  const usName = document.getElementById('home-user-name');
+  if(p.teamName && badge){
+    badge.style.display='inline-flex';
+    if(agName) agName.textContent=p.teamName;
+    if(usName) usName.textContent=p.displayName||'—';
+    const roleLabel=document.getElementById('home-user-role');
+    if(roleLabel && p.role) roleLabel.textContent=p.role;
+  }
   document.getElementById('prof-invite-code').textContent = inviteCode;
+  const ic2 = document.getElementById('prof-invite-code-2');
+  if(ic2) ic2.textContent = inviteCode;
   document.getElementById('prof-nb-chantiers').textContent = S.chantiers.length;
   document.getElementById('prof-nb-photos').textContent = S.photos ? S.photos.length : 0;
   document.getElementById('prof-sync-status').textContent = FIREBASE_CONFIGURED ? '☁️ Synchronisé' : '💾 Local';
@@ -1448,15 +1649,15 @@ const today=()=>new Date().toISOString().split('T')[0];
 // ════════════════════════════════════════════
 //  ROUTING
 // ════════════════════════════════════════════
-const SCREENS=['screen-home','screen-rapport','s-camera','s-photos','s-dossier','s-consignes','s-profil','s-login'];
+const SCREENS=['screen-home','screen-rapport','s-camera','s-photos','s-dossier','s-consignes','s-profil','s-login','s-admin'];
 const NAV_MAP={
   'screen-home':'nav-home',
-  's-photos':'nav-photos','s-dossier':'nav-dossier','s-consignes':'nav-consignes','s-profil':'nav-profil'
+  's-photos':'nav-photos','s-dossier':'nav-dossier','s-consignes':'nav-consignes','s-profil':'nav-profil','s-admin':'nav-admin'
 };
 const TITLES={
   'screen-home':'NCVRD Detect','screen-rapport':'📋 Rapport',
   's-camera':'📷 Caméra','s-photos':'📸 Photos',
-  's-dossier':'📄 Documents','s-consignes':'📋 Consignes','s-profil':'👤 Profil'
+  's-dossier':'📄 Documents','s-consignes':'📋 Consignes','s-profil':'👤 Profil','s-admin':'⚙️ Admin'
 };
 
 function showScreen(id){
@@ -2738,7 +2939,8 @@ function exportPDF(){
   toast('⏳ Préparation du PDF…');
   const photos=S.photos.filter(p=>p.rapportId===r.id);
   const gps=S.gpsPoints.filter(p=>p.rapportId===r.id);
-  const html=buildPDFHTML(c,r,photos,gps);
+  const agenceName = currentUserProfile ? (currentUserProfile.teamName || '') : '';
+  const html=buildPDFHTML(c,r,photos,gps,agenceName);
   const fname=(c.name||'rapport').replace(/[^a-z0-9]/gi,'_').toLowerCase();
 
   function doGenerate(){
@@ -2830,6 +3032,7 @@ function exportRapportWord(){
   if(!r||!c){toast('⚠️ Aucun rapport ouvert');return}
   toast('⏳ Génération du Word…');
   function doWord(){
+    const agence = currentUserProfile ? (currentUserProfile.teamName || '') : '';
     const activeNets=(r.networks||[]).filter(n=>n.active);
     const opDet=r.opDetection||[];
     const opGeo=r.opGeo||[];
@@ -2841,7 +3044,8 @@ function exportRapportWord(){
 
     // ── PAGE DE GARDE (titre bleu) ──
     body+=`<w:p><w:pPr><w:shd w:val="clear" w:color="auto" w:fill="2F5496"/><w:jc w:val="center"/><w:spacing w:before="480" w:after="120"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:sz w:val="56"/><w:color w:val="FFFFFF"/></w:rPr><w:t>NEOCONCEPT VRD</w:t></w:r></w:p>`;
-    body+=`<w:p><w:pPr><w:shd w:val="clear" w:color="auto" w:fill="2F5496"/><w:jc w:val="center"/><w:spacing w:before="0" w:after="480"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="22"/><w:color w:val="FFFFFF"/></w:rPr><w:t>D\u00e9tection et g\u00e9or\u00e9f\u00e9rencement des r\u00e9seaux enterr\u00e9s</w:t></w:r></w:p>`;
+    body+=`<w:p><w:pPr><w:shd w:val="clear" w:color="auto" w:fill="2F5496"/><w:jc w:val="center"/><w:spacing w:before="0" w:after="${agence?'80':'480'}"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="22"/><w:color w:val="FFFFFF"/></w:rPr><w:t>D\u00e9tection et g\u00e9or\u00e9f\u00e9rencement des r\u00e9seaux enterr\u00e9s</w:t></w:r></w:p>`;
+    if(agence) body+=`<w:p><w:pPr><w:shd w:val="clear" w:color="auto" w:fill="2F5496"/><w:jc w:val="center"/><w:spacing w:before="0" w:after="480"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:sz w:val="20"/><w:color w:val="FFFFFF"/></w:rPr><w:t xml:space="preserve">🏢 Agence : ${_xmlEsc(agence)}</w:t></w:r></w:p>`;
     body+=`<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="200" w:after="80"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:sz w:val="44"/><w:color w:val="2F5496"/></w:rPr><w:t>COMPTE RENDU</w:t></w:r></w:p>`;
     body+=`<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="80"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="26"/><w:color w:val="595959"/></w:rPr><w:t xml:space="preserve">Op\u00e9ration : ${_xmlEsc(r.natureOperations||c.name||'—')}</w:t></w:r></w:p>`;
     body+=`<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="360"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="22"/><w:color w:val="595959"/></w:rPr><w:t xml:space="preserve">R\u00e9f\u00e9rence / adresse : ${_xmlEsc(r.adresse||c.address||'—')}</w:t></w:r></w:p>`;
@@ -2930,8 +3134,9 @@ function exportRapportWord(){
   document.head.appendChild(s);
 }
 
-function buildPDFHTML(c,r,photos,gps){
+function buildPDFHTML(c,r,photos,gps,agenceName){
   const LOGO=typeof LOGO_URL!=='undefined'?LOGO_URL:'';
+  const agence = agenceName || (currentUserProfile ? currentUserProfile.teamName : '') || '';
   const PRIMARY='#2F5496'; // couleur modèle CR.docx
   const activeNets=(r.networks||[]).filter(n=>n.active);
   const netRows=activeNets.map(n=>`
@@ -3008,6 +3213,7 @@ function buildPDFHTML(c,r,photos,gps){
       <div>
         <div class="cover-logo">NEOCONCEPT VRD</div>
         <div class="cover-sub">Détection et géoréférencement des réseaux enterrés</div>
+        ${agence?`<div style="display:inline-block;margin-top:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;color:#fff;letter-spacing:.5px">🏢 ${agence}</div>`:''}
       </div>
       ${LOGO?`<img src="${LOGO}" width="70" height="70" style="border-radius:6px;border:2px solid rgba(255,255,255,.3)">`:
       '<div style="font-size:9px;opacity:.6;text-align:right">NCVRD Detect</div>'}
@@ -3138,22 +3344,37 @@ async function openCollabModal(){
         <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
           <div>
             <div style="font-weight:700;font-size:13px">👤 ${u.displayName||u.email}</div>
-            <div style="font-size:11px;color:var(--muted)">${u.email||''}${u.uid===currentUser.uid?' · <strong>Vous</strong>':''} · <span style="color:var(--accent)">${u.role||'Technicien'}</span></div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px">${u.email||''}${u.uid===currentUser.uid?' · <strong>Vous</strong>':''}</div>
+            <div style="margin-top:5px">${roleBadgeHTML(u.role||'Technicien')}</div>
           </div>
         </div>`).join('');
     }
-    // Charger code invitation
+    // Charger les 2 codes (ou les générer s'ils n'existent pas encore)
     const teamSnap = await fdb.collection('teams').doc(currentUserProfile.teamId).get();
-    if(teamSnap.exists) codeEl.textContent = teamSnap.data().inviteCode || '—';
+    if(teamSnap.exists){
+      const td = teamSnap.data();
+      const updates = {};
+      let invCode = td.inviteCode;
+      let admCode = td.adminInviteCode;
+      if(!invCode){ invCode = generateInviteCode(); updates.inviteCode = invCode; }
+      if(!admCode){ admCode = generateInviteCode(); updates.adminInviteCode = admCode; }
+      if(Object.keys(updates).length) await fdb.collection('teams').doc(currentUserProfile.teamId).update(updates);
+      codeEl.textContent = invCode;
+      const admEl = document.getElementById('collab-admin-code');
+      if(admEl) admEl.textContent = admCode;
+    } else {
+      codeEl.textContent = '—';
+    }
   } catch(e){
     listEl.innerHTML = '<div style="color:var(--muted);font-size:12px">Erreur de chargement.</div>';
   }
 }
 
-function copyCollabInviteCode(){
-  const code = document.getElementById('collab-invite-code').textContent.trim();
+function copyCollabInviteCode(){ copyCollabCode('collab-invite-code'); }
+function copyCollabCode(elId){
+  const el = document.getElementById(elId);
+  const code = el ? el.textContent.trim() : '';
   if(!code||code==='—'){ toast('⚠️ Code non disponible'); return; }
-  // Méthode 1 : Clipboard API moderne
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(code)
       .then(()=>toast('✅ Code copié : '+code))
@@ -3178,6 +3399,182 @@ function shareCollabInvite(){
   const text = `Rejoignez mon équipe sur NCVRD Detect !\nCode d'invitation : ${code}\nApplication : ${url}`;
   if(navigator.share){ navigator.share({title:'NCVRD Detect – Invitation',text}).catch(()=>{}); }
   else { navigator.clipboard.writeText(text).then(()=>toast('✅ Lien copié dans le presse-papier')).catch(()=>{ prompt('Partagez ce lien :',text); }); }
+}
+
+// ════════════════════════════════════════════
+//  PANNEAU ADMIN
+// ════════════════════════════════════════════
+let _adminData = { teams:[], users:[], loaded:false };
+let _adminCurrentTab = 'agencies';
+
+async function openAdmin(){
+  if(!currentUserProfile || !isAdminRole(currentUserProfile.role)){
+    toast('⛔ Accès réservé aux administrateurs'); return;
+  }
+  showScreen('s-admin');
+  // Sous-titre selon le rôle
+  const sub = document.getElementById('admin-subtitle');
+  if(sub) sub.textContent = currentUserProfile.role === 'Directeur Général'
+    ? 'Toutes les agences · Tous les utilisateurs'
+    : `Agence : ${currentUserProfile.teamName||'—'}`;
+  adminTab('agencies');
+  await loadAdminData();
+  renderAdminAgencies();
+}
+
+async function loadAdminData(){
+  if(!FIREBASE_CONFIGURED) return;
+  try {
+    const isDG = currentUserProfile.role === 'Directeur Général';
+    // Charger les agences
+    let teamsSnap;
+    if(isDG){
+      teamsSnap = await fdb.collection('teams').get();
+    } else {
+      teamsSnap = await fdb.collection('teams').where('__name__','==',currentUserProfile.teamId).get();
+    }
+    _adminData.teams = teamsSnap.docs.map(d=>({id:d.id,...d.data()}));
+    // Charger les utilisateurs
+    let usersSnap;
+    if(isDG){
+      usersSnap = await fdb.collection('users').get();
+    } else {
+      usersSnap = await fdb.collection('users').where('teamId','==',currentUserProfile.teamId).get();
+    }
+    _adminData.users = usersSnap.docs.map(d=>({uid:d.id,...d.data()}));
+    _adminData.loaded = true;
+  } catch(e){ toast('⚠️ Erreur de chargement admin'); }
+}
+
+function adminTab(tab){
+  _adminCurrentTab = tab;
+  document.getElementById('admin-panel-agencies').style.display = tab==='agencies'?'block':'none';
+  document.getElementById('admin-panel-users').style.display    = tab==='users'?'block':'none';
+  const aBtn=document.getElementById('atab-agencies'), uBtn=document.getElementById('atab-users');
+  const blue='var(--blue)', muted='var(--muted)';
+  aBtn.style.color=tab==='agencies'?blue:muted; aBtn.style.borderBottomColor=tab==='agencies'?blue:'transparent';
+  uBtn.style.color=tab==='users'?blue:muted;    uBtn.style.borderBottomColor=tab==='users'?blue:'transparent';
+  if(tab==='agencies') renderAdminAgencies();
+  else renderAdminUsers();
+}
+
+function adminSearch(val){
+  if(_adminCurrentTab==='agencies') renderAdminAgencies(val);
+  else renderAdminUsers(val);
+}
+
+function renderAdminAgencies(filter=''){
+  const el = document.getElementById('admin-agencies-list');
+  if(!_adminData.loaded){ el.innerHTML='<div style="text-align:center;color:var(--muted);padding:30px">Chargement…</div>'; return; }
+  const q = filter.toLowerCase();
+  const teams = _adminData.teams.filter(t=>!q||t.name.toLowerCase().includes(q));
+  if(!teams.length){ el.innerHTML='<div style="text-align:center;color:var(--muted);padding:30px">Aucune agence trouvée.</div>'; return; }
+  el.innerHTML = teams.map(t=>{
+    const members = _adminData.users.filter(u=>u.teamId===t.id);
+    const admins  = members.filter(u=>isAdminRole(u.role));
+    const techs   = members.filter(u=>!isAdminRole(u.role));
+    return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div>
+          <div style="font-size:15px;font-weight:800">🏢 ${t.name||t.id}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${members.length} membre${members.length>1?'s':''} · ${admins.length} admin${admins.length>1?'s':''} · ${techs.length} tech${techs.length>1?'s':''}</div>
+        </div>
+        <div style="text-align:right;font-size:10px;color:var(--muted)">
+          <div>👷 <span style="font-family:monospace;font-weight:700">${t.inviteCode||'—'}</span></div>
+          <div>🔑 <span style="font-family:monospace;font-weight:700;color:#92400e">${t.adminInviteCode||'—'}</span></div>
+        </div>
+      </div>
+      <div>${members.length?members.map(u=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-top:1px solid var(--border)">
+          <div style="min-width:0">
+            <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">👤 ${u.displayName||u.email}</div>
+            <div style="margin-top:3px">${roleBadgeHTML(u.role)}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;margin-left:8px">
+            <button onclick="adminChangeRole('${u.uid}')" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">✏️ Rôle</button>
+            <button onclick="adminMoveUser('${u.uid}')" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">↗️ Agence</button>
+            <button onclick="adminDeleteUser('${u.uid}','${(u.displayName||u.email||'').replace(/'/g,'\u2019')}')" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">🗑️</button>
+          </div>
+        </div>`).join(''):'<div style="font-size:12px;color:var(--muted);padding:6px 0">Aucun membre.</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAdminUsers(filter=''){
+  const el = document.getElementById('admin-users-list');
+  if(!_adminData.loaded){ el.innerHTML='<div style="text-align:center;color:var(--muted);padding:30px">Chargement…</div>'; return; }
+  const q = filter.toLowerCase();
+  const users = _adminData.users.filter(u=>!q||(u.displayName||'').toLowerCase().includes(q)||(u.email||'').toLowerCase().includes(q)||(u.role||'').toLowerCase().includes(q)||(u.teamName||'').toLowerCase().includes(q));
+  if(!users.length){ el.innerHTML='<div style="text-align:center;color:var(--muted);padding:30px">Aucun utilisateur trouvé.</div>'; return; }
+  el.innerHTML = users.map(u=>`
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="min-width:0">
+          <div style="font-size:14px;font-weight:800">👤 ${u.displayName||'—'}</div>
+          <div style="font-size:11px;color:var(--muted)">${u.email||'—'}</div>
+          <div style="margin-top:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            ${roleBadgeHTML(u.role)}
+            <span style="font-size:11px;color:var(--muted)">🏢 ${u.teamName||'—'}</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+          <button onclick="adminChangeRole('${u.uid}')" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✏️ Changer rôle</button>
+          <button onclick="adminMoveUser('${u.uid}')" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">↗️ Changer agence</button>
+          <button onclick="adminDeleteUser('${u.uid}','${(u.displayName||u.email||'').replace(/'/g,'\u2019')}')" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🗑️ Supprimer</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function adminChangeRole(uid){
+  const user = _adminData.users.find(u=>u.uid===uid);
+  if(!user){ toast('Utilisateur introuvable'); return; }
+  const roles = [...ROLES_TECH, ...ROLES_ADMIN_LIST];
+  const opts = roles.map((r,i)=>`${i+1}. ${r}`).join('\n');
+  const choice = prompt(`Choisissez le nouveau rôle pour ${user.displayName||user.email} :\n\n${opts}\n\nEntrez le numéro :`);
+  if(!choice) return;
+  const idx = parseInt(choice)-1;
+  if(isNaN(idx)||idx<0||idx>=roles.length){ toast('⚠️ Numéro invalide'); return; }
+  const newRole = roles[idx];
+  try {
+    await fdb.collection('users').doc(uid).update({ role: newRole });
+    user.role = newRole;
+    toast(`✅ Rôle de ${user.displayName||user.email} → ${newRole}`);
+    if(_adminCurrentTab==='agencies') renderAdminAgencies();
+    else renderAdminUsers();
+  } catch(e){ toast('⚠️ Erreur mise à jour rôle'); }
+}
+
+async function adminMoveUser(uid){
+  const user = _adminData.users.find(u=>u.uid===uid);
+  if(!user){ toast('Utilisateur introuvable'); return; }
+  if(_adminData.teams.length<2){ toast('⚠️ Une seule agence disponible'); return; }
+  const opts = _adminData.teams.map((t,i)=>`${i+1}. ${t.name||t.id}${t.id===user.teamId?' (actuelle)':''}`).join('\n');
+  const choice = prompt(`Déplacer ${user.displayName||user.email} vers quelle agence ?\n\n${opts}\n\nEntrez le numéro :`);
+  if(!choice) return;
+  const idx = parseInt(choice)-1;
+  if(isNaN(idx)||idx<0||idx>=_adminData.teams.length){ toast('⚠️ Numéro invalide'); return; }
+  const target = _adminData.teams[idx];
+  if(target.id===user.teamId){ toast('L\'utilisateur est déjà dans cette agence'); return; }
+  try {
+    await fdb.collection('users').doc(uid).update({ teamId: target.id, teamName: target.name });
+    user.teamId = target.id; user.teamName = target.name;
+    toast(`✅ ${user.displayName||user.email} déplacé vers ${target.name}`);
+    if(_adminCurrentTab==='agencies') renderAdminAgencies();
+    else renderAdminUsers();
+  } catch(e){ toast('⚠️ Erreur déplacement'); }
+}
+
+async function adminDeleteUser(uid, displayName){
+  if(!confirm(`Supprimer définitivement l'utilisateur "${displayName}" ?\n\nCette action supprime son profil de l'application. Il ne pourra plus se connecter.`)) return;
+  try {
+    await fdb.collection('users').doc(uid).delete();
+    _adminData.users = _adminData.users.filter(u=>u.uid!==uid);
+    toast(`✅ Utilisateur "${displayName}" supprimé`);
+    if(_adminCurrentTab==='agencies') renderAdminAgencies();
+    else renderAdminUsers();
+  } catch(e){ toast('⚠️ Erreur suppression'); }
 }
 
 // ════════════════════════════════════════════
