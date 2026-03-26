@@ -2782,21 +2782,47 @@ function exportPDF(){
 }
 
 function _xmlEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function _wp(text,bold,size,color){
-  const b=bold?'<w:b/>':'';
+// Paragraphe simple
+function _wp(text,bold,size,color,shading){
+  const b=bold?'<w:b/><w:bCs/>':'';
   const sz=size?`<w:sz w:val="${size}"/><w:szCs w:val="${size}"/>`:'';
   const col=color?`<w:color w:val="${color}"/>`:'';
-  return `<w:p><w:r><w:rPr>${b}${sz}${col}</w:rPr><w:t xml:space="preserve">${_xmlEsc(text)}</w:t></w:r></w:p>`;
+  const shd=shading?`<w:pPr><w:shd w:val="clear" w:color="auto" w:fill="${shading}"/></w:pPr>`:'';
+  return `<w:p>${shd}<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>${b}${sz}${col}</w:rPr><w:t xml:space="preserve">${_xmlEsc(text)}</w:t></w:r></w:p>`;
 }
-function _wh(text,level){
-  const sz=level===1?32:26;
-  const col=level===1?'1d4ed8':'374151';
-  return `<w:p><w:pPr><w:pStyle w:val="Heading${level}"/><w:spacing w:before="200" w:after="100"/></w:pPr><w:r><w:rPr><w:b/><w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/><w:color w:val="${col}"/></w:rPr><w:t>${_xmlEsc(text)}</w:t></w:r></w:p>`;
+// Titre de section (fond bleu #2F5496 + texte blanc, style CR.docx)
+function _wh(num,text){
+  const fill='2F5496';
+  return `<w:p><w:pPr><w:shd w:val="clear" w:color="auto" w:fill="${fill}"/><w:spacing w:before="240" w:after="120"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:bCs/><w:sz w:val="24"/><w:szCs w:val="24"/><w:color w:val="FFFFFF"/></w:rPr><w:t xml:space="preserve">${_xmlEsc(num+'. '+text.toUpperCase())}</w:t></w:r></w:p>`;
 }
+// Sous-titre (texte bleu souligné)
+function _wh3(text){
+  return `<w:p><w:pPr><w:spacing w:before="160" w:after="80"/><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="2F5496"/></w:pBdr></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:bCs/><w:sz w:val="22"/><w:szCs w:val="22"/><w:color w:val="2F5496"/></w:rPr><w:t>${_xmlEsc(text.toUpperCase())}</w:t></w:r></w:p>`;
+}
+// Ligne de tableau
 function _wrow(cells,header){
-  const rPr=header?'<w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr>':'<w:rPr></w:rPr>';
-  const trPr=header?'<w:trPr><w:shd w:val="clear" w:color="auto" w:fill="1d4ed8"/></w:trPr>':'';
-  return `<w:tr>${trPr}${cells.map(c=>`<w:tc><w:tcPr><w:tcBorders><w:top w:val="single" w:sz="4" w:color="CCCCCC"/><w:left w:val="single" w:sz="4" w:color="CCCCCC"/><w:bottom w:val="single" w:sz="4" w:color="CCCCCC"/><w:right w:val="single" w:sz="4" w:color="CCCCCC"/></w:tcBorders><w:shd w:val="clear" w:color="auto" w:fill="${header?'1d4ed8':'FFFFFF'}"/></w:tcPr><w:p><w:r>${rPr}<w:t xml:space="preserve">${_xmlEsc(c)}</w:t></w:r></w:p></w:tc>`).join('')}</w:tr>`;
+  const rPr=header?`<w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:bCs/><w:sz w:val="20"/><w:color w:val="FFFFFF"/></w:rPr>`:`<w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="20"/><w:color w:val="595959"/></w:rPr>`;
+  const trPr=header?`<w:trPr><w:shd w:val="clear" w:color="auto" w:fill="2F5496"/></w:trPr>`:'';
+  return `<w:tr>${trPr}${cells.map((cell,i)=>`<w:tc><w:tcPr><w:tcBorders><w:top w:val="single" w:sz="4" w:color="C5CCE0"/><w:left w:val="single" w:sz="4" w:color="C5CCE0"/><w:bottom w:val="single" w:sz="4" w:color="C5CCE0"/><w:right w:val="single" w:sz="4" w:color="C5CCE0"/></w:tcBorders><w:shd w:val="clear" w:color="auto" w:fill="${header?'2F5496':'FFFFFF'}"/></w:tcPr><w:p><w:r>${rPr}<w:t xml:space="preserve">${_xmlEsc(cell)}</w:t></w:r></w:p></w:tc>`).join('')}</w:tr>`;
+}
+// Ligne tableau zébré (ligne paire)
+function _wrowEven(cells){
+  const rPr=`<w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="20"/><w:color w:val="595959"/></w:rPr>`;
+  return `<w:tr>${cells.map(cell=>`<w:tc><w:tcPr><w:tcBorders><w:top w:val="single" w:sz="4" w:color="C5CCE0"/><w:left w:val="single" w:sz="4" w:color="C5CCE0"/><w:bottom w:val="single" w:sz="4" w:color="C5CCE0"/><w:right w:val="single" w:sz="4" w:color="C5CCE0"/></w:tcBorders><w:shd w:val="clear" w:color="auto" w:fill="EEF1F7"/></w:tcPr><w:p><w:r>${rPr}<w:t xml:space="preserve">${_xmlEsc(cell)}</w:t></w:r></w:p></w:tc>`).join('')}</w:tr>`;
+}
+// Tableau complet
+function _wtable(headers,rows){
+  let xml=`<w:tbl><w:tblPr><w:tblW w:w="9360" w:type="dxa"/><w:tblBorders><w:insideH w:val="single" w:sz="4" w:color="C5CCE0"/><w:insideV w:val="single" w:sz="4" w:color="C5CCE0"/></w:tblBorders></w:tblPr>`;
+  xml+=_wrow(headers,true);
+  rows.forEach((r,i)=>{ xml+=(i%2===0?_wrow(r,false):_wrowEven(r)); });
+  xml+='</w:tbl><w:p/>';
+  return xml;
+}
+// Bloc texte avec fond gris clair
+function _wblock(lines,obsColor){
+  const fill=obsColor?'FFFBEB':'F2F5FB';
+  const bord=obsColor?'F59E0B':'2F5496';
+  return lines.map(l=>`<w:p><w:pPr><w:shd w:val="clear" w:color="auto" w:fill="${fill}"/><w:pBdr><w:left w:val="single" w:sz="12" w:space="6" w:color="${bord}"/></w:pBdr><w:ind w:left="120"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="22"/><w:color w:val="272727"/></w:rPr><w:t xml:space="preserve">${_xmlEsc(l||' ')}</w:t></w:r></w:p>`).join('');
 }
 
 function exportRapportWord(){
@@ -2805,56 +2831,82 @@ function exportRapportWord(){
   toast('⏳ Génération du Word…');
   function doWord(){
     const activeNets=(r.networks||[]).filter(n=>n.active);
-    const ops=[...(r.opDetection||[]),...(r.opGeo||[])];
+    const opDet=r.opDetection||[];
+    const opGeo=r.opGeo||[];
     const mats=r.materiels||[];
-    // Build body XML
-    let body='';
-    body+=_wh('Compte rendu de détection de réseaux',1);
-    body+=_wh('Informations générales',2);
-    body+=_wp(`Chantier : ${c.name||'—'}`,false,22);
-    body+=_wp(`Client : ${c.client||'—'}`,false,22);
-    body+=_wp(`Adresse : ${r.adresse||c.address||'—'}`,false,22);
-    body+=_wp(`Date début : ${r.dateDebut||'—'}   Date fin : ${r.dateFin||'—'}`,false,22);
-    body+=_wp(`Responsable : ${r.responsable||'—'}`,false,22);
-    body+=_wp(`Objet : ${r.objetEtude||'—'}`,false,22);
-    body+=_wp(`Nature des opérations : ${r.natureOperations||'—'}`,false,22);
-    if(ops.length){
-      body+=_wh('Moyens humains',2);
-      body+=`<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/></w:tblPr>`;
-      body+=_wrow(['Nom','Poste'],true);
-      ops.forEach(o=>{ body+=_wrow([o.nom||'—',o.poste||'—'],false); });
-      body+='</w:tbl><w:p/>';
-    }
-    if(mats.length){
-      body+=_wh('Moyens matériels',2);
-      body+=`<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/></w:tblPr>`;
-      body+=_wrow(['Appareil','N° Série'],true);
-      mats.forEach(m=>{ body+=_wrow([m.type||'—',m.serie||'—'],false); });
-      body+='</w:tbl><w:p/>';
-    }
-    if(activeNets.length){
-      body+=_wh('Réseaux détectés',2);
-      body+=`<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/></w:tblPr>`;
-      body+=_wrow(['Nature du réseau','Méthode','Remarques'],true);
-      activeNets.forEach(n=>{ body+=_wrow([n.nature||'—',n.methode||'—',n.remarques||'—'],false); });
-      body+='</w:tbl><w:p/>';
-    }
-    body+=_wh('Conclusions',2);
-    (r.conclusions||'—').split('\n').forEach(line=>{ body+=_wp(line,false,22); });
-    if(r.observations){
-      body+=_wp('Observations :',true,22);
-      r.observations.split('\n').forEach(line=>{ body+=_wp(line,false,22); });
-    }
-    body+=_wh('Signature',2);
-    body+=_wp('Responsable projet / NEOCONCEPT VRD :',false,22);
-    body+=`<w:p><w:r><w:rPr><w:sz w:val="22"/></w:rPr><w:t>______________________________</w:t></w:r></w:p>`;
-    body+=_wp(`Rapport généré le ${new Date().toLocaleDateString('fr-FR')} – NEOCONCEPT VRD`,false,18);
+    const logs=r.logiciels||[];
+    const dateGen=new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
 
-    // Build DOCX XML files
+    let body='';
+
+    // ── PAGE DE GARDE (titre bleu) ──
+    body+=`<w:p><w:pPr><w:shd w:val="clear" w:color="auto" w:fill="2F5496"/><w:jc w:val="center"/><w:spacing w:before="480" w:after="120"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:sz w:val="56"/><w:color w:val="FFFFFF"/></w:rPr><w:t>NEOCONCEPT VRD</w:t></w:r></w:p>`;
+    body+=`<w:p><w:pPr><w:shd w:val="clear" w:color="auto" w:fill="2F5496"/><w:jc w:val="center"/><w:spacing w:before="0" w:after="480"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="22"/><w:color w:val="FFFFFF"/></w:rPr><w:t>D\u00e9tection et g\u00e9or\u00e9f\u00e9rencement des r\u00e9seaux enterr\u00e9s</w:t></w:r></w:p>`;
+    body+=`<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="200" w:after="80"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:sz w:val="44"/><w:color w:val="2F5496"/></w:rPr><w:t>COMPTE RENDU</w:t></w:r></w:p>`;
+    body+=`<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="80"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="26"/><w:color w:val="595959"/></w:rPr><w:t xml:space="preserve">Op\u00e9ration : ${_xmlEsc(r.natureOperations||c.name||'—')}</w:t></w:r></w:p>`;
+    body+=`<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="360"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="22"/><w:color w:val="595959"/></w:rPr><w:t xml:space="preserve">R\u00e9f\u00e9rence / adresse : ${_xmlEsc(r.adresse||c.address||'—')}</w:t></w:r></w:p>`;
+    // Tableau de garde
+    body+=_wtable(['Client','Date','Classe de pr\u00e9cision','N\u00b0 DT/DICT'],[[r.client||c.client||'—',r.dateDebut||'—',r.classePresicion||'—',r.dtNum||'—']]);
+    body+=`<w:p><w:pPr><w:pageBreakBefore/></w:pPr></w:p>`;
+
+    // ── 1. INFORMATION GÉNÉRAL ──
+    body+=_wh('1','Information g\u00e9n\u00e9ral');
+    body+=_wh3('Objet de l\u2019\u00e9tude');
+    body+=_wp('Nature des op\u00e9rations :',true,22,'2F5496');
+    body+=_wblock([`\u00c0 la demande de \u00ab ${r.client||'CLIENT'} \u00bb la soci\u00e9t\u00e9 NEOCONCEPT VRD a r\u00e9alis\u00e9 une mission de \u00ab ${r.natureOperations||'op\u00e9ration'} \u00bb${r.classePresicion?' \u2013 '+r.classePresicion:''} situ\u00e9 \u00ab ${r.adresse||c.address||'adresse'} \u00bb.`,`L\u2019intervention a \u00e9t\u00e9 r\u00e9alis\u00e9e le ${r.dateDebut?new Date(r.dateDebut).toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}):'—'}.`]);
+    body+=_wp('Num\u00e9ro de consultation du t\u00e9l\u00e9service (DT/DICT) :',true,22,'2F5496');
+    body+=_wtable(['Date de la d\u00e9claration','N\u00b0 consultation t\u00e9l\u00e9service'],[[r.dtDate||'—',r.dtNum||'—']]);
+    body+=_wp('Date et heure de la r\u00e9daction :',true,22,'2F5496');
+    body+=_wtable(['Date et heure de la r\u00e9daction','Nom du r\u00e9dacteur'],[[dateGen,r.respNom||r.responsable||'—']]);
+
+    // ── 2. MOYENS HUMAINS ──
+    body+=_wh('2','Moyens humains');
+    body+=_wh3('Responsable projet');
+    body+=_wtable(['NOM + PR\u00c9NOM','POSTE','CONTACT'],[[r.respNom||'—',r.respPoste||'—',r.respContact||'—']]);
+    if(opDet.length){
+      body+=_wh3('Op\u00e9rateur de d\u00e9tection');
+      body+=_wtable(['NOM + PR\u00c9NOM','POSTE'],opDet.map(o=>[o.nom||'—',o.poste||'—']));
+    }
+    if(opGeo.length){
+      body+=_wh3('Op\u00e9rateur de g\u00e9or\u00e9f\u00e9rencement');
+      body+=_wtable(['NOM + PR\u00c9NOM','POSTE'],opGeo.map(o=>[o.nom||'—',o.poste||'—']));
+    }
+
+    // ── 3. MOYENS MATÉRIELS ──
+    body+=_wh('3','Moyens mat\u00e9riels');
+    if(mats.length) body+=_wtable(['Type de mat\u00e9riel','N\u00b0 de s\u00e9rie / Mod\u00e8le'],mats.map(m=>[m.type||'—',m.serie||'—']));
+    if(logs.length) body+=_wtable(['Type de logiciel','Marque'],logs.map(l=>[l.type||'—',l.marque||'—']));
+    body+=_wp('Les fiches techniques ainsi que les m\u00e9thodes op\u00e9rationnelles sont pr\u00e9sent\u00e9es en annexe.',false,20,'595959');
+
+    // ── 4. RÉSEAUX DÉTECTÉS ──
+    if(activeNets.length){
+      body+=_wh('4','R\u00e9seaux d\u00e9tect\u00e9s');
+      body+=_wtable(['Nature du r\u00e9seau','M\u00e9thode de d\u00e9tection','Remarques'],activeNets.map(n=>[n.nature||'—',n.methode||'—',n.remarques||'—']));
+    }
+
+    // ── 5. CONCLUSIONS / ÉCART ──
+    body+=_wh('5','Conclusions / \u00c9cart');
+    body+=_wblock((r.conclusions||'—').split('\n'));
+    if(r.observations){
+      body+=_wp('OBSERVATION :',true,22,'F59E0B');
+      body+=_wblock(r.observations.split('\n'),true);
+    }
+
+    // ── SIGNATURES ──
+    body+=_wh('6','Signatures');
+    body+=_wtable(['Responsable projet / NEOCONCEPT VRD','Validateur / Client'],[['','']]);
+    body+=`<w:p/>`;
+
+    // ── PIED DE PAGE du document ──
+    body+=`<w:p><w:pPr><w:pBdr><w:top w:val="single" w:sz="6" w:color="2F5496"/></w:pBdr><w:jc w:val="center"/><w:spacing w:before="200"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:sz w:val="18"/><w:color w:val="2F5496"/></w:rPr><w:t>NEOCONCEPT VRD</w:t></w:r></w:p>`;
+    body+=`<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="16"/><w:color w:val="595959"/></w:rPr><w:t>S.A.S au capital de 11\u202f000 \u20ac \u2013 RCS\u00a0: Nanterre B 790 087 563 \u2013 84/88 bd de la mission marchand \u2013 92400 Courbevoie</w:t></w:r></w:p>`;
+    body+=`<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="16"/><w:color w:val="595959"/></w:rPr><w:t>T\u00e9l\u00a0: 01 46 67 75 58 \u2013 contact@neoconceptvrd.com \u2013 Document g\u00e9n\u00e9r\u00e9 le ${_xmlEsc(dateGen)}</w:t></w:r></w:p>`;
+
+    // ── ASSEMBLER LE DOCX ──
     const ct=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`;
     const rels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
     const wrels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>`;
-    const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr></w:body></w:document>`;
+    const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1418"/></w:sectPr></w:body></w:document>`;
 
     const zip=new JSZip();
     zip.file('[Content_Types].xml',ct);
@@ -2865,7 +2917,7 @@ function exportRapportWord(){
     zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}).then(blob=>{
       const url=URL.createObjectURL(blob);
       const a=document.createElement('a');
-      a.href=url; a.download=`rapport_${fname}.docx`; a.click();
+      a.href=url; a.download=`rapport_${fname}.docx`; document.body.appendChild(a); a.click(); document.body.removeChild(a);
       setTimeout(()=>URL.revokeObjectURL(url),5000);
       toast('✅ Word (.docx) téléchargé !');
     });
@@ -2880,134 +2932,176 @@ function exportRapportWord(){
 
 function buildPDFHTML(c,r,photos,gps){
   const LOGO=typeof LOGO_URL!=='undefined'?LOGO_URL:'';
+  const PRIMARY='#2F5496'; // couleur modèle CR.docx
   const activeNets=(r.networks||[]).filter(n=>n.active);
   const netRows=activeNets.map(n=>`
     <tr>
-      <td style="font-weight:700;vertical-align:top">${n.nature}</td>
+      <td style="font-weight:700;vertical-align:top;color:#272727">${n.nature}</td>
       <td style="vertical-align:top">${(n.photos||(n.photo?[n.photo]:[])).map(p=>`<img src="${p}" style="width:72px;height:54px;object-fit:cover;border-radius:4px;display:inline-block;margin:2px">`).join('')||'—'}</td>
       <td style="vertical-align:top">${n.methode||'—'}</td>
       <td style="vertical-align:top">${n.remarques||'—'}</td>
     </tr>`).join('');
-  const photoGrid=photos.map(p=>`
-    <div style="break-inside:avoid;margin-bottom:16px;border:1px solid #ddd;border-radius:6px;overflow:hidden">
-      <img src="${p.dataUrl}" style="width:100%;max-height:260px;object-fit:cover;display:block">
-      <div style="padding:6px 10px;background:#f8f9fa;font-size:11px">
-        <strong>Photo ${p.numero}</strong> · ${p.section||''} ${p.caption?' · '+p.caption:''}
-        ${p.gpsLat?' · GPS: '+p.gpsLat+'° N, '+p.gpsLng+'° E':''}
+  const photoGrid=photos.map((p,idx)=>`
+    <div style="break-inside:avoid;margin-bottom:16px;border:1px solid #d0d7e3;border-radius:0;overflow:hidden">
+      <img src="${p.dataUrl}" style="width:100%;max-height:240px;object-fit:cover;display:block">
+      <div style="padding:6px 10px;background:#eef1f7;font-size:10.5px;color:#595959">
+        <strong style="color:#2F5496">Photo ${p.numero||idx+1}</strong> · ${p.section||''} ${p.caption?' – '+p.caption:''}
+        ${p.gpsLat?' · 📍 '+p.gpsLat+'° N, '+p.gpsLng+'° E':''}
       </div>
     </div>`).join('');
-  const matRows=(r.materiels||[]).map((m,i)=>`
-    <tr><td><em>${m.type||'—'}</em></td><td>${m.serie||'—'}</td></tr>`).join('');
+  const matRows=(r.materiels||[]).map(m=>`
+    <tr><td>${m.type||'—'}</td><td>${m.serie||'—'}</td></tr>`).join('');
   const logRows=(r.logiciels||[]).map(l=>`
-    <tr><td><em>${l.type||'—'}</em></td><td>${l.marque||'—'}</td></tr>`).join('');
+    <tr><td>${l.type||'—'}</td><td>${l.marque||'—'}</td></tr>`).join('');
   const opDetRows=(r.opDetection||[]).map(o=>`
-    <tr><td>${o.nom||''}</td><td>${o.poste||''}</td></tr>`).join('');
+    <tr><td>${o.nom||'—'}</td><td>${o.poste||'—'}</td></tr>`).join('');
   const opGeoRows=(r.opGeo||[]).map(o=>`
-    <tr><td>${o.nom||''}</td><td>${o.poste||''}</td></tr>`).join('');
+    <tr><td>${o.nom||'—'}</td><td>${o.poste||'—'}</td></tr>`).join('');
+  const dateGen=new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
 
   return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <title>Compte Rendu – ${c.name}</title>
 <style>
-  *{box-sizing:border-box} body{font-family:Arial,sans-serif;margin:0;padding:0;color:#222;font-size:11.5px}
-  .page{max-width:820px;margin:0 auto;padding:28px 32px}
-  .header{background:#1a3a5c;color:white;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
-  .header-text h1{font-size:17px;margin:0 0 4px} .header-text p{font-size:11px;opacity:.8;margin:0}
-  .ref-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
-  .ref-box{background:#f5f7fa;border:1px solid #dce3ec;border-radius:5px;padding:10px 12px}
-  .ref-box label{display:block;font-size:9px;font-weight:700;text-transform:uppercase;color:#666;letter-spacing:.4px;margin-bottom:3px}
-  .ref-box .v{font-size:12px;font-weight:700}
-  h2{font-size:13px;background:#1a3a5c;color:white;padding:7px 11px;border-radius:4px;margin:18px 0 9px;text-transform:uppercase;letter-spacing:.5px}
-  h3{font-size:12px;color:#1a3a5c;margin:12px 0 6px;font-weight:700;border-bottom:1px solid #dce3ec;padding-bottom:4px}
-  table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11px}
-  th{background:#1a3a5c;color:white;padding:7px 10px;text-align:left;font-size:10.5px}
-  td{padding:6px 10px;border-bottom:1px solid #eee;vertical-align:top}
-  tr:nth-child(even) td{background:#f8f9fa}
-  .text-block{background:#f5f7fa;border-left:3px solid #1a3a5c;padding:10px 14px;border-radius:0 5px 5px 0;margin-bottom:12px;line-height:1.7;font-size:11.5px;white-space:pre-wrap}
-  .obs-block{background:#fffbeb;border-left:3px solid #f4a61d;padding:10px 14px;border-radius:0 5px 5px 0;margin-bottom:12px;line-height:1.7;font-size:11.5px;white-space:pre-wrap}
-  .photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .plan-img{width:100%;max-height:300px;object-fit:contain;border:1px solid #ddd;border-radius:6px;margin-bottom:14px}
-  .sig-box{border:1px solid #ccc;border-radius:5px;padding:35px 14px;text-align:center;color:#999;font-size:10px}
-  .footer{border-top:2px solid #1a3a5c;margin-top:28px;padding-top:10px;text-align:center;font-size:9.5px;color:#888}
-  .annex-note{background:#f0f4f8;border:1px solid #dce3ec;border-radius:5px;padding:8px 12px;font-size:10.5px;color:#555;margin-bottom:14px;font-style:italic}
-  @media print{body{margin:0}.page{padding:15px}}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,sans-serif;color:#272727;font-size:11px;background:#fff}
+  .page{max-width:820px;margin:0 auto;padding:0}
+
+  /* ── PAGE DE GARDE ── */
+  .cover{background:#2F5496;color:#fff;padding:40px 36px 32px;position:relative}
+  .cover-logo{font-size:22px;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+  .cover-sub{font-size:11px;opacity:.75;margin-bottom:32px}
+  .cover-title{font-size:26px;font-weight:700;text-transform:uppercase;letter-spacing:1px;border-top:3px solid rgba(255,255,255,.4);padding-top:18px;margin-bottom:8px}
+  .cover-op{font-size:14px;opacity:.85;margin-bottom:32px}
+  .cover-meta{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid rgba(255,255,255,.3)}
+  .cover-meta-item{padding:10px 0;border-right:1px solid rgba(255,255,255,.2)}
+  .cover-meta-item:last-child{border-right:none;padding-left:16px}
+  .cover-meta-item label{display:block;font-size:8.5px;text-transform:uppercase;letter-spacing:.6px;opacity:.65;margin-bottom:3px}
+  .cover-meta-item .v{font-size:12px;font-weight:700}
+
+  /* ── CORPS DU DOCUMENT ── */
+  .body{padding:24px 36px}
+  h2{font-size:12px;background:#2F5496;color:#fff;padding:6px 11px;margin:20px 0 10px;text-transform:uppercase;letter-spacing:.6px;font-weight:700}
+  h3{font-size:11.5px;color:#2F5496;margin:12px 0 6px;font-weight:700;border-bottom:2px solid #2F5496;padding-bottom:3px;text-transform:uppercase;letter-spacing:.3px}
+  table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:10.5px}
+  th{background:#2F5496;color:#fff;padding:6px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+  td{padding:5px 10px;border-bottom:1px solid #e0e6ef;vertical-align:top;color:#595959}
+  tr:nth-child(even) td{background:#f2f5fb}
+  .text-block{background:#f2f5fb;border-left:4px solid #2F5496;padding:10px 14px;margin-bottom:12px;line-height:1.75;font-size:11px;color:#272727;white-space:pre-wrap}
+  .obs-block{background:#fffbeb;border-left:4px solid #f59e0b;padding:10px 14px;margin-bottom:12px;line-height:1.75;font-size:11px;color:#272727;white-space:pre-wrap}
+  .photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  .plan-img{width:100%;max-height:300px;object-fit:contain;border:1px solid #d0d7e3;margin-bottom:12px}
+  .sig-box{border:1px solid #ccc;padding:32px 14px;text-align:center;color:#aaa;font-size:10px}
+  .annex-note{background:#eef1f7;border-left:4px solid #2F5496;padding:8px 12px;font-size:10.5px;color:#595959;margin-bottom:12px;font-style:italic}
+  .section-intro{font-size:11px;color:#595959;line-height:1.7;margin-bottom:10px}
+
+  /* ── PIED DE PAGE ── */
+  .footer{border-top:2px solid #2F5496;margin-top:30px;padding:10px 0 4px;text-align:center;font-size:8.5px;color:#666;line-height:1.6}
+  .footer strong{color:#2F5496}
+
+  @media print{body{margin:0}.page{padding:0}.body{padding:16px 24px}}
 </style></head><body>
 <div class="page">
 
-  <div class="header">
-    <div class="header-text">
-      <h1>Compte Rendu de Détection de Réseaux</h1>
-      <p>Document généré le ${new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'})}</p>
+  <!-- PAGE DE GARDE -->
+  <div class="cover">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div class="cover-logo">NEOCONCEPT VRD</div>
+        <div class="cover-sub">Détection et géoréférencement des réseaux enterrés</div>
+      </div>
+      ${LOGO?`<img src="${LOGO}" width="70" height="70" style="border-radius:6px;border:2px solid rgba(255,255,255,.3)">`:
+      '<div style="font-size:9px;opacity:.6;text-align:right">NCVRD Detect</div>'}
     </div>
-    ${LOGO?`<img src="${LOGO}" width="65" height="65" style="border-radius:5px">`:
-    '<div style="font-size:13px;font-weight:900;letter-spacing:1px">NEOCONCEPT VRD</div>'}
-  </div>
-
-  <div class="ref-grid">
-    <div class="ref-box"><label>Référence chantier</label><div class="v">${c.name}</div></div>
-    <div class="ref-box"><label>Client</label><div class="v">${r.client||c.client||'—'}</div></div>
-    <div class="ref-box"><label>Adresse</label><div class="v">${r.adresse||c.address||'—'}</div></div>
-    <div class="ref-box"><label>Date d'intervention</label><div class="v">${r.dateDebut||'—'}</div></div>
-    <div class="ref-box"><label>Classe de précision</label><div class="v">${r.classePresicion||'—'}</div></div>
-    <div class="ref-box"><label>N° DT/DICT</label><div class="v">${r.dtNum||'—'} ${r.dtDate?'('+r.dtDate+')':''}</div></div>
-  </div>
-
-  <h2>1. Informations générales – Objet de l'étude</h2>
-  <div class="text-block">À la demande de « ${r.client||'CLIENT'} » la société NEOCONCEPT VRD a réalisé une mission de « ${r.natureOperations||'opération'} » ${r.classePresicion?'– '+r.classePresicion:''} situé « ${r.adresse||'adresse'} ».
-L'intervention a été réalisée le ${r.dateDebut?new Date(r.dateDebut).toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}):'—'}</div>
-
-  <table><thead><tr><th>Date de la déclaration DT/DICT</th><th>N° consultation téléservice</th></tr></thead>
-  <tbody><tr><td>${r.dtDate||'—'}</td><td>${r.dtNum||'—'}</td></tr></tbody></table>
-
-  ${r.planSituation?`<h3>Plan de situation</h3><img src="${r.planSituation}" class="plan-img">`:''}
-
-  <h2>2. Moyens humains</h2>
-  <h3>Responsable projet</h3>
-  <table><thead><tr><th>NOM + PRÉNOM</th><th>POSTE</th><th>CONTACT</th></tr></thead>
-  <tbody><tr><td>${r.respNom||'—'}</td><td>${r.respPoste||'—'}</td><td>${r.respContact||'—'}</td></tr></tbody></table>
-  <h3>Opérateurs de détection</h3>
-  <table><thead><tr><th>NOM + PRÉNOM</th><th>POSTE</th></tr></thead>
-  <tbody>${opDetRows||'<tr><td colspan="2">—</td></tr>'}</tbody></table>
-  <h3>Opérateurs de géoréférencement</h3>
-  <table><thead><tr><th>NOM + PRÉNOM</th><th>POSTE</th></tr></thead>
-  <tbody>${opGeoRows||'<tr><td colspan="2">—</td></tr>'}</tbody></table>
-
-  <h2>3. Moyens matériels</h2>
-  <table><thead><tr><th>Type de matériel</th><th>N° de série</th></tr></thead>
-  <tbody>${matRows||'<tr><td colspan="2">—</td></tr>'}</tbody></table>
-  <div class="annex-note">Les fiches techniques ainsi que les méthodes opérationnelles sont présentées en annexe.</div>
-  ${logRows?`<table><thead><tr><th>Type de logiciel</th><th>Marque</th></tr></thead><tbody>${logRows}</tbody></table>`:''}
-
-  ${photos.length?`<h2>4. Documentation photographique</h2><div class="photo-grid">${photoGrid}</div>`:''}
-
-  <h2>5. Conclusions / Écart</h2>
-  ${r.conclusions?`<div class="text-block">${r.conclusions}</div>`:''}
-  ${r.observations?`<div style="font-weight:700;margin:10px 0 6px;font-size:12px">OBSERVATIONS :</div><div class="obs-block">${r.observations}</div>`:''}
-  ${(r.conclusionPhotos&&r.conclusionPhotos.length)?`<div style="font-weight:700;margin:12px 0 6px;font-size:12px">PHOTOS DE CONCLUSIONS :</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">${r.conclusionPhotos.map(src=>`<img src="${src}" style="width:120px;height:90px;object-fit:cover;border-radius:6px;border:1px solid #ddd">`).join('')}</div>`:''}
-
-  ${activeNets.length?`
-  <table><thead><tr><th style="width:18%">Nature du réseau</th><th style="width:12%">Photo</th><th style="width:35%">Méthode de détection</th><th style="width:35%">Remarque</th></tr></thead>
-  <tbody>${netRows}</tbody></table>`:''}
-
-  ${gps.length?`
-  <h2>Points GPS</h2>
-  <table><thead><tr><th>Point</th><th>Latitude</th><th>Longitude</th><th>Horodatage</th></tr></thead>
-  <tbody>${gps.map(p=>`<tr><td>${p.description}</td><td>${p.lat}°N</td><td>${p.lng}°E</td><td>${p.timestamp}</td></tr>`).join('')}</tbody></table>`:''}
-
-  <h2>Signatures</h2>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-    <div>
-      <div style="font-size:10px;color:#666;margin-bottom:6px">Responsable projet / NEOCONCEPT VRD</div>
-      ${r.signature
-        ? `<img src="${r.signature}" style="width:100%;max-height:80px;object-fit:contain;border:1px solid #ddd;border-radius:6px;background:#fff">`
-        : '<div class="sig-box">Signature</div>'}
+    <div class="cover-title">COMPTE RENDU</div>
+    <div class="cover-op">Opération : ${r.natureOperations||c.name||'—'}<br>
+    Référence / adresse de chantier : ${r.adresse||c.address||'—'}</div>
+    <div class="cover-meta">
+      <div class="cover-meta-item"><label>Client</label><div class="v">${r.client||c.client||'—'}</div></div>
+      <div class="cover-meta-item"><label>Date d'intervention</label><div class="v">${r.dateDebut||'—'}</div></div>
+      <div class="cover-meta-item"><label>Classe de précision</label><div class="v">${r.classePresicion||'—'}</div></div>
+      <div class="cover-meta-item"><label>N° DT/DICT</label><div class="v">${r.dtNum||'—'}</div></div>
     </div>
-    <div><div style="font-size:10px;color:#666;margin-bottom:6px">Validateur / Client</div><div class="sig-box">Signature</div></div>
   </div>
 
-  <div class="footer">Rapport généré par NCVRD Detect · NEOCONCEPT VRD · ${new Date().toLocaleDateString('fr-FR')} · Document confidentiel</div>
+  <div class="body">
+
+    <!-- 1. INFORMATION GÉNÉRAL -->
+    <h2>1. Information général – Objet de l'étude</h2>
+    <div class="section-intro"><strong>Nature des opérations :</strong></div>
+    <div class="text-block">À la demande de « ${r.client||'CLIENT'} » la société NEOCONCEPT VRD a réalisé une mission de « ${r.natureOperations||'opération'} »${r.classePresicion?' – '+r.classePresicion:''} situé « ${r.adresse||c.address||'adresse'} ».
+L'intervention a été réalisée le ${r.dateDebut?new Date(r.dateDebut).toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}):'—'}.</div>
+
+    <div class="section-intro"><strong>Numéro de consultation du téléservice (DT/DICT) :</strong></div>
+    <table><thead><tr><th>Date de la déclaration</th><th>N° consultation téléservice</th></tr></thead>
+    <tbody><tr><td>${r.dtDate||'—'}</td><td>${r.dtNum||'—'}</td></tr></tbody></table>
+
+    ${r.planSituation?`<div class="section-intro"><strong>Plan de situation :</strong></div><img src="${r.planSituation}" class="plan-img">`:''}
+
+    <table><thead><tr><th>Date et heure de la rédaction</th><th>Nom du rédacteur</th></tr></thead>
+    <tbody><tr><td>${dateGen}</td><td>${r.respNom||r.responsable||'—'}</td></tr></tbody></table>
+
+    <!-- 2. MOYENS HUMAINS -->
+    <h2>2. Moyens humains</h2>
+    <h3>Responsable projet</h3>
+    <table><thead><tr><th>NOM + PRÉNOM</th><th>POSTE</th><th>CONTACT</th></tr></thead>
+    <tbody><tr><td>${r.respNom||'—'}</td><td>${r.respPoste||'—'}</td><td>${r.respContact||'—'}</td></tr></tbody></table>
+    <h3>Opérateur de détection</h3>
+    <table><thead><tr><th>NOM + PRÉNOM</th><th>POSTE</th></tr></thead>
+    <tbody>${opDetRows||'<tr><td colspan="2">—</td></tr>'}</tbody></table>
+    <h3>Opérateur de géoréférencement</h3>
+    <table><thead><tr><th>NOM + PRÉNOM</th><th>POSTE</th></tr></thead>
+    <tbody>${opGeoRows||'<tr><td colspan="2">—</td></tr>'}</tbody></table>
+
+    <!-- 3. MOYENS MATÉRIELS -->
+    <h2>3. Moyens matériels</h2>
+    <table><thead><tr><th>Type de matériel</th><th>Marque</th><th>N° de série / Modèle</th></tr></thead>
+    <tbody>${matRows||'<tr><td colspan="3">—</td></tr>'}</tbody></table>
+    <div class="annex-note">Les fiches techniques ainsi que les méthodes opérationnelles sont présentées en annexe.</div>
+    ${logRows?`<table><thead><tr><th>Type de logiciel</th><th>Marque</th></tr></thead><tbody>${logRows}</tbody></table>`:''}
+
+    <!-- 4. DOCUMENTATION PHOTOGRAPHIQUE -->
+    ${photos.length?`
+    <h2>4. Documentation photographique</h2>
+    <div class="photo-grid">${photoGrid}</div>`:''}
+
+    <!-- 5. CONCLUSIONS / ÉCART -->
+    <h2>5. Conclusions / Écart</h2>
+    ${r.conclusions?`<div class="text-block">${r.conclusions}</div>`:'<div class="text-block" style="color:#999;font-style:italic">Aucune conclusion renseignée.</div>'}
+    ${r.observations?`<div style="font-weight:700;margin:10px 0 5px;font-size:11.5px;color:#272727">OBSERVATION :</div><div class="obs-block">${r.observations}</div>`:''}
+    ${(r.conclusionPhotos&&r.conclusionPhotos.length)?`<div style="font-weight:700;margin:12px 0 6px;font-size:11.5px">PHOTOS DE CONCLUSIONS :</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">${r.conclusionPhotos.map(src=>`<img src="${src}" style="width:120px;height:90px;object-fit:cover;border:1px solid #d0d7e3">`).join('')}</div>`:''}
+
+    ${activeNets.length?`
+    <h3>Tableau des réseaux détectés</h3>
+    <table><thead><tr><th style="width:18%">Nature du réseau</th><th style="width:12%">Photo</th><th style="width:35%">Méthode de détection</th><th style="width:35%">Remarque</th></tr></thead>
+    <tbody>${netRows}</tbody></table>`:''}
+
+    ${gps.length?`
+    <h2>Points GPS relevés</h2>
+    <table><thead><tr><th>Point</th><th>Latitude</th><th>Longitude</th><th>Précision</th><th>Horodatage</th></tr></thead>
+    <tbody>${gps.map(p=>`<tr><td>${p.description}</td><td>${p.lat}°N</td><td>${p.lng}°E</td><td>±${p.accuracy||'?'}m</td><td>${p.timestamp||'—'}</td></tr>`).join('')}</tbody></table>`:''}
+
+    <!-- SIGNATURES -->
+    <h2>Signatures</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+      <div>
+        <div style="font-size:10px;color:#595959;margin-bottom:6px;font-weight:700">Responsable projet / NEOCONCEPT VRD</div>
+        ${r.signature
+          ?`<img src="${r.signature}" style="width:100%;max-height:80px;object-fit:contain;border:1px solid #d0d7e3;background:#fff">`
+          :'<div class="sig-box">Signature</div>'}
+      </div>
+      <div>
+        <div style="font-size:10px;color:#595959;margin-bottom:6px;font-weight:700">Validateur / Client</div>
+        <div class="sig-box">Signature</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <strong>NEOCONCEPT VRD</strong> S.A.S au capital de 11 000 € – RCS : Nanterre B 790 087 563<br>
+      84/88 bd de la mission marchand – 92400 Courbevoie · Tél : 01 46 67 75 58 · contact@neoconceptvrd.com<br>
+      <span style="color:#999">Document généré le ${dateGen} par NCVRD Detect · Confidentiel</span>
+    </div>
+
+  </div>
 </div></body></html>`;
 }
 
