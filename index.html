@@ -3168,7 +3168,7 @@ function _fallbackCopy(text){
   ta.value=text; ta.style.cssText='position:fixed;left:-9999px;opacity:0';
   document.body.appendChild(ta); ta.focus(); ta.select();
   try{ document.execCommand('copy'); toast('✅ Code copié : '+text); }
-  catch(){ prompt("Code d'invitation (copiez-le) :",text); }
+  catch(e){ prompt("Code d'invitation (copiez-le) :",text); }
   document.body.removeChild(ta);
 }
 
