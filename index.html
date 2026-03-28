@@ -2756,10 +2756,19 @@ function removeOperateur(type,i){
 let _pickerState = { type:'resp', idx:-1 };
 
 function _getPickerPersonnel(){
-  // Essai 1 : région de l'utilisateur courant
   const rd = getRegionData(currentUserProfile && currentUserProfile.teamName);
+  // Paris EST (Noisy) et Paris OUEST (Courbevoie) partagent leur personnel
+  const isIDF = rd === REGION_DATA['Paris EST'] || rd === REGION_DATA['Paris OUEST'];
+  if(isIDF){
+    const people = [
+      ...(REGION_DATA['Paris EST'].allPersonnel  || []),
+      ...(REGION_DATA['Paris OUEST'].allPersonnel || [])
+    ];
+    return { label:'IDF (Noisy + Courbevoie)', people };
+  }
+  // Grand EST : seulement son propre personnel
   if(rd && rd.allPersonnel) return { label: rd.label, people: rd.allPersonnel };
-  // Fallback : toutes les régions
+  // Fallback
   const all = [];
   Object.values(REGION_DATA).forEach(r=>{ if(r.allPersonnel) all.push(...r.allPersonnel); });
   return { label:'Toutes les régions', people: all };
