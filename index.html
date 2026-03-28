@@ -4373,9 +4373,25 @@ async function refreshInviteChantierList(){
   const chantier   = S.chantiers.find(c=>c.id===chantierId);
   const collabs    = chantier?.collaborators || [];
   try {
-    const snap  = await fdb.collection('users').where('teamId','==',currentUserProfile.teamId).get();
-    const users = snap.docs.map(d=>({uid:d.id,...d.data()}))
-      .filter(u => u.uid !== (chantier?.createdBy||currentUserProfile.uid));
+    // Paris EST (Noisy) et Paris OUEST (Courbevoie) peuvent s'inviter mutuellement
+    // Grand EST reste en silo
+    const myRegion = getRegionData(currentUserProfile.teamName);
+    const isIDF = myRegion === REGION_DATA['Paris EST'] || myRegion === REGION_DATA['Paris OUEST'];
+
+    let allUsers = [];
+    if(isIDF){
+      const allTeamsSnap = await fdb.collection('teams').get();
+      const idfTeamIds = allTeamsSnap.docs
+        .filter(d => { const rd = getRegionData(d.data().name); return rd === REGION_DATA['Paris EST'] || rd === REGION_DATA['Paris OUEST']; })
+        .map(d => d.id);
+      const snaps = await Promise.all(idfTeamIds.map(tid => fdb.collection('users').where('teamId','==',tid).get()));
+      snaps.forEach(s => s.docs.forEach(d => allUsers.push({uid:d.id,...d.data()})));
+    } else {
+      const snap = await fdb.collection('users').where('teamId','==',currentUserProfile.teamId).get();
+      snap.docs.forEach(d => allUsers.push({uid:d.id,...d.data()}));
+    }
+
+    const users = allUsers.filter(u => u.uid !== (chantier?.createdBy||currentUserProfile.uid));
     if(!users.length){
       listEl.innerHTML='<div style="color:var(--muted);font-size:12px;padding:8px">Aucun autre membre dans l\'équipe.</div>'; return;
     }
