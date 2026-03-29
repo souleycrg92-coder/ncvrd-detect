@@ -1153,7 +1153,7 @@ body > *{position:relative;z-index:1}
       <button class="btn-big btn-card" style="flex:1;background:var(--blue);color:#fff;border-color:var(--blue)" onclick="exportRapportWord()">📝 Word</button>
     </div>
     <div class="btn-row" style="margin-top:0">
-      <button class="btn-big btn-card" style="flex:1" onclick="shareRapport()">📤 Partager</button>
+      <button class="btn-big btn-card" style="flex:1" onclick="openInviteChantierModal(S.currentChantier&&S.currentChantier.id)">📤 Partager</button>
     </div>
     <div style="height:10px"></div>
   </div>
@@ -2732,7 +2732,7 @@ function renderRapportScreen(){
   document.getElementById('topTitle').textContent='📋 '+c.name;
   const rref=document.getElementById('r-reference'); if(rref) rref.value=r.reference||c.name||'';
   const rcli=document.getElementById('r-client'); if(rcli) rcli.value=r.client||c.client||'';
-  document.getElementById('r-objet').value=r.objetEtude||'';
+  const robjet=document.getElementById('r-objet'); if(robjet) robjet.value=r.objetEtude||'';
   // Pré-remplir la nature des opérations (select + input libre)
   const _natureVal = r.natureOperations||'';
   const _natSel = document.getElementById('r-nature-select');
