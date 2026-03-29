@@ -1155,7 +1155,6 @@ body > *{position:relative;z-index:1}
     <div class="btn-row" style="margin-top:0">
       <button class="btn-big btn-card" style="flex:1" onclick="shareRapport()">📤 Partager</button>
     </div>
-    <button class="btn-big btn-card" onclick="openCollabModal()">👥 Collaborateurs</button>
     <div style="height:10px"></div>
   </div>
 
@@ -1727,17 +1726,20 @@ body > *{position:relative;z-index:1}
   </div>
 </div>
 
-<!-- Modal: Inviter collaborateur sur un chantier -->
+<!-- Modal: Partager un chantier avec des collaborateurs -->
 <div class="modal" id="m-invite-chantier" onclick="if(event.target===this)closeModal('m-invite-chantier')">
   <div class="modal-box">
     <div class="modal-hdr" style="position:sticky;top:0;background:var(--card2);z-index:10;padding-bottom:12px;margin-bottom:8px;border-bottom:1px solid var(--border)">
       <span class="modal-title">👥 Partager ce chantier</span>
       <button class="modal-close" onclick="closeModal('m-invite-chantier')">✕</button>
     </div>
-    <div class="info-box" style="margin:0 0 12px;font-size:12px">Les collaborateurs invités pourront accéder et compléter ce chantier depuis leur propre appareil.</div>
-    <div id="invite-chantier-list" style="max-height:320px;overflow-y:auto">
+    <div class="info-box" style="margin:0 0 14px;font-size:12px">Cochez les collaborateurs avec qui vous souhaitez partager ce chantier. Ils recevront une notification et le chantier apparaîtra dans leur onglet <strong>Partagés</strong>.</div>
+    <div id="invite-chantier-list" style="max-height:300px;overflow-y:auto;margin-bottom:14px">
       <div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">Chargement…</div>
     </div>
+    <button id="btn-valider-partage" onclick="validerPartageChantier()" style="width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:Inter,inherit;display:flex;align-items:center;justify-content:center;gap:8px">
+      ✅ Valider le partage
+    </button>
   </div>
 </div>
 
@@ -2625,7 +2627,7 @@ async function openChantier(id){
       ],
       logiciels:[{type:'AUTOCAD/COVADIS',marque:'AUTODESK'}],
       networks:[],
-      conclusions:'L\'ensemble des réseaux géolocalisés à l\'aide du géoradar et de l\'appareil de radiodétection ont été relevés par notre géomètre à l\'aide d\'une tablette Panasonic Toughbook FZ-G1 MK4/MK5, d\'une station total TS13 et/ou d\'une antenne GPS GG04 Plus. Ces données ont ensuite été reportées sous format AUTOCAD, dont le plan est joint au présent rapport. Sur ce plan, les réseaux relevés sont géoréférencés. La côte NGF de la génératrice supérieure du réseau est renseignée, sauf pour les réseaux d\'assainissement où le fil d\'eau est renseigné, tout comme la profondeur relative du réseau pour une lecture plus rapide.',
+      conclusions:'L\'ensemble des réseaux géolocalisés à l\'aide du géoradar et de l\'appareil de radiodétection ont été relevés par notre géomètre à l\'aide d\'une tablette Panasonic Toughbook FZ-G1 MK4/MK5, d\'une station total TS13 et/ou d\'une antenne GPS GG04 Plus.\nCes données ont ensuite été reportées sous format AUTOCAD, dont le plan est joint au présent rapport. Sur ce plan, les réseaux relevés sont géoréférencés. La côte NGF de la génératrice supérieure du réseau est renseignée, sauf pour les réseaux d\'assainissement où le fil d\'eau est renseigné, tout comme la profondeur relative du réseau pour une lecture plus rapide.',
       observations:'',conclusionPhotos:[],updatedAt:Date.now()};
     // Auto-remplissage équipe régionale
     const _rd = getRegionData(currentUserProfile && currentUserProfile.teamName);
@@ -4217,44 +4219,59 @@ async function initNotifications(){
   const uid = currentUserProfile.uid;
   if(!uid) return;
   if(_notifUnsubscribe) _notifUnsubscribe();
+  // Requête simple sur un seul champ = pas d'index composite requis
   _notifUnsubscribe = fdb.collection('notifications')
     .where('toUid','==',uid)
-    .where('read','==',false)
     .onSnapshot(snap => {
-      const count = snap.docs.length;
-      const badge = document.getElementById('notif-badge');
+      // Compter les non lues côté client
+      const unread = snap.docs.filter(d => !d.data().read);
+      const count  = unread.length;
+      const badge  = document.getElementById('notif-badge');
       if(badge){
         badge.textContent = count > 9 ? '9+' : count;
         badge.style.display = count > 0 ? 'flex' : 'none';
       }
+      // Toast pour les nouvelles notifications (< 10s)
       snap.docChanges().forEach(change => {
         if(change.type==='added'){
           const d = change.doc.data();
-          if(Date.now() - d.createdAt < 10000) toast('🔔 ' + d.message);
+          if(!d.read && d.createdAt && Date.now() - d.createdAt < 10000)
+            toast('🔔 ' + (d.message||'Nouvelle notification'));
         }
       });
       if(document.getElementById('notif-panel')?.style.display !== 'none') renderNotifList();
-    });
+    }, err => { console.warn('initNotifications error:', err); });
 }
 
 async function renderNotifList(){
   const listEl = document.getElementById('notif-list');
   if(!listEl || !fdb || !currentUserProfile) return;
   try {
+    // Requête simple (pas d'orderBy pour éviter index composite)
     const snap = await fdb.collection('notifications')
       .where('toUid','==',currentUserProfile.uid)
-      .orderBy('createdAt','desc').limit(20).get();
-    if(snap.empty){ listEl.innerHTML='<div style="text-align:center;color:#5a6c8a;font-size:12px;padding:20px">Aucune notification</div>'; return; }
-    listEl.innerHTML = snap.docs.map(doc => {
-      const d = doc.data();
+      .limit(30).get();
+    if(snap.empty){
+      listEl.innerHTML='<div style="text-align:center;color:#5a6c8a;font-size:12px;padding:20px">Aucune notification</div>';
+      return;
+    }
+    // Trier côté client par date décroissante
+    const docs = snap.docs
+      .map(doc => ({id:doc.id, ...doc.data()}))
+      .sort((a,b) => (b.createdAt||0) - (a.createdAt||0))
+      .slice(0,20);
+    listEl.innerHTML = docs.map(d => {
       const time = d.createdAt ? new Date(d.createdAt).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
-      return `<div class="notif-item ${d.read?'read':'unread'}" onclick="openNotifChantier('${doc.id}','${d.chantierId||''}')">
-        <div class="notif-title">${d.type==='chantier_invite'?'📋 Invitation chantier':'🔔 Notification'}</div>
+      return `<div class="notif-item ${d.read?'read':'unread'}" onclick="openNotifChantier('${d.id}','${d.chantierId||''}')">
+        <div class="notif-title">${d.type==='chantier_invite'?'📋 Chantier partagé':'🔔 Notification'}</div>
         <div class="notif-body">${d.message||''}</div>
         <div class="notif-time">${time}</div>
       </div>`;
     }).join('');
-  } catch(e){ listEl.innerHTML='<div style="color:#ef4444;font-size:12px;padding:10px">Erreur chargement</div>'; }
+  } catch(e){
+    console.error('renderNotifList:', e);
+    listEl.innerHTML='<div style="color:#ef4444;font-size:12px;padding:10px">Erreur : '+(e.message||e)+'</div>';
+  }
 }
 
 function toggleNotifPanel(){
@@ -4267,14 +4284,19 @@ function toggleNotifPanel(){
 
 async function markAllNotifsRead(){
   if(!fdb || !currentUserProfile) return;
-  const snap = await fdb.collection('notifications')
-    .where('toUid','==',currentUserProfile.uid).where('read','==',false).get();
-  const batch = fdb.batch();
-  snap.docs.forEach(doc => batch.update(doc.ref,{read:true}));
-  await batch.commit();
-  const badge = document.getElementById('notif-badge');
-  if(badge) badge.style.display = 'none';
-  renderNotifList();
+  try {
+    // Requête simple sur un champ = pas d'index composite
+    const snap = await fdb.collection('notifications')
+      .where('toUid','==',currentUserProfile.uid).get();
+    const toMark = snap.docs.filter(d => !d.data().read);
+    if(!toMark.length) return;
+    const batch = fdb.batch();
+    toMark.forEach(doc => batch.update(doc.ref,{read:true}));
+    await batch.commit();
+    const badge = document.getElementById('notif-badge');
+    if(badge) badge.style.display = 'none';
+    renderNotifList();
+  } catch(e){ console.warn('markAllNotifsRead:', e); }
 }
 
 async function openNotifChantier(notifId, chantierId){
@@ -4329,21 +4351,16 @@ async function refreshInviteChantierList(){
   const chantier   = S.chantiers.find(c=>c.id===chantierId);
   const collabs    = chantier?.collaborators || [];
   try {
-    // Paris EST (Noisy) et Paris OUEST (Courbevoie) peuvent s'inviter mutuellement
-    // Grand EST reste en silo
     const myRegion = getRegionData(currentUserProfile.teamName);
     const isIDF = myRegion === REGION_DATA['Paris EST'] || myRegion === REGION_DATA['Paris OUEST'];
-
     let allUsers = [];
     if(isIDF){
-      // Chercher par teamName (plus fiable que teamId pour les comptes créés via script)
       const [snapEst, snapOuest] = await Promise.all([
         fdb.collection('users').where('teamName','==','Paris EST').get(),
         fdb.collection('users').where('teamName','==','Paris OUEST').get()
       ]);
       [snapEst, snapOuest].forEach(s => s.docs.forEach(d => allUsers.push({uid:d.id,...d.data()})));
     } else {
-      // Fallback : teamName si teamId absent
       const myTeamName = currentUserProfile.teamName;
       const myTeamId   = currentUserProfile.teamId;
       const snap = myTeamName
@@ -4352,25 +4369,89 @@ async function refreshInviteChantierList(){
       snap.docs.forEach(d => allUsers.push({uid:d.id,...d.data()}));
     }
 
-    const users = allUsers.filter(u => u.uid !== (chantier?.createdBy||currentUserProfile.uid));
+    // Exclure soi-même
+    const myUid = currentUserProfile.uid;
+    const users = allUsers.filter(u => u.uid && u.uid !== myUid);
+
     if(!users.length){
-      listEl.innerHTML='<div style="color:var(--muted);font-size:12px;padding:8px">Aucun autre membre dans l\'équipe.</div>'; return;
+      listEl.innerHTML='<div style="color:var(--muted);font-size:12px;padding:8px;text-align:center">Aucun autre membre trouvé dans l\'équipe.</div>'; return;
     }
-    listEl.innerHTML = users.map(u=>{
-      const isCollab = collabs.includes(u.uid);
-      const btnAdd  = `<button onclick="addCollaborateurChantier('${chantierId}','${u.uid}')" style="background:rgba(29,78,216,.12);border:1px solid rgba(29,78,216,.3);color:var(--accent);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">＋ Inviter</button>`;
-      const btnRm   = `<button onclick="removeCollaborateurChantier('${chantierId}','${u.uid}')" style="background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.3);color:#dc2626;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✕ Retirer</button>`;
-      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--card2);border-radius:10px;margin-bottom:6px;border:1px solid var(--border)">
-        <div>
+
+    // Rendu avec cases à cocher
+    listEl.innerHTML = users.map(u => {
+      const checked = collabs.includes(u.uid) ? 'checked' : '';
+      const isAlreadyCollab = collabs.includes(u.uid);
+      return `<label style="display:flex;align-items:center;gap:12px;padding:11px 12px;background:var(--card2);border-radius:10px;margin-bottom:6px;border:1.5px solid ${isAlreadyCollab?'var(--accent)':'var(--border)'};cursor:pointer;transition:border-color .2s">
+        <input type="checkbox" data-uid="${u.uid}" data-name="${(u.displayName||u.email||'').replace(/"/g,'')}" ${checked}
+          style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);flex-shrink:0"
+          onchange="this.closest('label').style.borderColor=this.checked?'var(--accent)':'var(--border)'">
+        <div style="flex:1">
           <div style="font-weight:700;font-size:13px">👤 ${u.displayName||u.email||'—'}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">${u.role||'Technicien'}${isCollab?' · <span style="color:#15803d;font-weight:700">✅ Invité</span>':''}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${u.role||'Technicien'}${isAlreadyCollab?' · <span style="color:var(--accent);font-weight:700">✅ Déjà invité</span>':''}</div>
         </div>
-        ${isCollab ? btnRm : btnAdd}
-      </div>`;
+      </label>`;
     }).join('');
   } catch(e){
-    listEl.innerHTML='<div style="color:var(--muted);font-size:12px">Erreur de chargement.</div>';
+    console.error('refreshInviteChantierList:', e);
+    listEl.innerHTML='<div style="color:var(--muted);font-size:12px">Erreur : '+(e.message||e)+'</div>';
   }
+}
+
+async function validerPartageChantier(){
+  const chantierId = _inviteTargetId;
+  const chantier   = S.chantiers.find(c=>c.id===chantierId);
+  if(!chantier){ toast('⚠️ Chantier introuvable'); return; }
+
+  const checkboxes = document.querySelectorAll('#invite-chantier-list input[type=checkbox]');
+  if(!checkboxes.length){ toast('⚠️ Aucun membre à sélectionner'); return; }
+
+  const prevCollabs = chantier.collaborators || [];
+  const newCollabs  = [];
+  const added       = [];
+  const removed     = [];
+
+  checkboxes.forEach(cb => {
+    const uid  = cb.dataset.uid;
+    const name = cb.dataset.name;
+    if(cb.checked){
+      newCollabs.push(uid);
+      if(!prevCollabs.includes(uid)) added.push({uid, name});
+    } else {
+      if(prevCollabs.includes(uid)) removed.push(uid);
+    }
+  });
+
+  chantier.collaborators = newCollabs;
+  chantier.updatedAt = Date.now();
+  await db.put('chantiers', chantier);
+  await syncChantierToFirebase(chantier);
+
+  // Envoyer notif aux nouveaux collaborateurs
+  if(FIREBASE_CONFIGURED && fdb && added.length){
+    const senderName = currentUserProfile ? (currentUserProfile.displayName || currentUserProfile.email || 'Un collègue') : 'Un collègue';
+    await Promise.all(added.map(u =>
+      fdb.collection('notifications').add({
+        toUid:       u.uid,
+        fromUid:     currentUserProfile?.uid || null,
+        fromName:    senderName,
+        type:        'chantier_invite',
+        chantierId:  chantierId,
+        chantierName: chantier.name || 'Sans titre',
+        message:     `${senderName} vous a partagé le chantier "${chantier.name || 'Sans titre'}"`,
+        read:        false,
+        createdAt:   Date.now()
+      }).catch(e => console.warn('Notif error:', e))
+    ));
+  }
+
+  const msg = added.length
+    ? `✅ Chantier partagé avec ${added.length} collaborateur(s)`
+    : removed.length
+      ? '✅ Accès retiré'
+      : '✅ Aucun changement';
+  toast(msg);
+  closeModal('m-invite-chantier');
+  renderChantiers(S.chantiers);
 }
 
 async function addCollaborateurChantier(chantierId, targetUid){
@@ -4449,24 +4530,42 @@ async function openCollabModal(){
           </div>
         </div>`).join('');
     }
-    // Charger les 2 codes (ou les générer s'ils n'existent pas encore)
-    const teamSnap = await fdb.collection('teams').doc(currentUserProfile.teamId).get();
-    if(teamSnap.exists){
-      const td = teamSnap.data();
-      const updates = {};
-      let invCode = td.inviteCode;
-      let admCode = td.adminInviteCode;
-      if(!invCode){ invCode = generateInviteCode(); updates.inviteCode = invCode; }
-      if(!admCode){ admCode = generateInviteCode(); updates.adminInviteCode = admCode; }
-      if(Object.keys(updates).length) await fdb.collection('teams').doc(currentUserProfile.teamId).update(updates);
-      codeEl.textContent = invCode;
-      const admEl = document.getElementById('collab-admin-code');
-      if(admEl) admEl.textContent = admCode;
-    } else {
-      codeEl.textContent = '—';
-    }
+    // Charger les codes d'invitation (si teamId disponible)
+    try {
+      const tid = currentUserProfile.teamId;
+      if(tid){
+        const teamSnap = await fdb.collection('teams').doc(tid).get();
+        if(teamSnap.exists){
+          const td = teamSnap.data();
+          const updates = {};
+          let invCode = td.inviteCode;
+          let admCode = td.adminInviteCode;
+          if(!invCode){ invCode = generateInviteCode(); updates.inviteCode = invCode; }
+          if(!admCode){ admCode = generateInviteCode(); updates.adminInviteCode = admCode; }
+          if(Object.keys(updates).length) await fdb.collection('teams').doc(tid).update(updates);
+          codeEl.textContent = invCode;
+          const admEl = document.getElementById('collab-admin-code');
+          if(admEl) admEl.textContent = admCode;
+        } else {
+          codeEl.textContent = '—';
+        }
+      } else {
+        // teamId absent : chercher l'équipe par teamName
+        const teamName = currentUserProfile.teamName;
+        if(teamName){
+          const teamQ = await fdb.collection('teams').where('name','==',teamName).limit(1).get();
+          if(!teamQ.empty){
+            const td = teamQ.docs[0].data();
+            codeEl.textContent = td.inviteCode || '—';
+            const admEl = document.getElementById('collab-admin-code');
+            if(admEl) admEl.textContent = td.adminInviteCode || '—';
+          } else { codeEl.textContent = '—'; }
+        } else { codeEl.textContent = '—'; }
+      }
+    } catch(e){ console.warn('Codes invitation:', e); codeEl.textContent = '—'; }
   } catch(e){
-    listEl.innerHTML = '<div style="color:var(--muted);font-size:12px">Erreur de chargement.</div>';
+    listEl.innerHTML = '<div style="color:var(--muted);font-size:12px">Erreur : ' + (e.message||e) + '</div>';
+    console.error('openCollabModal:', e);
   }
 }
 
@@ -5114,6 +5213,21 @@ async function init(){
       try {
         const snap = await fdb.collection('users').doc(user.uid).get();
         currentUserProfile = snap.exists ? snap.data() : {displayName:user.displayName||user.email, email:user.email, teamId:null};
+        currentUserProfile.uid = user.uid;
+
+        // Si teamId absent mais teamName présent → chercher l'équipe par nom
+        if(!currentUserProfile.teamId && currentUserProfile.teamName){
+          try {
+            const teamQ = await fdb.collection('teams').where('name','==',currentUserProfile.teamName).limit(1).get();
+            if(!teamQ.empty){
+              const foundTeamId = teamQ.docs[0].id;
+              currentUserProfile.teamId = foundTeamId;
+              // Enregistrer teamId dans le profil pour les prochaines connexions
+              await fdb.collection('users').doc(user.uid).update({ teamId: foundTeamId });
+            }
+          } catch(e){ console.warn('teamId lookup by name failed:', e); }
+        }
+
         if(currentUserProfile.teamId) db.setTeam(currentUserProfile.teamId);
       } catch(e){ currentUserProfile = {displayName:user.displayName||user.email, email:user.email, teamId:null}; }
       await initApp();
