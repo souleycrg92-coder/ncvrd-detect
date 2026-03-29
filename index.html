@@ -2379,17 +2379,31 @@ async function loadChantiers(){
 
       } else if(isAdminRole(p.role)){
         // Responsable / Directeur d'agence : tous les chantiers de leur équipe
-        const snap = await fdb.collection('teams').doc(p.teamId).collection('chantiers').get();
-        snap.docs.forEach(d=>all.push({id:d.id,...d.data(),_teamId:p.teamId}));
+        // Chercher teamId par teamName si absent
+        let adminTeamId = p.teamId;
+        if(!adminTeamId && p.teamName){
+          const tq = await fdb.collection('teams').where('name','==',p.teamName).limit(1).get();
+          if(!tq.empty){ adminTeamId = tq.docs[0].id; p.teamId = adminTeamId; }
+        }
+        if(adminTeamId){
+          const snap = await fdb.collection('teams').doc(adminTeamId).collection('chantiers').get();
+          snap.docs.forEach(d=>all.push({id:d.id,...d.data(),_teamId:adminTeamId}));
+        }
 
       } else {
         // Technicien : seulement ses chantiers + ceux où il est collaborateur
         const uid = p.uid;
-        const teamId = p.teamId;
-        const q1 = await fdb.collection('teams').doc(teamId).collection('chantiers').where('createdBy','==',uid).get();
-        const q2 = await fdb.collection('teams').doc(teamId).collection('chantiers').where('collaborators','array-contains',uid).get();
-        const seen = new Set();
-        [...q1.docs,...q2.docs].forEach(d=>{ if(!seen.has(d.id)){seen.add(d.id); all.push({id:d.id,...d.data(),_teamId:teamId});} });
+        let teamId = p.teamId;
+        if(!teamId && p.teamName){
+          const tq = await fdb.collection('teams').where('name','==',p.teamName).limit(1).get();
+          if(!tq.empty){ teamId = tq.docs[0].id; p.teamId = teamId; }
+        }
+        if(teamId && uid){
+          const q1 = await fdb.collection('teams').doc(teamId).collection('chantiers').where('createdBy','==',uid).get();
+          const q2 = await fdb.collection('teams').doc(teamId).collection('chantiers').where('collaborators','array-contains',uid).get();
+          const seen = new Set();
+          [...q1.docs,...q2.docs].forEach(d=>{ if(!seen.has(d.id)){seen.add(d.id); all.push({id:d.id,...d.data(),_teamId:teamId});} });
+        }
       }
 
       all.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
@@ -4216,11 +4230,12 @@ let _notifUnsubscribe = null;
 
 async function initNotifications(){
   if(!FIREBASE_CONFIGURED || !fdb || !currentUserProfile) return;
-  const uid = currentUserProfile.uid;
-  if(!uid) return;
+  const uid    = currentUserProfile.uid;
+  const teamId = currentUserProfile.teamId;
+  if(!uid || !teamId) return;
   if(_notifUnsubscribe) _notifUnsubscribe();
-  // Requête simple sur un seul champ = pas d'index composite requis
-  _notifUnsubscribe = fdb.collection('notifications')
+  // Notifications stockées sous teams/{teamId}/notifications — pas d'index composite requis
+  _notifUnsubscribe = fdb.collection('teams').doc(teamId).collection('notifications')
     .where('toUid','==',uid)
     .onSnapshot(snap => {
       // Compter les non lues côté client
@@ -4247,8 +4262,9 @@ async function renderNotifList(){
   const listEl = document.getElementById('notif-list');
   if(!listEl || !fdb || !currentUserProfile) return;
   try {
-    // Requête simple (pas d'orderBy pour éviter index composite)
-    const snap = await fdb.collection('notifications')
+    const myTeamId = currentUserProfile.teamId;
+    if(!myTeamId){ listEl.innerHTML='<div style="text-align:center;color:#5a6c8a;font-size:12px;padding:20px">Aucune notification</div>'; return; }
+    const snap = await fdb.collection('teams').doc(myTeamId).collection('notifications')
       .where('toUid','==',currentUserProfile.uid)
       .limit(30).get();
     if(snap.empty){
@@ -4284,9 +4300,10 @@ function toggleNotifPanel(){
 
 async function markAllNotifsRead(){
   if(!fdb || !currentUserProfile) return;
+  const myTeamId = currentUserProfile.teamId;
+  if(!myTeamId) return;
   try {
-    // Requête simple sur un champ = pas d'index composite
-    const snap = await fdb.collection('notifications')
+    const snap = await fdb.collection('teams').doc(myTeamId).collection('notifications')
       .where('toUid','==',currentUserProfile.uid).get();
     const toMark = snap.docs.filter(d => !d.data().read);
     if(!toMark.length) return;
@@ -4300,11 +4317,13 @@ async function markAllNotifsRead(){
 }
 
 async function openNotifChantier(notifId, chantierId){
-  if(notifId && fdb) await fdb.collection('notifications').doc(notifId).update({read:true});
+  if(notifId && fdb && currentUserProfile?.teamId){
+    await fdb.collection('teams').doc(currentUserProfile.teamId).collection('notifications').doc(notifId).update({read:true}).catch(()=>{});
+  }
   if(chantierId){
     const ch = S.chantiers.find(c=>c.id===chantierId);
     if(ch) openChantier(chantierId);
-    else { toast('🔄 Synchronisation...'); await loadChantiersFromFirebase(); }
+    else { toast('🔄 Synchronisation...'); await loadChantiers(); }
   }
   document.getElementById('notif-panel').style.display = 'none';
 }
@@ -4317,8 +4336,16 @@ document.addEventListener('click', e => {
 });
 
 async function syncChantierToFirebase(c){
-  if(!FIREBASE_CONFIGURED || !currentUserProfile?.teamId) return;
-  const teamId = c._teamId || currentUserProfile.teamId;
+  if(!FIREBASE_CONFIGURED || !currentUserProfile) return;
+  let teamId = c._teamId || currentUserProfile.teamId;
+  // Si teamId toujours absent, chercher par teamName
+  if(!teamId && currentUserProfile.teamName){
+    try {
+      const tq = await fdb.collection('teams').where('name','==',currentUserProfile.teamName).limit(1).get();
+      if(!tq.empty){ teamId = tq.docs[0].id; currentUserProfile.teamId = teamId; }
+    } catch(e){ console.warn('syncChantier teamId lookup:', e); }
+  }
+  if(!teamId){ console.warn('syncChantierToFirebase: teamId introuvable'); return; }
   const data = {...c}; delete data._teamId;
   try { await fdb.collection('teams').doc(teamId).collection('chantiers').doc(c.id).set(data,{merge:true}); }
   catch(e){ console.warn('syncChantierToFirebase:',e); }
@@ -4382,7 +4409,7 @@ async function refreshInviteChantierList(){
       const checked = collabs.includes(u.uid) ? 'checked' : '';
       const isAlreadyCollab = collabs.includes(u.uid);
       return `<label style="display:flex;align-items:center;gap:12px;padding:11px 12px;background:var(--card2);border-radius:10px;margin-bottom:6px;border:1.5px solid ${isAlreadyCollab?'var(--accent)':'var(--border)'};cursor:pointer;transition:border-color .2s">
-        <input type="checkbox" data-uid="${u.uid}" data-name="${(u.displayName||u.email||'').replace(/"/g,'')}" ${checked}
+        <input type="checkbox" data-uid="${u.uid}" data-name="${(u.displayName||u.email||'').replace(/"/g,'')}" data-teamid="${u.teamId||currentUserProfile.teamId||''}" ${checked}
           style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);flex-shrink:0"
           onchange="this.closest('label').style.borderColor=this.checked?'var(--accent)':'var(--border)'">
         <div style="flex:1">
@@ -4411,11 +4438,12 @@ async function validerPartageChantier(){
   const removed     = [];
 
   checkboxes.forEach(cb => {
-    const uid  = cb.dataset.uid;
-    const name = cb.dataset.name;
+    const uid    = cb.dataset.uid;
+    const name   = cb.dataset.name;
+    const teamId = cb.dataset.teamid || currentUserProfile.teamId || '';
     if(cb.checked){
       newCollabs.push(uid);
-      if(!prevCollabs.includes(uid)) added.push({uid, name});
+      if(!prevCollabs.includes(uid)) added.push({uid, name, teamId});
     } else {
       if(prevCollabs.includes(uid)) removed.push(uid);
     }
@@ -4426,11 +4454,13 @@ async function validerPartageChantier(){
   await db.put('chantiers', chantier);
   await syncChantierToFirebase(chantier);
 
-  // Envoyer notif aux nouveaux collaborateurs
+  // Envoyer notif aux nouveaux collaborateurs (stockée sous teams/{teamId}/notifications)
   if(FIREBASE_CONFIGURED && fdb && added.length){
     const senderName = currentUserProfile ? (currentUserProfile.displayName || currentUserProfile.email || 'Un collègue') : 'Un collègue';
-    await Promise.all(added.map(u =>
-      fdb.collection('notifications').add({
+    await Promise.all(added.map(u => {
+      const recipientTeamId = u.teamId || currentUserProfile.teamId;
+      if(!recipientTeamId) return Promise.resolve();
+      return fdb.collection('teams').doc(recipientTeamId).collection('notifications').add({
         toUid:       u.uid,
         fromUid:     currentUserProfile?.uid || null,
         fromName:    senderName,
@@ -4440,8 +4470,8 @@ async function validerPartageChantier(){
         message:     `${senderName} vous a partagé le chantier "${chantier.name || 'Sans titre'}"`,
         read:        false,
         createdAt:   Date.now()
-      }).catch(e => console.warn('Notif error:', e))
-    ));
+      }).catch(e => console.warn('Notif error:', e));
+    }));
   }
 
   const msg = added.length
