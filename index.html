@@ -995,18 +995,8 @@ body > *{position:relative;z-index:1}
         <div class="form-group">
           <label class="form-label">Nature des opérations / Mission</label>
           <select class="form-input" id="r-nature-select" onchange="onNatureSelectChange()" style="appearance:auto">
-            <option value="">— Sélectionner une opération —</option>
-            <option value="Détection et géoréférencement des réseaux enterrés.">Détection et géoréférencement des réseaux enterrés.</option>
-            <option value="Détection des réseaux enterrés.">Détection des réseaux enterrés.</option>
-            <option value="Géoréférencement des réseaux enterrés.">Géoréférencement des réseaux enterrés.</option>
-            <option value="Marquage - piquetage des réseaux enterrés.">Marquage - piquetage des réseaux enterrés.</option>
-            <option value="Détection, géoréférencement et marquage - piquetage des réseaux enterrés.">Détection, géoréférencement et marquage - piquetage des réseaux enterrés.</option>
-            <option value="Détection et marquage - piquetage des réseaux enterrés.">Détection et marquage - piquetage des réseaux enterrés.</option>
-            <option value="Géodétection et géoréférencement des réseaux enterrés Non classe A">Géodétection et géoréférencement des réseaux enterrés Non classe A</option>
-            <option value="Géodétection et géoréférencement des réseaux sensibles Non classe A">Géodétection et géoréférencement des réseaux sensibles Non classe A</option>
-            <option value="PGOD">PGOD</option>
-            <option value="PGOC">PGOC</option>
-            <option value="__autre__">✏️ Autre (texte libre)…</option>
+            <!-- Peuplé dynamiquement par DynLists.populateSelects() -->
+            <option value="">— Chargement… —</option>
           </select>
           <input class="form-input" id="r-nature" placeholder="Décrire la nature de l'opération…" oninput="rapportChanged()" style="margin-top:8px;display:none">
         </div>
@@ -1307,13 +1297,7 @@ body > *{position:relative;z-index:1}
       <div class="form-group">
         <label class="form-label">Section</label>
         <select class="form-select" id="photo-section">
-          <option>Général</option>
-          <option>Réseau ENEDIS</option>
-          <option>Réseau GAZ</option>
-          <option>Réseau AEP</option>
-          <option>Réseau TELECOM</option>
-          <option>Réseau EU/EP</option>
-          <option>Constat / Anomalie</option>
+          <!-- Peuplé dynamiquement par DynLists.populateSelects() -->
         </select>
       </div>
       <div class="btn-row">
@@ -1607,20 +1591,8 @@ body > *{position:relative;z-index:1}
     </div>
     <div class="form-group"><label class="form-label">Nature du réseau *</label>
       <select class="form-select" id="net-nature" onchange="autoFillNetwork(this.value)">
-        <option value="">— Choisir un réseau —</option>
-        <option value="ENEDIS">ENEDIS</option>
-        <option value="France Télécom">France Télécom</option>
-        <option value="ASSAINISSEMENT">ASSAINISSEMENT</option>
-        <option value="GAZ">GAZ</option>
-        <option value="AEP">AEP</option>
-        <option value="Éclairage public">Éclairage public</option>
-        <option value="Réseau inconnu">Réseau inconnu</option>
-        <option value="SLT">SLT</option>
-        <option value="RATP">RATP</option>
-        <option value="GRT">GRT</option>
-        <option value="RTE">RTE</option>
-        <option value="Chauffage urbain">Chauffage urbain</option>
-        <option value="__autre__">Autre (saisie libre)…</option>
+        <!-- Peuplé dynamiquement par DynLists.populateSelects() -->
+        <option value="">— Chargement… —</option>
       </select>
       <input class="form-input" id="net-nature-custom" placeholder="Nom du réseau…" style="display:none;margin-top:8px">
     </div>
@@ -1637,10 +1609,8 @@ body > *{position:relative;z-index:1}
       <input class="form-input" id="net-methode" placeholder="Ex: Radiodétection en 50Hz et GEORADAR…"></div>
     <div class="form-group"><label class="form-label">Classe de précision</label>
       <select class="form-select" id="net-classe">
-        <option value="">— Sélectionner —</option>
-        <option value="Classe A">Classe A (±10 cm)</option>
-        <option value="Classe B">Classe B (±25 cm)</option>
-        <option value="Classe C">Classe C (supposée)</option>
+        <!-- Peuplé dynamiquement par DynLists.populateSelects() -->
+        <option value="">— Chargement… —</option>
       </select></div>
     <div class="form-group"><label class="form-label">Remarque</label>
       <textarea class="form-textarea" id="net-remarques" placeholder="Observations, précisions…" style="min-height:70px"></textarea></div>
@@ -1756,11 +1726,7 @@ body > *{position:relative;z-index:1}
     </div>
     <div class="form-group"><label class="form-label">Catégorie</label>
       <select class="form-select" id="con-cat">
-        <option value="epi">🦺 EPI</option>
-        <option value="elec">⚡ Risques électriques</option>
-        <option value="gaz">🔥 Risques gaz</option>
-        <option value="route">🚗 Sécurité routière</option>
-        <option value="avant">📋 Avant intervention</option>
+        <!-- Peuplé dynamiquement par DynLists.populateSelects() -->
       </select></div>
     <div class="form-group"><label class="form-label">Texte de la consigne *</label>
       <textarea class="form-textarea" id="con-text" placeholder="Décrivez la consigne de sécurité…"></textarea></div>
