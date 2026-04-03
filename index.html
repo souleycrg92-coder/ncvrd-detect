@@ -586,10 +586,21 @@ body > *{position:relative;z-index:1}
 /* ── RESPONSIVE MOBILE ────────────────── */
 @media screen and (max-width: 600px) {
   body{max-width:100%}
-  #main-wrapper{flex-direction:column-reverse}
+  #main-wrapper{
+    flex-direction:column;
+    overflow:hidden;
+  }
+  #app{
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    order:1;
+  }
   #bottom-nav{
     flex-direction:row;
     width:100%;
+    flex-shrink:0;
+    order:2;
     border-right:none;
     border-top:1px solid rgba(0,229,255,.1);
     box-shadow:0 -4px 32px rgba(0,0,0,.7),inset 0 1px 0 rgba(124,58,237,.1);
@@ -603,20 +614,20 @@ body > *{position:relative;z-index:1}
     background:linear-gradient(90deg,transparent,rgba(0,229,255,.4),rgba(124,58,237,.4),transparent);
   }
   .nav-btn{
-    width:auto;flex:1;min-width:52px;
-    padding:6px 4px;
-    font-size:8px;gap:3px;
+    width:auto;flex:1;min-width:48px;
+    padding:6px 2px;
+    font-size:7.5px;gap:2px;
+    border-radius:8px;
   }
   .nav-btn.active::before{
     left:50%;top:-4px;transform:translateX(-50%);
-    width:32px;height:3px;
+    width:24px;height:2px;
     border-radius:0 0 3px 3px;
   }
-  .nav-icon{font-size:18px}
-  #app{padding-bottom:0}
+  .nav-icon{font-size:17px}
   .card{margin:0 10px 10px}
   .btn-big{width:calc(100% - 20px);margin:0 10px 10px}
-  .sec-hdr{padding:16px 12px 8px}
+  .sec-hdr{padding:14px 12px 8px}
 }
 
 /* ── PRINT ────────────────────────────── */
