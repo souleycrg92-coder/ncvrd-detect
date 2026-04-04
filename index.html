@@ -1062,9 +1062,23 @@ body > *{position:relative;z-index:1}
           <label class="form-label">Adresse de l'intervention</label>
           <input class="form-input" id="r-adresse" placeholder="Adresse complète du chantier" oninput="rapportChanged()">
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div>
+            <label class="form-label">Date de début</label>
+            <input type="date" class="form-input" id="r-date-debut" onchange="rapportChanged()">
+          </div>
+          <div>
+            <label class="form-label">Date de fin</label>
+            <input type="date" class="form-input" id="r-date-fin" onchange="rapportChanged()">
+          </div>
+        </div>
         <div class="form-group">
-          <label class="form-label">Date d'intervention</label>
-          <input type="date" class="form-input" id="r-date-debut" onchange="rapportChanged()">
+          <label class="form-label">Objet de l'étude</label>
+          <input class="form-input" id="r-objet" placeholder="Ex : Détection et localisation de réseaux souterrains" oninput="rapportChanged()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Responsable chargé d'étude</label>
+          <input class="form-input" id="r-responsable" placeholder="Nom du responsable d'étude" oninput="rapportChanged()">
         </div>
         <div style="background:var(--input);border-radius:10px;padding:14px;margin-bottom:14px;border:1px solid var(--inputborder)">
           <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Numéro de consultation DT / DICT</div>
@@ -1148,7 +1162,27 @@ body > *{position:relative;z-index:1}
       </div>
     </div>
 
+    <!-- § Photos du rapport -->
+    <div class="acc-section">
+      <button class="acc-toggle" onclick="toggleAcc(this)">
+        <span>📸 Photos du rapport</span><span id="photo-count-label" style="font-size:11px;font-weight:700;color:var(--accent);margin-left:6px"></span><span class="acc-chevron">▼</span>
+      </button>
+      <div class="acc-body">
+        <div id="rapport-photo-strip" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:10px;min-height:40px"></div>
+        <button class="btn-big btn-accent" onclick="showScreen('s-camera')">📷 Prendre une photo</button>
+      </div>
+    </div>
 
+    <!-- § GPS -->
+    <div class="acc-section">
+      <button class="acc-toggle" onclick="toggleAcc(this)">
+        <span>📍 Points GPS</span><span class="acc-chevron">▼</span>
+      </button>
+      <div class="acc-body">
+        <div id="gps-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+        <button class="btn-big btn-card" onclick="captureGPS()">📍 Enregistrer ma position GPS</button>
+      </div>
+    </div>
 
     <!-- § Conclusions -->
     <div class="acc-section">
@@ -3180,7 +3214,7 @@ function renderRapportScreen(){
   document.getElementById('topTitle').textContent='📋 '+c.name;
   const rref=document.getElementById('r-reference'); if(rref) rref.value=r.reference||c.name||'';
   const rcli=document.getElementById('r-client'); if(rcli) rcli.value=r.client||c.client||'';
-  document.getElementById('r-objet').value=r.objetEtude||'';
+  const robjet=document.getElementById('r-objet'); if(robjet) robjet.value=r.objetEtude||'';
   // Nature des opérations : pré-sélectionner dans le dropdown ou afficher texte libre
   const _natSel = document.getElementById('r-nature-select');
   const _natInp = document.getElementById('r-nature');
@@ -3203,9 +3237,9 @@ function renderRapportScreen(){
   }
   document.getElementById('r-adresse').value=r.adresse||c.address||'';
   document.getElementById('r-date-debut').value=r.dateDebut||c.dateDebut||today();
-  document.getElementById('r-date-fin').value=r.dateFin||c.dateFin||'';
+  const rdatefin=document.getElementById('r-date-fin'); if(rdatefin) rdatefin.value=r.dateFin||c.dateFin||'';
   const rclasse=document.getElementById('r-classe'); if(rclasse) rclasse.value=r.classePresicion||'';
-  document.getElementById('r-responsable').value=r.responsable||'';
+  const rresp=document.getElementById('r-responsable'); if(rresp) rresp.value=r.responsable||'';
   document.getElementById('r-conclusions').value=r.conclusions||'';
   document.getElementById('r-observations').value=r.observations||'';
   if(!r.conclusionPhotos) r.conclusionPhotos=[];
@@ -3241,6 +3275,9 @@ function rapportChanged(){
   r.classePresicion=document.getElementById('r-classe')?.value||'';
   r.adresse=document.getElementById('r-adresse').value;
   r.dateDebut=document.getElementById('r-date-debut').value;
+  const _rdatefin=document.getElementById('r-date-fin'); if(_rdatefin) r.dateFin=_rdatefin.value;
+  const _robjet=document.getElementById('r-objet'); if(_robjet) r.objetEtude=_robjet.value;
+  const _rresponsable=document.getElementById('r-responsable'); if(_rresponsable) r.responsable=_rresponsable.value;
   r.dtDate=document.getElementById('r-dt-date').value;
   r.dtNum=document.getElementById('r-dt-num').value;
   r.respNom=document.getElementById('r-resp-nom').value;
@@ -4167,6 +4204,7 @@ function simulateGPS(){
 
 function renderGPS(){
   const el=document.getElementById('gps-list');
+  if(!el) return;
   const pts=S.gpsPoints.filter(p=>p.rapportId===S.currentRapport?.id);
   if(!pts.length){
     el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:6px 0">Aucun point GPS enregistré.</div>';
@@ -5215,7 +5253,13 @@ async function syncChantierToFirebase(c){
 async function syncRapportToFirebase(r){
   if(!FIREBASE_CONFIGURED || !currentUserProfile?.teamId) return;
   const teamId = (S.currentChantier?._teamId) || currentUserProfile.teamId;
-  try { await fdb.collection('teams').doc(teamId).collection('rapports').doc(r.id).set(r,{merge:true}); }
+  // Exclure les données base64 volumineuses du document Firestore (limite 1MB/doc)
+  // Les images restent stockées localement dans IndexedDB
+  const firestoreData = {...r};
+  delete firestoreData.planSituation;
+  delete firestoreData.signature;
+  delete firestoreData.conclusionPhotos;
+  try { await fdb.collection('teams').doc(teamId).collection('rapports').doc(r.id).set(firestoreData,{merge:true}); }
   catch(e){ Logger.warn('Sync', `syncRapport échoué pour ${r.id}`, e?.message); }
 }
 
@@ -5948,14 +5992,12 @@ function toggleOffline(){
   const pill=document.getElementById('syncPill');
   const btn=document.getElementById('offline-btn');
   if(S.isOffline){
-    pill.className='sync-pill offline';
-    pill.innerHTML='<div class="sync-dot" style="background:var(--red)"></div><span>Hors ligne</span>';
-    btn.textContent='🔄 Simuler retour connexion';
+    if(pill){ pill.className='sync-pill offline'; pill.innerHTML='<div class="sync-dot" style="background:var(--red)"></div><span>Hors ligne</span>'; }
+    if(btn) btn.textContent='🔄 Simuler retour connexion';
     toast('📴 Mode hors ligne – données stockées localement');
   } else {
-    pill.className='sync-pill online';
-    pill.innerHTML='<div class="sync-dot" style="background:var(--green)"></div><span>En ligne</span>';
-    btn.textContent='📴 Simuler mode hors ligne';
+    if(pill){ pill.className='sync-pill online'; pill.innerHTML='<div class="sync-dot" style="background:var(--green)"></div><span>En ligne</span>'; }
+    if(btn) btn.textContent='📴 Simuler mode hors ligne';
     S.photos.forEach(p=>p.synced=true);
     renderRapportPhotos(); renderAllPhotos();
     toast('🔄 Synchronisation terminée – tout est à jour');
