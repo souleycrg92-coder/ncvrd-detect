@@ -1825,11 +1825,6 @@ body > *{position:relative;z-index:1}
     <img id="photo-view-img" style="width:100%;border-radius:12px;margin-bottom:14px;max-height:50vh;object-fit:contain">
     <div id="photo-view-info" style="font-size:13px;color:var(--muted);line-height:1.7;text-align:left"></div>
     <button class="btn-big btn-red" style="margin-top:12px" onclick="deleteCurrentPhoto()">🗑️ Supprimer la photo</button>
-  </div>
-</div>
-
-<script>
-
 
 // ════════════════════════════════════════════
 //  FIREBASE CONFIG  ← Remplacez par vos clés
@@ -4830,6 +4825,25 @@ async function doWordDocx(){
     children.push(sp(80));
     children.push(para("LIMITES : Cette méthode ne permet pas l'identification des réseaux détectés. Seule une analyse des plans de récolement et une ouverture de fouille pourra confirmer leur nature.",{size:20,color:'6B7280',italics:true,after:80}));
     children.push(sp(200));
+
+    // ─── SIGNATURE ───
+    if(r.signature){
+      children.push(subTitle('Signature du responsable'));
+      children.push(sp(60));
+      const sigImg = parseImg(r.signature);
+      if(sigImg){
+        children.push(new Paragraph({
+          spacing:{before:40,after:40},
+          alignment:AlignmentType.LEFT,
+          children:[new ImageRun({type:sigImg.type,data:sigImg.data,transformation:{width:200,height:80},altText:{title:'Signature',description:'Signature',name:'Signature'}})]
+        }));
+      }
+      const redacteur = currentUserProfile?(currentUserProfile.displayName||currentUserProfile.email):'—';
+      children.push(para(redacteur,{size:20,color:DGRAY,bold:true,after:40}));
+      children.push(para(dateGen,{size:18,color:'9CA3AF',italics:true,after:80}));
+      children.push(sp(200));
+    }
+
     // ─── HEADER & FOOTER ───
     const header=new Header({children:[new Paragraph({
       spacing:{before:0,after:0},
@@ -5163,6 +5177,11 @@ async function removeCollaborateurChantier(chantierId, targetUid){
   await syncChantierToFirebase(chantier);
   toast('✅ Collaborateur retiré');
   await refreshInviteChantierList();
+}
+
+function validerPartageChantier(){
+  closeModal('m-invite-chantier');
+  toast('✅ Partage enregistré avec succès');
 }
 
 // ════════════════════════════════════════════
