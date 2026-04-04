@@ -1825,7 +1825,15 @@ body > *{position:relative;z-index:1}
   <div class="modal-box" style="text-align:center">
     <div class="modal-hdr">
       <span class="modal-title" id="photo-view-title">Photo</span>
+      <button class="modal-close" onclick="closeModal('m-photo-view')">✕</button>
+    </div>
+    <img id="photo-view-img" style="max-width:100%;max-height:60vh;border-radius:12px;object-fit:contain;margin-bottom:12px" src="" alt="Photo">
+    <div id="photo-view-info" style="font-size:13px;color:var(--text2);text-align:left;margin-bottom:16px;line-height:1.8"></div>
+    <button class="btn-big btn-danger" onclick="deleteCurrentPhoto()">🗑️ Supprimer cette photo</button>
+  </div>
+</div>
 
+<script>
 // ════════════════════════════════════════════
 //  FIREBASE CONFIG  ← Remplacez par vos clés
 // ════════════════════════════════════════════
