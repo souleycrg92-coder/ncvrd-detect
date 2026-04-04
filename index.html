@@ -2540,12 +2540,15 @@ async function registerUser(){
 async function logoutUser(){
   if(!confirm('Voulez-vous vraiment vous déconnecter ?')) return;
   try {
-    await fauth.signOut();
+    if(fauth) await fauth.signOut();
     Logger.info('Auth', 'Déconnexion réussie');
   } catch(e){
-    Logger.error('Auth', 'Erreur déconnexion', e?.message);
-    toast('⚠️ Erreur lors de la déconnexion');
+    Logger.warn('Auth', 'signOut Firebase échoué, déconnexion forcée', e?.message);
   }
+  // Déconnexion forcée même si Firebase échoue
+  currentUser = null;
+  currentUserProfile = null;
+  showScreen('s-login');
 }
 
 async function resetPassword(){
@@ -5964,14 +5967,17 @@ async function saveProfileAgence(){
 async function clearAllData(){
   if(!confirm('Effacer TOUTES les données locales ? Cette action est irréversible.')) return;
   try {
-    // 1. Vider tout le localStorage
-    localStorage.clear();
-    // 2. Supprimer entièrement la base IndexedDB locale
+    // 1. Déconnecter Firebase d'abord pour éviter l'état incohérent
+    if(fauth) await fauth.signOut().catch(()=>{});
+    // 2. Supprimer seulement les clés de l'app (pas les tokens Firebase)
+    const appKeys = ['chantier_current','dynlists_cache','userProfile','agence','teamId','inviteCode','net_methods'];
+    appKeys.forEach(k => localStorage.removeItem(k));
+    // 3. Supprimer entièrement la base IndexedDB locale
     await new Promise((res, rej) => {
       const req = indexedDB.deleteDatabase('detecapp_v3');
       req.onsuccess = res;
       req.onerror   = rej;
-      req.onblocked = res; // continuer même si bloqué
+      req.onblocked = res;
     });
     toast('✅ Cache effacé — rechargement en cours…');
     Logger.info('Data', 'Cache local entièrement effacé');
