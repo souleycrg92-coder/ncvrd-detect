@@ -4778,7 +4778,18 @@ async function doWordDocx(){
     async function imgDims(u){return new Promise(r=>{const i=new Image();i.onload=()=>r({w:i.naturalWidth,h:i.naturalHeight});i.onerror=()=>r({w:400,h:300});i.src=u;});}
     async function makeImgRun(dataUrl){
       const p=parseImg(dataUrl);if(!p)return null;
-      return new ImageRun({type:p.type,data:p.data,transformation:{width:408,height:284},altText:{title:'Photo',description:'Photo',name:'Photo'}});
+      // Calcul des dimensions en respectant le ratio d'origine (max 408×320)
+      let w=408,h=284;
+      try{
+        const dims=await imgDims(dataUrl);
+        if(dims.w&&dims.h){
+          const ratio=dims.w/dims.h;
+          w=Math.min(408,dims.w);
+          h=Math.round(w/ratio);
+          if(h>320){h=320;w=Math.round(h*ratio);}
+        }
+      }catch(e){}
+      return new ImageRun({type:p.type,data:p.data,transformation:{width:w,height:h},altText:{title:'Photo',description:'Photo',name:'Photo'}});
     }
     async function photoRow(s1,c1){
       const els=[];
