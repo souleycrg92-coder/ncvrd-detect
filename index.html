@@ -5962,22 +5962,23 @@ async function saveProfileAgence(){
 }
 
 async function clearAllData(){
-  if(!confirm('Effacer TOUTES les données ? Cette action est irréversible.')) return;
+  if(!confirm('Effacer TOUTES les données locales ? Cette action est irréversible.')) return;
   try {
-    const stores = ['chantiers','rapports','photos','gps_points'];
-    for(const s of stores){
-      const all = await db.getAll(s);
-      for(const item of all) await db.del(s, item.id);
-    }
-    S.chantiers=[];S.photos=[];S.gpsPoints=[];S.currentChantier=null;S.currentRapport=null;
-    renderChantiers([]);
-    document.getElementById('nav-rapport').style.display='none';
-    showScreen('screen-home');
-    Logger.info('Data', 'Toutes les données locales effacées');
-    toast('🗑️ Données effacées');
+    // 1. Vider tout le localStorage
+    localStorage.clear();
+    // 2. Supprimer entièrement la base IndexedDB locale
+    await new Promise((res, rej) => {
+      const req = indexedDB.deleteDatabase('detecapp_v3');
+      req.onsuccess = res;
+      req.onerror   = rej;
+      req.onblocked = res; // continuer même si bloqué
+    });
+    toast('✅ Cache effacé — rechargement en cours…');
+    Logger.info('Data', 'Cache local entièrement effacé');
+    setTimeout(() => location.reload(), 1500);
   } catch(e){
     Logger.error('Data', 'Erreur suppression des données', e?.message);
-    toast('❌ Erreur lors de la suppression des données');
+    toast('❌ Erreur lors de la suppression : ' + e?.message);
   }
 }
 
