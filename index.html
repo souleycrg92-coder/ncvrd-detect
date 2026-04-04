@@ -1670,7 +1670,12 @@ body > *{position:relative;z-index:1}
         <!-- Peuplé dynamiquement par DynLists.populateSelects() -->
         <option value="">— Chargement… —</option>
       </select></div>
-    <div class="form-group"><label class="form-label">Remarque</label>
+    <!-- Sélecteur de méthode (affiché uniquement si des choix existent) -->
+    <div id="net-obs-choices" style="display:none;margin-bottom:12px">
+      <label class="form-label">Choisir l'observation</label>
+      <div id="net-obs-choices-list" style="display:flex;flex-direction:column;gap:8px;margin-top:6px"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Observation</label>
       <textarea class="form-textarea" id="net-remarques" placeholder="Observations, précisions…" style="min-height:70px" autocomplete="off"></textarea></div>
     <button class="btn-big btn-accent" onclick="addNetwork()">✅ Ajouter au tableau</button>
   </div>
@@ -1820,11 +1825,6 @@ body > *{position:relative;z-index:1}
   <div class="modal-box" style="text-align:center">
     <div class="modal-hdr">
       <span class="modal-title" id="photo-view-title">Photo</span>
-      <button class="modal-close" onclick="closeModal('m-photo-view')">✕</button>
-    </div>
-    <img id="photo-view-img" style="width:100%;border-radius:12px;margin-bottom:14px;max-height:50vh;object-fit:contain">
-    <div id="photo-view-info" style="font-size:13px;color:var(--muted);line-height:1.7;text-align:left"></div>
-    <button class="btn-big btn-red" style="margin-top:12px" onclick="deleteCurrentPhoto()">🗑️ Supprimer la photo</button>
 
 // ════════════════════════════════════════════
 //  FIREBASE CONFIG  ← Remplacez par vos clés
@@ -2048,11 +2048,19 @@ const DynLists = {
     net_methods: {
       'ENEDIS': {
         methode: "Radiodétection en 50Hz et GEORADAR et/ou en radiodétection par induction via une pince à champ magnétique.",
-        remarques: "Lorsque le réseau n'est pas en classe A sur les DT, La détection a été réalisé à l'aide des deux appareils. Nous avons utilisé l'appareil de radiodétection en mode passif 50 Hz, pour le positionner en X, Y puis le Géoradar pour nous confirmer la position en X et Y et donner la position en Z.\n\nEt/ou :\n\nLe repérage du réseau ENEDIS a été réalisé à l'aide de l'appareil de radiodétection via une pince à champ magnétique et du générateur en mode 8.19Hz."
+        remarques: "",
+        choices: [
+          "Lorsque le réseau n'est pas en classe A sur les DT, La détection a été réalisé à l'aide des deux appareils. Nous avons utilisé l'appareil de radiodétection en mode passif 50 Hz, pour le positionner en X, Y puis le Géoradar pour nous confirmer la position en X et Y et donner la position en Z.",
+          "Le repérage du réseau ENEDIS a été réalisé à l'aide de l'appareil de radiodétection via une pince à champ magnétique et du générateur en mode 8.19Hz."
+        ]
       },
       'France Télécom': {
         methode: "Radiodétection en RADIO et GEORADAR et/ou en radiodétection par induction via une pince à champ magnétique.",
-        remarques: "Le repérage du réseau France Telecom a été réalisé à l'aide des deux appareils. Nous avons utilisé l'appareil de radiodétection en mode passif radio, pour le positionner en X, Y puis le géoradar pour nous confirmer la position en X et Y et donner la position en Z.\n\nEt/ou :\n\nLe repérage du réseau France TELECOM a été réalisé à l'aide de l'appareil de radiodétection via une pince à champ magnétique et du générateur en mode 8.19Hz."
+        remarques: "",
+        choices: [
+          "Le repérage du réseau France Telecom a été réalisé à l'aide des deux appareils. Nous avons utilisé l'appareil de radiodétection en mode passif radio, pour le positionner en X, Y puis le géoradar pour nous confirmer la position en X et Y et donner la position en Z.",
+          "Le repérage du réseau France TELECOM a été réalisé à l'aide de l'appareil de radiodétection via une pince à champ magnétique et du générateur en mode 8.19Hz."
+        ]
       },
       'ASSAINISSEMENT': {
         methode: "GEORADAR",
@@ -3784,22 +3792,51 @@ function viewNetPhoto(netId, idx){
 
 function autoFillNetwork(val){
   const customInp = document.getElementById('net-nature-custom');
+  const choicesDiv = document.getElementById('net-obs-choices');
+  const choicesList = document.getElementById('net-obs-choices-list');
   if(val === '__autre__'){
     customInp.style.display = 'block';
     customInp.focus();
     document.getElementById('net-methode').value = '';
     document.getElementById('net-remarques').value = '';
+    if(choicesDiv) choicesDiv.style.display = 'none';
     return;
   }
   customInp.style.display = 'none';
   const data = NET_METHODS[val];
   if(data){
     document.getElementById('net-methode').value = data.methode;
-    document.getElementById('net-remarques').value = data.remarques;
+    // Afficher le sélecteur de choix si des options existent
+    if(data.choices && data.choices.length && choicesDiv && choicesList){
+      choicesDiv.style.display = 'block';
+      choicesList.innerHTML = data.choices.map((txt, i) => `
+        <div onclick="selectNetObs(this,'${i}')" data-idx="${i}" style="cursor:pointer;padding:10px 12px;border-radius:10px;border:2px solid var(--border);background:var(--card2);font-size:12px;color:var(--text);transition:border-color .2s">
+          <div style="font-weight:700;color:var(--accent);margin-bottom:4px">Option ${i+1}</div>
+          <div style="line-height:1.5">${txt}</div>
+        </div>`).join('');
+      document.getElementById('net-remarques').value = '';
+    } else {
+      if(choicesDiv) choicesDiv.style.display = 'none';
+      document.getElementById('net-remarques').value = data.remarques || '';
+    }
   } else {
     document.getElementById('net-methode').value = '';
     document.getElementById('net-remarques').value = '';
+    if(choicesDiv) choicesDiv.style.display = 'none';
   }
+}
+
+function selectNetObs(el, idx){
+  const data = NET_METHODS[document.getElementById('net-nature').value];
+  if(!data || !data.choices) return;
+  // Highlight selected
+  el.parentElement.querySelectorAll('div[data-idx]').forEach(d => {
+    d.style.borderColor = 'var(--border)';
+    d.style.background = 'var(--card2)';
+  });
+  el.style.borderColor = 'var(--accent)';
+  el.style.background = 'rgba(0,229,255,0.07)';
+  document.getElementById('net-remarques').value = data.choices[idx];
 }
 
 async function addNetwork(){
@@ -4756,7 +4793,7 @@ async function doWordDocx(){
     children.push(sectionTitle('04','Réseaux Détectés'));
     children.push(sp(100));
     const activeNets=(r.networks||[]).filter(n=>n.active);
-    if(activeNets.length)children.push(makeTable(['NATURE DU RÉSEAU','MÉTHODE DE DÉTECTION','CLASSE','REMARQUES'],activeNets.map(n=>[n.nature,n.methode||'—',n.classe||'—',n.remarques||'—']),[1900,3000,1200,3538]));
+    if(activeNets.length)children.push(makeTable(['NATURE DU RÉSEAU','MÉTHODE DE DÉTECTION','CLASSE','OBSERVATIONS'],activeNets.map(n=>[n.nature,n.methode||'—',n.classe||'—',n.remarques||'—']),[1900,3000,1200,3538]));
     else children.push(para('Aucun réseau actif renseigné.',{color:DGRAY,size:22}));
     children.push(sp(200));
 
@@ -4798,7 +4835,7 @@ async function doWordDocx(){
           mkRun(n.classe||'—',{size:20,color:DGRAY}),
         ]
       }));
-      if(n.remarques) children.push(para('Remarques : '+n.remarques,{size:18,color:'6B7280',italics:true,after:40,align:AlignmentType.CENTER}));
+      if(n.remarques) children.push(para('Observations : '+n.remarques,{size:18,color:'6B7280',italics:true,after:40,align:AlignmentType.CENTER}));
       children.push(sp(120));
     }
     if(!rapPhotos.length&&!activeNets.some(n=>(n.photos&&n.photos.length)||n.photo))
@@ -5383,7 +5420,7 @@ function _renderDynListsAdmin(){
             <button onclick="dynListRemoveNetMethod('${_escHtml(name)}')" style="background:var(--red);color:#fff;border:none;border-radius:6px;padding:3px 7px;font-size:10px;cursor:pointer;font-family:inherit">✕</button>
           </div>
           <input class="mini-inp" value="${_escHtml(networks[name].methode||'')}" placeholder="Méthode" onchange="dynListUpdateNetMethod('${_escHtml(name)}','methode',this.value)" style="width:100%;font-size:11px;padding:5px 7px;margin-bottom:3px;box-sizing:border-box">
-          <textarea onchange="dynListUpdateNetMethod('${_escHtml(name)}','remarques',this.value)" placeholder="Remarques" style="width:100%;font-size:11px;padding:5px 7px;min-height:40px;border:1px solid var(--inputborder);border-radius:6px;background:var(--input);color:var(--text);resize:vertical;box-sizing:border-box">${_escHtml(networks[name].remarques||'')}</textarea>
+          <textarea onchange="dynListUpdateNetMethod('${_escHtml(name)}','remarques',this.value)" placeholder="Observations" style="width:100%;font-size:11px;padding:5px 7px;min-height:40px;border:1px solid var(--inputborder);border-radius:6px;background:var(--input);color:var(--text);resize:vertical;box-sizing:border-box">${_escHtml(networks[name].remarques||'')}</textarea>
         </div>`
       ).join('');
       contentHTML += `<div style="display:flex;gap:6px;margin-top:6px">
