@@ -5062,9 +5062,11 @@ async function renderNotifList(){
   try {
     const snap = await fdb.collection('notifications')
       .where('toUid','==',currentUserProfile.uid)
-      .orderBy('createdAt','desc').limit(20).get();
+      .limit(20).get();
     if(snap.empty){ listEl.innerHTML='<div style="text-align:center;color:#5a6c8a;font-size:12px;padding:20px">Aucune notification</div>'; return; }
-    listEl.innerHTML = snap.docs.map(doc => {
+    // Trier côté client pour éviter l'index Firestore composite
+    const docs = snap.docs.slice().sort((a,b)=>(b.data().createdAt||0)-(a.data().createdAt||0));
+    listEl.innerHTML = docs.map(doc => {
       const d = doc.data();
       const time = d.createdAt ? new Date(d.createdAt).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
       return `<div class="notif-item ${d.read?'read':'unread'}" onclick="openNotifChantier('${doc.id}','${d.chantierId||''}')">
@@ -5107,14 +5109,22 @@ async function markAllNotifsRead(){
 async function openNotifChantier(notifId, chantierId){
   try {
     if(notifId && fdb) await fdb.collection('notifications').doc(notifId).update({read:true});
+    document.getElementById('notif-panel').style.display = 'none';
     if(chantierId){
       const ch = S.chantiers.find(c=>c.id===chantierId);
-      if(ch) openChantier(chantierId);
-      else { toast('🔄 Synchronisation...'); await loadChantiersFromFirebase(); }
+      if(ch){
+        openChantier(chantierId);
+      } else {
+        toast('🔄 Synchronisation du chantier partagé…');
+        await loadChantiers(); // ← était loadChantiersFromFirebase() (inexistant)
+        const ch2 = S.chantiers.find(c=>c.id===chantierId);
+        if(ch2) openChantier(chantierId);
+        else toast('⚠️ Chantier introuvable — vérifiez votre connexion');
+      }
     }
-    document.getElementById('notif-panel').style.display = 'none';
   } catch(e){
     Logger.error('Notifications', 'Erreur ouverture notification', e?.message);
+    toast('❌ Erreur : ' + e?.message);
   }
 }
 
