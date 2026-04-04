@@ -4797,6 +4797,43 @@ async function doWordDocx(){
       }catch(e){}
       return new ImageRun({type:p.type,data:p.data,transformation:{width:w,height:h},altText:{title:'Photo',description:'Photo',name:'Photo'}});
     }
+    async function makeImgRunHalf(dataUrl){
+      // Même logique que makeImgRun mais pour une largeur max de 190px (2 colonnes)
+      const p=parseImg(dataUrl);if(!p)return null;
+      let w=190,h=143;
+      try{
+        const dims=await imgDims(dataUrl);
+        if(dims.w&&dims.h){
+          const ratio=dims.w/dims.h;
+          if(ratio>=1){ w=190; h=Math.round(190/ratio); }
+          else { h=240; w=Math.round(240*ratio); if(w>190){w=190;h=Math.round(190/ratio);} }
+        }
+      }catch(e){}
+      return new ImageRun({type:p.type,data:p.data,transformation:{width:w,height:h},altText:{title:'Photo',description:'Photo',name:'Photo'}});
+    }
+    // Insère les photos par paires côte à côte dans un tableau 2 colonnes
+    async function photoTable(photoItems){
+      const NOCELL = {style:BorderStyle.NONE,size:0,color:'FFFFFF'};
+      const noBorders = {top:NOCELL,bottom:NOCELL,left:NOCELL,right:NOCELL,insideH:NOCELL,insideV:NOCELL};
+      const els=[];
+      for(let i=0;i<photoItems.length;i+=2){
+        const left=photoItems[i];
+        const right=photoItems[i+1]||null;
+        const makeCell=async(item)=>{
+          if(!item) return new TableCell({width:{size:4500,type:WidthType.DXA},borders:noBorders,children:[new Paragraph({})]});
+          const imgRun=await makeImgRunHalf(item.url);
+          const cellChildren=[new Paragraph({spacing:{before:40,after:8},alignment:AlignmentType.CENTER,children:imgRun?[imgRun]:[]})];
+          if(item.caption) cellChildren.push(new Paragraph({spacing:{before:0,after:40},alignment:AlignmentType.CENTER,children:[mkRun(item.caption,{size:17,color:'888888',italics:true})]}));
+          return new TableCell({width:{size:4500,type:WidthType.DXA},borders:noBorders,children:cellChildren});
+        };
+        const lc=await makeCell(left);
+        const rc=await makeCell(right);
+        els.push(new Table({width:{size:9000,type:WidthType.DXA},borders:noBorders,rows:[new TableRow({children:[lc,rc]})]}));
+        els.push(sp(40));
+      }
+      return els;
+    }
+    // Garde photoRow pour usage isolé (1 seule photo)
     async function photoRow(s1,c1){
       const els=[];
       const i1=s1?await makeImgRun(s1):null;
@@ -4917,11 +4954,9 @@ async function doWordDocx(){
       rapPhotos.forEach(ph=>{const sec=ph.section||'Général';if(!secMap[sec])secMap[sec]=[];secMap[sec].push(ph);});
       for(const[sec,secPhotos]of Object.entries(secMap)){
         children.push(subTitle(sec));
-        for(let i=0;i<secPhotos.length;i+=1){
-          const p1=secPhotos[i];
-          const rows=await photoRow(p1.dataUrl,p1.caption?'Photo '+(p1.numero||i+1)+' : '+p1.caption:'');
-          rows.forEach(el=>children.push(el));
-        }
+        const items=secPhotos.map((p1,i)=>({url:p1.dataUrl,caption:p1.caption?'Photo '+(p1.numero||i+1)+' : '+p1.caption:''}));
+        const tbl=await photoTable(items);
+        tbl.forEach(el=>children.push(el));
         children.push(sp(80));
       }
     }
@@ -4930,10 +4965,9 @@ async function doWordDocx(){
       const np=n.photos&&n.photos.length?n.photos:(n.photo?[n.photo]:[]);
       if(!np.length) continue;
       children.push(subTitle(n.nature||'—'));
-      for(let i=0;i<np.length;i+=1){
-        const rows=await photoRow(np[i],'Photo '+(i+1));
-        rows.forEach(el=>children.push(el));
-      }
+      const items=np.map((src,i)=>({url:src,caption:'Photo '+(i+1)}));
+      const tbl=await photoTable(items);
+      tbl.forEach(el=>children.push(el));
       // Méthodologie + Classe sous les photos
       children.push(new Paragraph({
         spacing:{before:40,after:40},
@@ -4960,9 +4994,10 @@ async function doWordDocx(){
     concl.split('\n\n').filter(Boolean).forEach(blk=>children.push(para(blk,{size:22,after:80})));
     // Photos conclusion
     const concluPhotos=r.conclusionPhotos||[];
-    for(let i=0;i<concluPhotos.length;i+=1){
-      const rows=await photoRow(concluPhotos[i],'');
-      rows.forEach(el=>children.push(el));
+    if(concluPhotos.length){
+      const items=concluPhotos.map(src=>({url:src,caption:''}));
+      const tbl=await photoTable(items);
+      tbl.forEach(el=>children.push(el));
     }
     children.push(sp(120));
     // Observations
