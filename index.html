@@ -1072,14 +1072,6 @@ body > *{position:relative;z-index:1}
             <input type="date" class="form-input" id="r-date-fin" onchange="rapportChanged()">
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Objet de l'étude</label>
-          <input class="form-input" id="r-objet" placeholder="Ex : Détection et localisation de réseaux souterrains" oninput="rapportChanged()">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Responsable chargé d'étude</label>
-          <input class="form-input" id="r-responsable" placeholder="Nom du responsable d'étude" oninput="rapportChanged()">
-        </div>
         <div style="background:var(--input);border-radius:10px;padding:14px;margin-bottom:14px;border:1px solid var(--inputborder)">
           <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Numéro de consultation DT / DICT</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -3203,7 +3195,6 @@ function renderRapportScreen(){
   document.getElementById('topTitle').textContent='📋 '+c.name;
   const rref=document.getElementById('r-reference'); if(rref) rref.value=r.reference||c.name||'';
   const rcli=document.getElementById('r-client'); if(rcli) rcli.value=r.client||c.client||'';
-  const robjet=document.getElementById('r-objet'); if(robjet) robjet.value=r.objetEtude||'';
   // Nature des opérations : pré-sélectionner dans le dropdown ou afficher texte libre
   const _natSel = document.getElementById('r-nature-select');
   const _natInp = document.getElementById('r-nature');
@@ -3228,7 +3219,6 @@ function renderRapportScreen(){
   document.getElementById('r-date-debut').value=r.dateDebut||c.dateDebut||today();
   const rdatefin=document.getElementById('r-date-fin'); if(rdatefin) rdatefin.value=r.dateFin||c.dateFin||'';
   const rclasse=document.getElementById('r-classe'); if(rclasse) rclasse.value=r.classePresicion||'';
-  const rresp=document.getElementById('r-responsable'); if(rresp) rresp.value=r.responsable||'';
   document.getElementById('r-conclusions').value=r.conclusions||'';
   document.getElementById('r-observations').value=r.observations||'';
   if(!r.conclusionPhotos) r.conclusionPhotos=[];
@@ -3265,8 +3255,6 @@ function rapportChanged(){
   r.adresse=document.getElementById('r-adresse').value;
   r.dateDebut=document.getElementById('r-date-debut').value;
   const _rdatefin=document.getElementById('r-date-fin'); if(_rdatefin) r.dateFin=_rdatefin.value;
-  const _robjet=document.getElementById('r-objet'); if(_robjet) r.objetEtude=_robjet.value;
-  const _rresponsable=document.getElementById('r-responsable'); if(_rresponsable) r.responsable=_rresponsable.value;
   r.dtDate=document.getElementById('r-dt-date').value;
   r.dtNum=document.getElementById('r-dt-num').value;
   r.respNom=document.getElementById('r-resp-nom').value;
