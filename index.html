@@ -3104,7 +3104,7 @@ async function openChantier(id){
       materiels: DynLists.defaultMateriels,
       logiciels: DynLists.defaultLogiciels,
       networks:  [],
-      conclusions: DynLists.defaultConclusion,
+      conclusions: stripLimitesText(DynLists.defaultConclusion||''),
       observations:'',conclusionPhotos:[],updatedAt:Date.now()};
     // Auto-remplissage équipe régionale
     const _rd = getRegionData(currentUserProfile && currentUserProfile.teamName);
@@ -3177,6 +3177,10 @@ function chantierRefChanged(){
 // ════════════════════════════════════════════
 //  RAPPORT
 // ════════════════════════════════════════════
+function stripLimitesText(text){
+  return text.replace(/\n*LIMITES\s*:\s*Cette méthode ne permet pas l['']identification des réseaux détectés\.[^]*?nature\.\s*/g,'').trim();
+}
+
 function renderRapportScreen(){
   const r=S.currentRapport;
   const c=S.currentChantier;
@@ -3208,7 +3212,7 @@ function renderRapportScreen(){
   document.getElementById('r-date-debut').value=r.dateDebut||c.dateDebut||today();
   const rdatefin=document.getElementById('r-date-fin'); if(rdatefin) rdatefin.value=r.dateFin||c.dateFin||'';
   const rclasse=document.getElementById('r-classe'); if(rclasse) rclasse.value=r.classePresicion||'';
-  document.getElementById('r-conclusions').value=r.conclusions||'';
+  document.getElementById('r-conclusions').value=stripLimitesText(r.conclusions||'');
   document.getElementById('r-observations').value=r.observations||'';
   if(!r.conclusionPhotos) r.conclusionPhotos=[];
   renderConclusionPhotos();
@@ -4995,6 +4999,7 @@ async function doWordDocx(){
         ]
       }));
       if(n.remarques) children.push(para('Observations : '+n.remarques,{size:18,color:'6B7280',italics:true,after:40,align:AlignmentType.CENTER}));
+      if(n.includeLimites) children.push(para('LIMITES : Cette méthode ne permet pas l\'identification des réseaux détectés. Seule une analyse des plans de récolement et une ouverture de fouille pourra confirmer leur nature.',{size:18,color:'E8620A',italics:true,after:40,align:AlignmentType.CENTER}));
       children.push(sp(120));
     }
     if(!rapPhotos.length&&!activeNets.some(n=>(n.photos&&n.photos.length)||n.photo))
@@ -5019,8 +5024,6 @@ async function doWordDocx(){
     if(r.observations)r.observations.split('\n').filter(l=>l.trim()).forEach(l=>obsLines.push(l.replace(/^[-–•]\s*/,'')));
     if(!obsLines.length)obsLines.push('Sans objet.');
     children.push(makeObsBox(obsLines));
-    children.push(sp(80));
-    if((r.networks||[]).some(n=>n.includeLimites)) children.push(para("LIMITES : Cette méthode ne permet pas l'identification des réseaux détectés. Seule une analyse des plans de récolement et une ouverture de fouille pourra confirmer leur nature.",{size:20,color:'6B7280',italics:true,after:80}));
     children.push(sp(200));
 
     // ─── SIGNATURE ───
