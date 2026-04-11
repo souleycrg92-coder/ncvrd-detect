@@ -4444,6 +4444,13 @@ function renderSharedDocs(){
     const badge = document.getElementById('badge-'+cat);
     if(!listEl) return;
     if(badge) badge.textContent = docs.length;
+    // Auto-ouvrir l'accordéon si des documents existent
+    if(docs.length){
+      const body = listEl.closest('.acc-body');
+      const btn  = body && body.previousElementSibling;
+      if(body && !body.classList.contains('open')){ body.classList.add('open'); }
+      if(btn){ const ch=btn.querySelector('.acc-chevron'); if(ch) ch.classList.add('open'); }
+    }
     if(!docs.length){
       listEl.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:8px 0">Aucun document partagé</div>'; return;
     }
