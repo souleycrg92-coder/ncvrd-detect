@@ -5476,6 +5476,9 @@ async function doWordDocx(){
   const c = S.currentChantier || S.chantiers.find(x=>x.id===S.activeChantier) || {};
   const dateGen = new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
 
+  // Recharger les photos depuis IndexedDB pour s'assurer d'avoir les dataUrl à jour
+  try { S.photos = await db.getAll('photos'); } catch(e){ Logger.warn('Export','reload photos',e?.message); }
+
   await new Promise((resolve,reject)=>{
     if(window.docx) return resolve();
     const s=document.createElement('script');
@@ -5575,9 +5578,20 @@ async function doWordDocx(){
       });
     }
 
-    // Image helpers
-    function b64ToArr(b64){const bin=atob(b64);const a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return a;}
-    function parseImg(dataUrl){if(!dataUrl||typeof dataUrl!=='string')return null;const m=dataUrl.match(/^data:image\/(\w+);base64,(.+)$/);if(!m)return null;return{type:m[1]==='jpg'?'jpeg':m[1],data:b64ToArr(m[2])};}
+    // Image helpers — on passe la base64 directement (string) à docx.js ImageRun
+    // Docx.js appelle Buffer.from(string, 'base64') en interne → plus fiable que Uint8Array dans le navigateur
+    function parseImg(dataUrl){
+      if(!dataUrl||typeof dataUrl!=='string') return null;
+      // Nettoyer les éventuels espaces/retours à la ligne résiduels
+      const clean = dataUrl.trim();
+      const m = clean.match(/^data:image\/([a-zA-Z0-9+]+);base64,([\s\S]+)$/);
+      if(!m) return null;
+      let type = m[1].toLowerCase();
+      if(type==='jpg') type='jpeg';
+      // Supprimer les éventuels whitespace dans la base64 (safety)
+      const b64 = m[2].replace(/\s/g,'');
+      return {type, data: b64};  // chaîne base64 pure → docx.js Buffer.from(b64,'base64')
+    }
 
     // Convertit n'importe quelle URL (data: OU https://) en data URL JPEG base64
     async function ensureDataUrl(src){
@@ -5634,17 +5648,24 @@ async function doWordDocx(){
       });
     }
 
-    // docx.js ne supporte PAS WebP — conversion en JPEG si nécessaire
+    // docx.js supporte uniquement jpeg, png, gif, bmp — conversion si autre format
+    // En particulier WebP est rejeté par docx.js → on convertit en JPEG via canvas
     async function toJpegForDocx(dataUrl){
       if(!dataUrl) return null;
-      if(!dataUrl.startsWith('data:image/webp')) return dataUrl;
+      // Formats directement supportés par docx.js : jpeg, png, gif, bmp
+      const supported = ['data:image/jpeg','data:image/png','data:image/gif','data:image/bmp'];
+      if(supported.some(p => dataUrl.startsWith(p))) return dataUrl;
+      // Tout autre format (webp, tiff, svg...) → conversion canvas → JPEG
       return new Promise((resolve) => {
         const img = new Image();
         img.onload = () => {
           try {
             const c = document.createElement('canvas');
             c.width = img.naturalWidth || 800; c.height = img.naturalHeight || 600;
-            c.getContext('2d').drawImage(img, 0, 0);
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, c.width, c.height);
+            ctx.drawImage(img, 0, 0);
             resolve(c.toDataURL('image/jpeg', 0.88));
           } catch(e) { resolve(null); }
         };
@@ -5655,9 +5676,13 @@ async function doWordDocx(){
 
     async function imgDims(u){return new Promise(r=>{const i=new Image();i.onload=()=>r({w:i.naturalWidth,h:i.naturalHeight});i.onerror=()=>r({w:400,h:300});i.src=u;});}
     async function makeImgRun(dataUrl){
+      const originalSrc = typeof dataUrl === 'string' ? dataUrl.substring(0,80) : '(null)';
       dataUrl = await ensureDataUrl(dataUrl);
-      dataUrl = await toJpegForDocx(dataUrl);   // WebP → JPEG
-      const p=parseImg(dataUrl);if(!p)return null;
+      if(!dataUrl){ console.warn('[Word] ensureDataUrl → null pour:', originalSrc); return null; }
+      dataUrl = await toJpegForDocx(dataUrl);   // WebP/autre → JPEG
+      if(!dataUrl){ console.warn('[Word] toJpegForDocx → null pour:', originalSrc); return null; }
+      const p=parseImg(dataUrl);
+      if(!p){ console.warn('[Word] parseImg → null, type:', dataUrl.substring(0,40)); return null; }
       // Toujours respecter le ratio réel de la photo (portrait ou paysage)
       let w=408,h=306; // ratio 4:3 paysage par défaut
       try{
@@ -5675,13 +5700,18 @@ async function doWordDocx(){
           }
         }
       }catch(e){}
+      _imgTotal++; _imgOk++;
       return new ImageRun({type:p.type,data:p.data,transformation:{width:w,height:h},altText:{title:'Photo',description:'Photo',name:'Photo'}});
     }
     async function makeImgRunHalf(dataUrl){
       // Même logique que makeImgRun mais pour une largeur max de 190px (2 colonnes)
+      const originalSrc = typeof dataUrl === 'string' ? dataUrl.substring(0,80) : '(null)';
       dataUrl = await ensureDataUrl(dataUrl);
-      dataUrl = await toJpegForDocx(dataUrl);   // WebP → JPEG
-      const p=parseImg(dataUrl);if(!p)return null;
+      if(!dataUrl){ console.warn('[Word] ensureDataUrl (half) → null pour:', originalSrc); return null; }
+      dataUrl = await toJpegForDocx(dataUrl);   // WebP/autre → JPEG
+      if(!dataUrl){ console.warn('[Word] toJpegForDocx (half) → null pour:', originalSrc); return null; }
+      const p=parseImg(dataUrl);
+      if(!p){ console.warn('[Word] parseImg (half) → null, type:', dataUrl.substring(0,40)); return null; }
       let w=190,h=143;
       try{
         const dims=await imgDims(dataUrl);
@@ -5693,6 +5723,9 @@ async function doWordDocx(){
       }catch(e){}
       return new ImageRun({type:p.type,data:p.data,transformation:{width:w,height:h},altText:{title:'Photo',description:'Photo',name:'Photo'}});
     }
+    // Compteur global d'images réellement intégrées (pour toast de résultat)
+    let _imgOk = 0, _imgTotal = 0;
+
     // Insère les photos par paires côte à côte dans un tableau 2 colonnes
     async function photoTable(photoItems){
       const NOCELL = {style:BorderStyle.NONE,size:0,color:'FFFFFF'};
@@ -5703,7 +5736,9 @@ async function doWordDocx(){
         const right=photoItems[i+1]||null;
         const makeCell=async(item)=>{
           if(!item) return new TableCell({width:{size:4500,type:WidthType.DXA},borders:noBorders,children:[new Paragraph({})]});
+          _imgTotal++;
           const imgRun=await makeImgRunHalf(item.url);
+          if(imgRun) _imgOk++;
           const cellChildren=[new Paragraph({spacing:{before:40,after:8},alignment:AlignmentType.CENTER,children:imgRun?[imgRun]:[]})];
           if(item.caption) cellChildren.push(new Paragraph({spacing:{before:0,after:40},alignment:AlignmentType.CENTER,children:[mkRun(item.caption,{size:17,color:'888888',italics:true})]}));
           return new TableCell({width:{size:4500,type:WidthType.DXA},borders:noBorders,children:cellChildren});
@@ -5951,7 +5986,11 @@ async function doWordDocx(){
     a.href=url; a.download='CR_'+fname+'.docx';
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url),5000);
-    toast('✅ Word (.docx) téléchargé !');
+    const imgMsg = _imgTotal > 0 ? ` — ${_imgOk}/${_imgTotal} photo(s)` : '';
+    toast(`✅ Word (.docx) téléchargé !${imgMsg}`);
+    if(_imgTotal > 0 && _imgOk < _imgTotal){
+      setTimeout(()=>toast(`⚠️ ${_imgTotal-_imgOk} photo(s) non intégrée(s) — vérifiez la console (F12)`), 1500);
+    }
   } catch(e){
     Logger.error('Export','doWordDocx',e?.message);
     toast('⚠️ Erreur export Word : '+(e?.message||e));
