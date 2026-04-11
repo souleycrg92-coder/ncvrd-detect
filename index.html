@@ -424,6 +424,22 @@ body > *{position:relative;z-index:1}
   position:absolute;bottom:4px;right:4px;background:var(--red);color:white;
   font-size:8px;font-weight:700;padding:1px 4px;border-radius:3px;z-index:1;
 }
+/* Badge "en attente d'upload vers le cloud" */
+.photo-uploading{
+  position:absolute;inset:0;border-radius:inherit;
+  background:rgba(0,0,0,.42);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;pointer-events:none;z-index:2;
+}
+.photo-uploading-icon{
+  font-size:20px;
+  animation:pulse 1.5s ease-in-out infinite;
+}
+.photo-uploading-label{
+  font-size:9px;font-weight:800;color:#fff;
+  text-shadow:0 1px 3px rgba(0,0,0,.8);
+  letter-spacing:.3px;line-height:1;
+}
 .photo-add-btn{
   aspect-ratio:1;border-radius:10px;background:var(--input);
   border:2px dashed var(--border);
@@ -1036,6 +1052,10 @@ body > *{position:relative;z-index:1}
       </button>
     </div>
     <div id="chantier-list" style="margin-top:8px"></div>
+    <div id="load-more-wrap" style="display:none;text-align:center;padding:10px 14px">
+      <button onclick="loadMoreChantiers()" style="background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 24px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Voir plus ↓</button>
+      <div id="load-more-count" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+    </div>
     <span id="count-badge" style="display:none">0</span>
     <div class="divider"></div>
     <div class="sec-hdr">Actions</div>
@@ -1245,6 +1265,17 @@ body > *{position:relative;z-index:1}
           <img id="sig-img-veri" style="max-width:100%;border:1px solid var(--border);border-radius:8px;background:#fff">
           <button onclick="clearSignatureVeri()" style="margin-top:6px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);color:#dc2626;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">🗑️ Supprimer</button>
         </div>
+      </div>
+    </div>
+
+    <!-- § Historique des modifications -->
+    <div class="acc-section">
+      <button class="acc-toggle" onclick="toggleAcc(this)">
+        <span>📜 7. Historique des modifications</span><span class="acc-chevron">▼</span>
+      </button>
+      <div class="acc-body">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5">Trace de toutes les modifications apportées à ce rapport, du plus récent au plus ancien.</div>
+        <div id="modif-history-list" style="display:flex;flex-direction:column;gap:6px"></div>
       </div>
     </div>
 
@@ -3008,6 +3039,9 @@ async function loadChantiers(){
 }
 
 let activeTab = 'encours';
+const PAGE_SIZE = 20;
+let _chantierPage = 1;
+let _lastFilteredList = [];
 
 function switchTab(tab){
   activeTab = tab;
@@ -3067,62 +3101,85 @@ function renderChantiers(list){
     return;
   }
 
-  el.innerHTML = filtered.map(c => {
-    const isTermine  = c.statut === 'termine';
-    const myUid      = currentUserProfile?.uid;
-    const isCreator  = !c.createdBy || c.createdBy === myUid;
-    const isAdmin    = currentUserProfile && isAdminRole(currentUserProfile.role);
-    const canInvite  = FIREBASE_CONFIGURED && (isCreator || isAdmin);
-    const collabs    = c.collaborators || [];
-    const collabsBadge = collabs.length
-      ? `<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(29,78,216,.12);border:1px solid rgba(29,78,216,.25);color:var(--accent);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700">👥 ${collabs.length} collab.</span>`
-      : '';
-    const sharedBadge = (!isCreator && !isAdmin)
-      ? '<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:#92400e;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700">🔗 Partagé</span>'
-      : '';
-    const badge = isTermine
-      ? '<span class="badge badge-green">✅ Terminé</span>'
-      : '<span class="badge badge-blue">🟢 En cours</span>';
-    const actionBtn = isTermine
-      ? `<button onclick="event.stopPropagation();rouvrir('${c.id}')" style="background:rgba(29,78,216,.1);border:1px solid rgba(29,78,216,.25);color:var(--blue);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,inherit">↩ Rouvrir</button>`
-      : `<button onclick="event.stopPropagation();terminerChantier('${c.id}')" style="background:rgba(21,128,61,.1);border:1px solid rgba(21,128,61,.25);color:#15803d;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,inherit">✅ Terminer</button>`;
-    const inviteBtn = canInvite
-      ? `<button onclick="event.stopPropagation();openInviteChantierModal('${c.id}')" style="background:rgba(29,78,216,.08);border:1px solid rgba(29,78,216,.2);color:var(--accent);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,inherit" title="Partager avec un collaborateur">👥 Partager</button>`
-      : '';
-    return `
-    <div class="card" draggable="true"
-         ondragstart="chantierDragStart(event,'${c.id}')"
-         ondragover="chantierDragOver(event)"
-         ondrop="chantierDrop(event,'${c.id}')"
-         ondragend="chantierDragEnd()"
-         onclick="openChantier('${c.id}')">
-      <div class="card-body">
-        <div class="card-title">🏗️ ${Validator.sanitize(c.name)}</div>
-        <div class="card-meta">
-          ${c.adresse?`<span>📍 ${Validator.sanitize(c.adresse)}</span>`:''}
-          <span>👤 ${Validator.sanitize(c.client||'—')}</span>
-          ${c.createdAt?`<span>📅 ${c.createdAt}</span>`:''}
-        </div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap;margin:6px 0 2px">${collabsBadge}${sharedBadge}</div>
-        <div class="card-footer">
-          ${badge}
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            ${inviteBtn}
-            ${actionBtn}
-            <span style="color:var(--muted);font-size:14px;cursor:grab" title="Glisser pour réorganiser">⠿</span>
-          </div>
-        </div>
-        <!-- Bouton supprimer explicite -->
-        <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px">
-          <button onclick="event.stopPropagation();deleteChantier('${c.id}')"
-            style="width:100%;background:rgba(220,38,38,.08);border:1.5px solid rgba(220,38,38,.3);color:#dc2626;border-radius:10px;padding:9px 14px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s"
-            onmouseover="this.style.background='rgba(220,38,38,.18)'" onmouseout="this.style.background='rgba(220,38,38,.08)'">
-            🗑️ Supprimer ce chantier
-          </button>
+  _chantierPage = 1;
+  _lastFilteredList = filtered;
+  const paged = filtered.slice(0, PAGE_SIZE);
+  const wrap = document.getElementById('load-more-wrap');
+  const cnt  = document.getElementById('load-more-count');
+  if(wrap){ wrap.style.display = filtered.length > PAGE_SIZE ? 'block' : 'none'; }
+  if(cnt)  cnt.textContent = `${Math.min(PAGE_SIZE, filtered.length)} / ${filtered.length} chantiers affichés`;
+
+  el.innerHTML = paged.map(c => chantierCardHTML(c)).join('');
+}
+
+// ── Helper : génère le HTML d'une carte chantier (réutilisé par renderChantiers ET loadMoreChantiers) ──
+function chantierCardHTML(c){
+  const isTermine  = c.statut === 'termine';
+  const myUid      = currentUserProfile?.uid;
+  const isCreator  = !c.createdBy || c.createdBy === myUid;
+  const isAdmin    = currentUserProfile && isAdminRole(currentUserProfile.role);
+  const canInvite  = FIREBASE_CONFIGURED && (isCreator || isAdmin);
+  const collabs    = c.collaborators || [];
+  const collabsBadge = collabs.length
+    ? `<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(29,78,216,.12);border:1px solid rgba(29,78,216,.25);color:var(--accent);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700">👥 ${collabs.length} collab.</span>`
+    : '';
+  const sharedBadge = (!isCreator && !isAdmin)
+    ? '<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:#92400e;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700">🔗 Partagé</span>'
+    : '';
+  const badge = isTermine
+    ? '<span class="badge badge-green">✅ Terminé</span>'
+    : '<span class="badge badge-blue">🟢 En cours</span>';
+  const actionBtn = isTermine
+    ? `<button onclick="event.stopPropagation();rouvrir('${c.id}')" style="background:rgba(29,78,216,.1);border:1px solid rgba(29,78,216,.25);color:var(--blue);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,inherit">↩ Rouvrir</button>`
+    : `<button onclick="event.stopPropagation();terminerChantier('${c.id}')" style="background:rgba(21,128,61,.1);border:1px solid rgba(21,128,61,.25);color:#15803d;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,inherit">✅ Terminer</button>`;
+  const inviteBtn = canInvite
+    ? `<button onclick="event.stopPropagation();openInviteChantierModal('${c.id}')" style="background:rgba(29,78,216,.08);border:1px solid rgba(29,78,216,.2);color:var(--accent);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:Inter,inherit" title="Partager avec un collaborateur">👥 Partager</button>`
+    : '';
+  return `
+  <div class="card" draggable="true"
+       ondragstart="chantierDragStart(event,'${c.id}')"
+       ondragover="chantierDragOver(event)"
+       ondrop="chantierDrop(event,'${c.id}')"
+       ondragend="chantierDragEnd()"
+       onclick="openChantier('${c.id}')">
+    <div class="card-body">
+      <div class="card-title">🏗️ ${Validator.sanitize(c.name)}</div>
+      <div class="card-meta">
+        ${c.adresse?`<span>📍 ${Validator.sanitize(c.adresse)}</span>`:''}
+        <span>👤 ${Validator.sanitize(c.client||'—')}</span>
+        ${c.createdAt?`<span>📅 ${c.createdAt}</span>`:''}
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin:6px 0 2px">${collabsBadge}${sharedBadge}</div>
+      <div class="card-footer">
+        ${badge}
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          ${inviteBtn}
+          ${actionBtn}
+          <span style="color:var(--muted);font-size:14px;cursor:grab" title="Glisser pour réorganiser">⠿</span>
         </div>
       </div>
-    </div>`;
-  }).join('');
+      <!-- Bouton supprimer explicite -->
+      <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px">
+        <button onclick="event.stopPropagation();deleteChantier('${c.id}')"
+          style="width:100%;background:rgba(220,38,38,.08);border:1.5px solid rgba(220,38,38,.3);color:#dc2626;border-radius:10px;padding:9px 14px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s"
+          onmouseover="this.style.background='rgba(220,38,38,.18)'" onmouseout="this.style.background='rgba(220,38,38,.08)'">
+          🗑️ Supprimer ce chantier
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function loadMoreChantiers(){
+  _chantierPage++;
+  const el   = document.getElementById('chantier-list');
+  const more = _lastFilteredList.slice(0, _chantierPage * PAGE_SIZE);
+  const remaining = _lastFilteredList.length - more.length;
+  const wrap = document.getElementById('load-more-wrap');
+  const cnt  = document.getElementById('load-more-count');
+  if(wrap) wrap.style.display = remaining > 0 ? 'block' : 'none';
+  if(cnt)  cnt.textContent = `${more.length} / ${_lastFilteredList.length} chantiers affichés`;
+  el.innerHTML = more.map(c => chantierCardHTML(c)).join('');
 }
 
 async function terminerChantier(id){
@@ -3169,10 +3226,17 @@ function chantierDrop(e, targetId){
   if(srcIdx < 0 || tgtIdx < 0) return;
   const moved = S.chantiers.splice(srcIdx, 1)[0];
   S.chantiers.splice(tgtIdx, 0, moved);
+  // Persister le nouvel ordre
+  S.chantiers.forEach((c,i) => {
+    c.sortOrder = i;
+    db.put('chantiers', c).catch(()=>{});
+    syncChantierToFirebase(c);
+  });
   renderChantiers(S.chantiers);
 }
 function chantierDragEnd(){
   _dragChantierSrc = null;
+  document.querySelectorAll('.card').forEach(el => el.style.opacity='');
   renderChantiers(S.chantiers);
 }
 
@@ -3196,8 +3260,10 @@ async function deleteChantier(id){
   toast('🗑️ Chantier supprimé');
 }
 
+let _searchTimer;
 function filterChantiers(q){
-  applyFilters();
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(applyFilters, 250);
 }
 
 function applyFilters(){
@@ -3410,6 +3476,47 @@ function renderRapportScreen(){
   const conflictBar = document.getElementById('conflict-bar');
   if(conflictBar) conflictBar.style.display='none'; // reset
   checkRapportConflict(r);
+  // Historique des modifications
+  renderModifHistory();
+}
+
+function renderModifHistory(){
+  const r = S.currentRapport;
+  const el = document.getElementById('modif-history-list');
+  if(!el) return;
+  const hist = (r?.modifHistory || []).slice().reverse(); // plus récent en premier
+  if(!hist.length){
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0">Aucune modification enregistrée.</div>';
+    return;
+  }
+  el.innerHTML = hist.map(h => {
+    const d = new Date(h.at);
+    const dateStr = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const timeStr = d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    const isMe = h.uid === currentUserProfile?.uid;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--card2);border:1px solid var(--border);border-radius:8px">
+      <div style="width:30px;height:30px;border-radius:50%;background:${isMe?'rgba(29,78,216,.15)':'rgba(168,85,247,.15)'};display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${isMe?'👤':'👥'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${Validator.sanitize(h.name)}${isMe?' <span style="color:var(--muted);font-weight:500">(vous)</span>':''}</div>
+        <div style="font-size:11px;color:var(--muted)">${dateStr} à ${timeStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Erreur sync visible ──
+let _syncErrTimer;
+function showSyncError(){
+  const bar = document.getElementById('autosave-bar');
+  if(!bar) return;
+  bar.style.color='#ef4444';
+  bar.style.background='rgba(239,68,68,.08)';
+  bar.textContent='⚠️ Synchronisation échouée — données sauvegardées localement';
+  clearTimeout(_syncErrTimer);
+  _syncErrTimer = setTimeout(()=>{
+    bar.style.color='';
+    bar.style.background='';
+  }, 5000);
 }
 
 let saveTimer;
@@ -3745,9 +3852,10 @@ function renderNetworks(){
         <span class="mini-lbl">Photos (${(n.photos||[n.photo].filter(Boolean)).length})</span>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-bottom:6px">
           ${(n.photos||[n.photo].filter(Boolean)).map((src,idx)=>`
-            <div style="position:relative;width:72px;height:72px;flex-shrink:0">
-              <img src="${src}" style="width:72px;height:72px;object-fit:cover;border-radius:7px;border:1px solid var(--border);cursor:pointer" onclick="viewNetPhoto('${n.id}',${idx})">
-              <button onclick="removeNetPhoto('${n.id}',${idx})" style="position:absolute;top:-6px;right:-6px;background:var(--red);border:none;color:white;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+            <div style="position:relative;width:72px;height:72px;flex-shrink:0;border-radius:7px;overflow:hidden">
+              <img src="${src}" style="width:72px;height:72px;object-fit:cover;border-radius:7px;border:1px solid var(--border);cursor:pointer;display:block" onclick="viewNetPhoto('${n.id}',${idx})">
+              ${photoUploadBadge(src)}
+              <button onclick="removeNetPhoto('${n.id}',${idx})" style="position:absolute;top:-6px;right:-6px;background:var(--red);border:none;color:white;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3">✕</button>
             </div>`).join('')}
         </div>
         <button onclick="showPhotoSource('net:${n.id}')"
@@ -3915,14 +4023,24 @@ function renderNetModalPhotos(){
     </div>`).join('');
 }
 
+// Retourne le badge "en attente d'upload" si le src est encore en base64
+function photoUploadBadge(src){
+  if(!src || !src.startsWith('data:')) return '';
+  return `<div class="photo-uploading">
+    <div class="photo-uploading-icon">☁️</div>
+    <div class="photo-uploading-label">Upload…</div>
+  </div>`;
+}
+
 function renderConclusionPhotos(){
   const strip=document.getElementById('conclusion-photo-strip');
   if(!strip||!S.currentRapport) return;
   const photos=S.currentRapport.conclusionPhotos||[];
   strip.innerHTML=photos.map((src,i)=>`
-    <div style="position:relative;flex-shrink:0">
-      <img src="${src}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer" onclick="viewConclusionPhoto(${i})">
-      <button onclick="removeConclusionPhoto(${i})" style="position:absolute;top:-6px;right:-6px;background:var(--red);border:none;color:white;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">✕</button>
+    <div style="position:relative;flex-shrink:0;border-radius:8px;overflow:hidden">
+      <img src="${src}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;display:block" onclick="viewConclusionPhoto(${i})">
+      ${photoUploadBadge(src)}
+      <button onclick="removeConclusionPhoto(${i})" style="position:absolute;top:-6px;right:-6px;background:var(--red);border:none;color:white;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;z-index:3">✕</button>
     </div>`).join('');
 }
 
@@ -4232,7 +4350,16 @@ async function handleFileInput(input){
   input.value='';
 }
 
-async function compressImage(file,maxW=1024){
+// Détecte si le navigateur supporte WebP en encodage
+const _supportsWebP = (()=>{
+  try {
+    const c = document.createElement('canvas');
+    c.width = c.height = 1;
+    return c.toDataURL('image/webp').startsWith('data:image/webp');
+  } catch{ return false; }
+})();
+
+async function compressImage(file, maxW=1024, maxSizeKB=300){
   if(!file || !file.type?.startsWith('image/')){
     Logger.warn('Photos', 'compressImage: fichier invalide', { type: file?.type, name: file?.name });
     throw new Error('Le fichier sélectionné n\'est pas une image valide');
@@ -4245,14 +4372,36 @@ async function compressImage(file,maxW=1024){
       img.onerror=()=>{ rej(new Error('Impossible de décoder l\'image')); };
       img.onload=()=>{
         try {
-          const scale=Math.min(maxW/img.width,1);
-          const canvas=document.createElement('canvas');
-          canvas.width=img.width*scale; canvas.height=img.height*scale;
-          canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
-          res(canvas.toDataURL('image/jpeg',0.75));
-        } catch(e){ rej(e); }
+          // Redimensionner si nécessaire
+          const scale = Math.min(maxW / img.width, 1);
+          const canvas = document.createElement('canvas');
+          canvas.width  = Math.round(img.width  * scale);
+          canvas.height = Math.round(img.height * scale);
+          const ctx = canvas.getContext('2d');
+          // Fond blanc pour les images avec transparence (PNG → JPEG)
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          // Choisir le meilleur format disponible
+          const fmt = _supportsWebP ? 'image/webp' : 'image/jpeg';
+          const maxBytes = maxSizeKB * 1024;
+
+          // Essayer différentes qualités jusqu'à obtenir la taille cible
+          let quality = 0.82;
+          let dataUrl = canvas.toDataURL(fmt, quality);
+          // Taille approximative en octets du base64
+          const b64Size = s => Math.round(s.length * 3 / 4);
+          // Réduire la qualité par paliers jusqu'à atteindre la taille cible
+          const steps = [0.82, 0.70, 0.58, 0.45, 0.32];
+          for(const q of steps){
+            dataUrl = canvas.toDataURL(fmt, q);
+            if(b64Size(dataUrl) <= maxBytes) break;
+          }
+          res(dataUrl);
+        } catch(err){ rej(err); }
       };
-      img.src=e.target.result;
+      img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   });
@@ -4291,8 +4440,8 @@ function renderRapportPhotos(){
   strip.innerHTML=rapPhotos.map(p=>`
     <div onclick="viewPhoto('${p.id}')" style="flex-shrink:0;width:80px;height:80px;border-radius:8px;overflow:hidden;position:relative;cursor:pointer;border:1px solid var(--border)">
       <img src="${p.dataUrl}" style="width:100%;height:100%;object-fit:cover">
-      <div style="position:absolute;top:3px;left:3px;background:var(--accent);color:#000;font-size:8px;font-weight:900;padding:1px 4px;border-radius:3px">📷${p.numero}</div>
-      ${!p.synced?'<div style="position:absolute;bottom:3px;right:3px;background:var(--red);color:white;font-size:7px;font-weight:800;padding:1px 3px;border-radius:2px">⬆️</div>':''}
+      <div style="position:absolute;top:3px;left:3px;background:var(--accent);color:#000;font-size:8px;font-weight:900;padding:1px 4px;border-radius:3px;z-index:3">📷${p.numero}</div>
+      ${!p.synced ? photoUploadBadge('data:') : ''}
     </div>
   `).join('');
 }
@@ -4307,7 +4456,7 @@ function renderAllPhotos(){
     <div class="photo-cell" onclick="viewPhoto('${p.id}')">
       <img src="${p.dataUrl}" alt="Photo ${p.numero}">
       <div class="photo-num">📷${p.numero}</div>
-      ${!p.synced?'<div class="photo-unsync">⬆️</div>':''}
+      ${!p.synced ? photoUploadBadge('data:') : ''}
     </div>
   `).join('');
 }
@@ -4323,7 +4472,7 @@ function viewPhoto(id){
     <strong>Légende :</strong> ${p.caption||'—'}<br>
     <strong>Prise le :</strong> ${p.takenAt||'—'}<br>
     ${p.gpsLat?`<strong>GPS :</strong> ${p.gpsLat}° N, ${p.gpsLng}° E`:''}
-    <br><span style="color:${p.synced?'var(--green)':'var(--red)'}">${p.synced?'✅ Synchronisée':'⬆️ En attente de sync'}</span>
+    <br><span style="color:${p.synced?'var(--green)':'var(--red)'};font-weight:700">${p.synced?'✅ Synchronisée avec le cloud':'☁️ Upload en attente — visible uniquement par vous pour l\'instant'}</span>
   `;
   openModal('m-photo-view');
 }
@@ -5508,10 +5657,16 @@ document.addEventListener('click', e => {
 
 async function syncChantierToFirebase(c){
   if(!FIREBASE_CONFIGURED || !currentUserProfile?.teamId) return;
+  if(!navigator.onLine){ addToSyncQueue('chantier', c.id); return; }
   const teamId = c._teamId || currentUserProfile.teamId;
   const data = {...c}; delete data._teamId;
-  try { await fdb.collection('teams').doc(teamId).collection('chantiers').doc(c.id).set(data,{merge:true}); }
-  catch(e){ Logger.warn('Sync', `syncChantier échoué pour ${c.id}`, e?.message); }
+  try {
+    await fdb.collection('teams').doc(teamId).collection('chantiers').doc(c.id).set(data,{merge:true});
+  } catch(e){
+    Logger.warn('Sync', `syncChantier échoué pour ${c.id}`, e?.message);
+    addToSyncQueue('chantier', c.id);
+    showSyncError();
+  }
 }
 
 // ── Upload base64 → Firebase Storage → retourne l'URL publique ──
@@ -5595,8 +5750,30 @@ async function syncRapportToFirebase(r){
   firestoreData.lastModifiedBy   = currentUserProfile.uid;
   firestoreData.lastModifiedName = currentUserProfile.displayName || currentUserProfile.email || '—';
   firestoreData.lastModifiedAt   = Date.now();
+
+  // Historique des modifications (max 30 entrées)
+  if(!r.modifHistory) r.modifHistory = [];
+  const lastEntry = r.modifHistory[r.modifHistory.length - 1];
+  const now = Date.now();
+  // Ne pas créer deux entrées à moins d'une minute d'intervalle pour le même auteur
+  if(!lastEntry || lastEntry.uid !== currentUserProfile.uid || (now - lastEntry.at) > 60000){
+    r.modifHistory.push({
+      uid:  currentUserProfile.uid,
+      name: currentUserProfile.displayName || currentUserProfile.email || '—',
+      at:   now
+    });
+    if(r.modifHistory.length > 30) r.modifHistory = r.modifHistory.slice(-30);
+    db.put('rapports', r).catch(()=>{});
+  }
+  firestoreData.modifHistory = r.modifHistory;
+
+  if(!navigator.onLine){ addToSyncQueue('rapport', r.id); return; }
   try { await fdb.collection('teams').doc(teamId).collection('rapports').doc(r.id).set(firestoreData,{merge:true}); }
-  catch(e){ Logger.warn('Sync', `syncRapport échoué pour ${r.id}`, e?.message); }
+  catch(e){
+    Logger.warn('Sync', `syncRapport échoué pour ${r.id}`, e?.message);
+    addToSyncQueue('rapport', r.id);
+    showSyncError();
+  }
 }
 
 // ── Vérification conflit à l'ouverture d'un rapport ──
@@ -6342,23 +6519,68 @@ async function adminDeleteUser(uid, displayName){
 }
 
 // ════════════════════════════════════════════
-//  OFFLINE MODE
+//  OFFLINE MODE — Détection réelle + file de sync
 // ════════════════════════════════════════════
-function toggleOffline(){
-  S.isOffline=!S.isOffline;
-  const pill=document.getElementById('syncPill');
-  const btn=document.getElementById('offline-btn');
-  if(S.isOffline){
-    if(pill){ pill.className='sync-pill offline'; pill.innerHTML='<div class="sync-dot" style="background:var(--red)"></div><span>Hors ligne</span>'; }
-    if(btn) btn.textContent='🔄 Simuler retour connexion';
-    toast('📴 Mode hors ligne – données stockées localement');
-  } else {
-    if(pill){ pill.className='sync-pill online'; pill.innerHTML='<div class="sync-dot" style="background:var(--green)"></div><span>En ligne</span>'; }
-    if(btn) btn.textContent='📴 Simuler mode hors ligne';
-    S.photos.forEach(p=>p.synced=true);
-    renderRapportPhotos(); renderAllPhotos();
-    toast('🔄 Synchronisation terminée – tout est à jour');
+const SYNC_QUEUE_KEY = 'ncvrd_sync_queue';
+
+function getSyncQueue(){ try{ return JSON.parse(localStorage.getItem(SYNC_QUEUE_KEY)||'[]'); }catch{ return []; } }
+function saveSyncQueue(q){ localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(q)); }
+
+function addToSyncQueue(type, id){
+  const q = getSyncQueue();
+  if(!q.find(x=>x.type===type && x.id===id)) q.push({type, id, at: Date.now()});
+  saveSyncQueue(q);
+}
+
+async function flushSyncQueue(){
+  if(!FIREBASE_CONFIGURED || !currentUserProfile?.teamId) return;
+  const q = getSyncQueue();
+  if(!q.length) return;
+  const remaining = [];
+  for(const item of q){
+    try {
+      if(item.type==='chantier'){
+        const c = await db.get('chantiers', item.id);
+        if(c) await syncChantierToFirebase(c);
+      } else if(item.type==='rapport'){
+        const r = await db.get('rapports', item.id);
+        if(r) await syncRapportToFirebase(r);
+      }
+    } catch(e){ remaining.push(item); }
   }
+  saveSyncQueue(remaining);
+  if(q.length > remaining.length)
+    toast(`🔄 ${q.length - remaining.length} élément(s) synchronisé(s) au retour en ligne`);
+}
+
+function updateConnectivityUI(){
+  const online = navigator.onLine;
+  S.isOffline = !online;
+  const pill = document.getElementById('syncPill');
+  if(pill){
+    if(online){
+      pill.className='sync-pill online';
+      pill.innerHTML='<div class="sync-dot" style="background:var(--green)"></div><span>En ligne</span>';
+    } else {
+      pill.className='sync-pill offline';
+      pill.innerHTML='<div class="sync-dot" style="background:var(--red)"></div><span>Hors ligne</span>';
+    }
+  }
+}
+
+window.addEventListener('online', ()=>{
+  updateConnectivityUI();
+  toast('🔄 Connexion rétablie — synchronisation en cours…');
+  flushSyncQueue();
+});
+window.addEventListener('offline', ()=>{
+  updateConnectivityUI();
+  toast('📴 Hors ligne — modifications sauvegardées localement');
+});
+
+// Garder l'ancienne fonction pour compatibilité
+function toggleOffline(){
+  updateConnectivityUI();
   updateProfile();
 }
 
