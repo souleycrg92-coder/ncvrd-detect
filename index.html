@@ -840,6 +840,247 @@ body > *{position:relative;z-index:1}
   box-shadow:0 6px 24px rgba(0,0,0,.5),0 0 20px rgba(0,229,255,.08);
   transform:translateY(-1px);
 }
+
+/* ═══════════════════════════════════════════════════════
+   🌞 MODE TERRAIN — Haute visibilité en plein soleil
+   ═══════════════════════════════════════════════════════ */
+[data-terrain="1"] {
+  --bg:          #f5f7fa;
+  --card:        #ffffff;
+  --card2:       #eef1f5;
+  --card3:       #e4e8ef;
+  --border:      #1e40af;
+  --border2:     #3b82f6;
+  --text:        #0a0f1e;
+  --text2:       #1e293b;
+  --muted:       #374151;
+  --accent:      #1d4ed8;
+  --accent2:     #1e40af;
+  --accent-v:    #2563eb;
+  --accent-v2:   #3b82f6;
+  --green:       #15803d;
+  --red:         #dc2626;
+  --blue:        #2563eb;
+  --input:       #ffffff;
+  --inputborder: #1e40af;
+  --shadow-sm:   0 2px 8px rgba(0,0,0,.18);
+  --shadow-md:   0 4px 16px rgba(0,0,0,.22);
+  --shadow-lg:   0 8px 32px rgba(0,0,0,.28);
+  --glow-cyan:   none; --glow-violet:none; --glow-green:none; --glow-red:none;
+}
+
+/* Fond — blanc pur, fini les étoiles et particules */
+[data-terrain="1"] html,
+[data-terrain="1"] body {
+  background: #f5f7fa !important;
+  background-image: none !important;
+}
+[data-terrain="1"] body::before,
+[data-terrain="1"] body::after { display:none !important; }
+html[data-terrain="1"] {
+  background: #f5f7fa !important;
+  background-image: none !important;
+}
+
+/* Topbar — fond blanc, texte sombre fort */
+[data-terrain="1"] #topbar {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  border-bottom: 3px solid #1e40af !important;
+  box-shadow: 0 3px 12px rgba(0,0,0,.2) !important;
+}
+[data-terrain="1"] #topbar::after { display:none !important; }
+[data-terrain="1"] .tb-title {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: #1e40af !important;
+  background-clip: unset !important;
+  color: #1e40af !important;
+  animation: none !important;
+  text-shadow: none !important;
+  font-size: 15px !important;
+}
+[data-terrain="1"] .back-btn {
+  background: #dbeafe !important;
+  border: 2px solid #1e40af !important;
+  color: #1e40af !important;
+}
+[data-terrain="1"] .sync-pill.online {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  border: 2px solid #16a34a !important;
+}
+[data-terrain="1"] .sync-pill.offline {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border: 2px solid #dc2626 !important;
+}
+[data-terrain="1"] #notif-btn {
+  background: #dbeafe !important;
+  border: 2px solid #1e40af !important;
+}
+
+/* Navigation latérale */
+[data-terrain="1"] #bottom-nav {
+  background: #1e40af !important;
+  backdrop-filter: none !important;
+  border-right: 3px solid #1e3a8a !important;
+  box-shadow: 3px 0 12px rgba(0,0,0,.25) !important;
+}
+[data-terrain="1"] #bottom-nav::after { display:none !important; }
+[data-terrain="1"] .nav-btn { color: rgba(255,255,255,.75) !important; }
+[data-terrain="1"] .nav-btn.active {
+  background: rgba(255,255,255,.2) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+[data-terrain="1"] .nav-btn.active::before { background: #ffffff !important; }
+[data-terrain="1"] .nav-icon { filter: none !important; }
+
+/* Cards */
+[data-terrain="1"] .card {
+  background: #ffffff !important;
+  border: 2px solid #cbd5e1 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12) !important;
+}
+[data-terrain="1"] .card-title { color: #0a0f1e !important; font-size:16px !important; }
+[data-terrain="1"] .card-meta  { color: #374151 !important; }
+[data-terrain="1"] .card-footer { border-top: 1px solid #e2e8f0 !important; }
+
+/* Formulaires */
+[data-terrain="1"] .form-input,
+[data-terrain="1"] .form-textarea,
+[data-terrain="1"] .form-select {
+  background: #ffffff !important;
+  border: 2px solid #475569 !important;
+  color: #0a0f1e !important;
+  font-size: 15px !important;
+}
+[data-terrain="1"] .form-input::placeholder,
+[data-terrain="1"] .form-textarea::placeholder { color: #9ca3af !important; }
+[data-terrain="1"] .form-input:focus,
+[data-terrain="1"] .form-textarea:focus,
+[data-terrain="1"] .form-select:focus {
+  border-color: #1d4ed8 !important;
+  box-shadow: 0 0 0 3px rgba(29,78,216,.25) !important;
+}
+[data-terrain="1"] .form-label { color: #1e293b !important; font-weight:800 !important; font-size:13px !important; }
+[data-terrain="1"] .mini-inp {
+  background: #ffffff !important;
+  border: 1.5px solid #475569 !important;
+  color: #0a0f1e !important;
+}
+[data-terrain="1"] .mini-lbl { color: #374151 !important; font-weight:800 !important; }
+
+/* Sections accordéon */
+[data-terrain="1"] .acc-section {
+  background: #ffffff !important;
+  border: 2px solid #cbd5e1 !important;
+}
+[data-terrain="1"] .acc-toggle { color: #0a0f1e !important; background: #f1f5f9 !important; }
+[data-terrain="1"] .acc-chevron { color: #1d4ed8 !important; filter:none !important; text-shadow:none !important; }
+[data-terrain="1"] .acc-body { background: #ffffff !important; }
+[data-terrain="1"] .sec-hdr {
+  color: #1e3a8a !important;
+  background: none !important;
+  border-bottom: 2px solid #bfdbfe !important;
+  font-size: 13px !important;
+}
+
+/* Boutons */
+[data-terrain="1"] .btn-big {
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  border-width: 2px !important;
+  padding: 15px 20px !important;
+}
+[data-terrain="1"] .btn-big::after { display:none !important; }
+
+/* Badges statut */
+[data-terrain="1"] .badge-green {
+  background: #dcfce7 !important; color: #166534 !important;
+  border: 2px solid #16a34a !important; text-shadow: none !important;
+}
+[data-terrain="1"] .badge-blue {
+  background: #dbeafe !important; color: #1e40af !important;
+  border: 2px solid #3b82f6 !important; text-shadow: none !important;
+}
+[data-terrain="1"] .badge-orange {
+  background: #ffedd5 !important; color: #c2410c !important;
+  border: 2px solid #ea580c !important;
+}
+[data-terrain="1"] .badge-gray {
+  background: #f1f5f9 !important; color: #374151 !important;
+  border: 2px solid #94a3b8 !important;
+}
+
+/* Barre autosave */
+[data-terrain="1"] .autosave-bar {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  border-bottom: 2px solid #16a34a !important;
+  text-shadow: none !important;
+  font-weight: 800 !important;
+}
+
+/* Toasts */
+[data-terrain="1"] #toast {
+  background: #1e40af !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,.4) !important;
+}
+
+/* Barre conflit */
+[data-terrain="1"] #conflict-bar {
+  background: #fef9c3 !important;
+  border-bottom: 2px solid #ca8a04 !important;
+  color: #713f12 !important;
+}
+
+/* Écran accueil — en-tête */
+[data-terrain="1"] .screen-header,
+[data-terrain="1"] [class*="gradient"] { background: #1e40af !important; }
+
+/* Info-box */
+[data-terrain="1"] .info-box {
+  background: #eff6ff !important;
+  border: 1.5px solid #93c5fd !important;
+  color: #1e3a8a !important;
+}
+
+/* Barres de réseau */
+[data-terrain="1"] .net-row {
+  background: #ffffff !important;
+  border: 2px solid #1e40af !important;
+}
+
+/* Recherche */
+[data-terrain="1"] .search-inp {
+  background: #ffffff !important;
+  border: 2px solid #475569 !important;
+  color: #0a0f1e !important;
+}
+[data-terrain="1"] .search-inp::placeholder { color: #9ca3af !important; }
+
+/* Ecran login */
+[data-terrain="1"] .login-card {
+  background: #ffffff !important;
+  border: 2px solid #1e40af !important;
+}
+
+/* Désactiver toutes les animations (performances + lisibilité) */
+[data-terrain="1"] *,
+[data-terrain="1"] *::before,
+[data-terrain="1"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.1s !important;
+}
+
+/* Taille de texte globale augmentée en mode terrain */
+[data-terrain="1"] #app {
+  font-size: 15px !important;
+}
 </style>
 </head>
 <body>
@@ -855,6 +1096,11 @@ body > *{position:relative;z-index:1}
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
+    <!-- Bouton Mode Terrain -->
+    <button id="terrain-btn" onclick="toggleTerrainMode()" title="Mode terrain (haute visibilité soleil)"
+      style="background:rgba(0,140,255,.1);border:1px solid rgba(0,140,255,.25);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0;transition:all .2s">
+      ☀️
+    </button>
     <button id="notif-btn" onclick="toggleNotifPanel()" style="position:relative;background:rgba(0,140,255,.1);border:1px solid rgba(0,140,255,.25);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0">
       🔔
       <span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;align-items:center;justify-content:center;font-family:Inter,sans-serif">0</span>
@@ -1957,6 +2203,46 @@ const FIREBASE_CONFIG = {
 
 let fauth = null, fdb = null, fstorage = null, currentUser = null, currentUserProfile = null;
 const FIREBASE_CONFIGURED = !FIREBASE_CONFIG.apiKey.includes('VOTRE');
+
+// ════════════════════════════════════════════
+//  MODE TERRAIN — Haute visibilité soleil
+// ════════════════════════════════════════════
+(function initTerrainMode(){
+  const active = localStorage.getItem('ncvrd_terrain') === '1';
+  if(active){
+    document.documentElement.setAttribute('data-terrain','1');
+    document.documentElement.style.background = '#f5f7fa';
+  }
+})();
+
+function toggleTerrainMode(){
+  const html = document.documentElement;
+  const isOn = html.getAttribute('data-terrain') === '1';
+  if(isOn){
+    html.removeAttribute('data-terrain');
+    html.style.background = '';
+    localStorage.setItem('ncvrd_terrain','0');
+    const btn = document.getElementById('terrain-btn');
+    if(btn){ btn.title='Mode terrain (haute visibilité soleil)'; btn.style.background='rgba(0,140,255,.1)'; btn.style.border='1px solid rgba(0,140,255,.25)'; }
+    toast('🌙 Mode nuit activé');
+  } else {
+    html.setAttribute('data-terrain','1');
+    html.style.background = '#f5f7fa';
+    localStorage.setItem('ncvrd_terrain','1');
+    const btn = document.getElementById('terrain-btn');
+    if(btn){ btn.title='Désactiver le mode terrain'; btn.style.background='#fef9c3'; btn.style.border='2px solid #ca8a04'; }
+    toast('☀️ Mode terrain activé — haute visibilité');
+  }
+}
+
+// Mettre à jour l'apparence du bouton au chargement
+function updateTerrainBtn(){
+  const btn = document.getElementById('terrain-btn');
+  if(!btn) return;
+  const isOn = document.documentElement.getAttribute('data-terrain') === '1';
+  if(isOn){ btn.style.background='#fef9c3'; btn.style.border='2px solid #ca8a04'; btn.title='Désactiver le mode terrain'; }
+  else     { btn.style.background='rgba(0,140,255,.1)'; btn.style.border='1px solid rgba(0,140,255,.25)'; btn.title='Mode terrain (haute visibilité soleil)'; }
+}
 
 // ════════════════════════════════════════════
 //  LOGGER – Système de logging structuré
@@ -6848,6 +7134,7 @@ async function initApp(){
   document.getElementById('nc-debut').value=t;
   await updateProfileScreen();
   initNotifications(); // démarrer le listener notifications temps réel
+  updateTerrainBtn();  // synchroniser l'apparence du bouton mode terrain
   showScreen('screen-home');
 }
 
