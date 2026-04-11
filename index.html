@@ -2281,12 +2281,6 @@ html[data-terrain="1"] {
 </div>
 
 <!-- PWA Install Banner — Feature 11 -->
-<div id="pwa-banner" style="display:none;position:fixed;bottom:70px;left:10px;right:10px;background:linear-gradient(135deg,#0066ff,#00aaff);color:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 8px 24px rgba(0,102,255,.35);z-index:1000;display:flex;align-items:center;gap:12px">
-  <div style="font-size:20px">📱</div>
-  <div style="flex:1;font-size:13px;font-weight:600">Installer NCVRD Detect sur votre appareil</div>
-  <button onclick="installPWA()" style="background:#fff;color:#0066ff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit">Installer</button>
-  <button onclick="document.getElementById('pwa-banner').style.display='none'" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:8px;padding:7px 10px;font-size:14px;cursor:pointer;line-height:1">✕</button>
-</div>
 
 <script>
 // ════════════════════════════════════════════
@@ -7722,37 +7716,9 @@ async function terminerChantier(id){
 
 // ════════════════════════════════════════════
 //  FEATURE 11: PWA
-// ════════════════════════════════════════════
-let _deferredPrompt = null;
-
-function initPWA(){
-  window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();
-    _deferredPrompt = e;
-    document.getElementById('pwa-banner').style.display = 'flex';
-  });
-
-  window.addEventListener('appinstalled', () => {
-    _deferredPrompt = null;
-    document.getElementById('pwa-banner').style.display = 'none';
-    toast('✅ NCVRD Detect installée !');
-  });
-
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js').catch(err => {
-      Logger.warn('PWA', 'Service Worker registration failed', err.message);
-    });
-  }
-}
-
-function installPWA(){
-  if(!_deferredPrompt) return;
-  _deferredPrompt.prompt();
-  _deferredPrompt.userChoice.then(choiceResult => {
-    if(choiceResult.outcome === 'accepted'){
-      _deferredPrompt = null;
-    }
-  });
+// PWA — Service Worker uniquement (sans bannière d'installation)
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 
 // ════════════════════════════════════════════
@@ -7835,7 +7801,6 @@ async function initApp(){
   checkOnboarding();
 
   // Feature 11: Init PWA
-  initPWA();
 
   // Feature 12: Render sync queue badge
   renderSyncQueueBadge();
