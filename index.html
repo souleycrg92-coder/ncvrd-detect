@@ -1190,20 +1190,40 @@ body > *{position:relative;z-index:1}
       </button>
       <div class="acc-body">
         <!-- Rédacteur -->
-        <div style="margin-bottom:14px">
+        <div style="margin-bottom:6px">
           <label class="form-label">Rédacteur</label>
           <div style="padding:10px 14px;background:var(--card2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--text)" id="sig-redacteur-display">—</div>
         </div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Signez dans le cadre ci-dessous. La signature sera intégrée au rapport Word.</div>
-        <canvas id="sig-canvas" style="border:1.5px solid var(--border);border-radius:10px;background:#fff;width:100%;display:block;height:140px;touch-action:none"></canvas>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5">Signez dans le cadre ci-dessous. La signature sera intégrée au rapport Word.</div>
+        <canvas id="sig-canvas" style="border:1.5px solid var(--border);border-radius:10px;background:#fff;width:100%;display:block;height:130px;touch-action:none"></canvas>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button onclick="clearSignature()" style="flex:1;background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:600">🗑️ Effacer</button>
           <button onclick="saveSignature()" style="flex:1;background:var(--blue);border:none;color:#fff;border-radius:8px;padding:10px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700">✅ Enregistrer</button>
         </div>
-        <div id="sig-preview" style="display:none;margin-top:12px">
+        <div id="sig-preview" style="display:none;margin-top:10px">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Signature enregistrée :</div>
           <img id="sig-img" style="max-width:100%;border:1px solid var(--border);border-radius:8px;background:#fff">
-          <button onclick="clearSignature()" style="margin-top:6px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);color:#dc2626;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">🗑️ Supprimer la signature</button>
+          <button onclick="clearSignature()" style="margin-top:6px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);color:#dc2626;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">🗑️ Supprimer</button>
+        </div>
+
+        <!-- Séparateur -->
+        <div style="height:1px;background:var(--border);margin:18px 0"></div>
+
+        <!-- Vérificateur -->
+        <div style="margin-bottom:8px">
+          <label class="form-label">Vérificateur</label>
+          <input class="form-input" id="sig-verificateur-nom" placeholder="Nom et prénom du vérificateur" oninput="rapportChanged()" style="font-size:13px">
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5">Signature du vérificateur :</div>
+        <canvas id="sig-canvas-veri" style="border:1.5px solid var(--border);border-radius:10px;background:#fff;width:100%;display:block;height:130px;touch-action:none"></canvas>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button onclick="clearSignatureVeri()" style="flex:1;background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:600">🗑️ Effacer</button>
+          <button onclick="saveSignatureVeri()" style="flex:1;background:var(--blue);border:none;color:#fff;border-radius:8px;padding:10px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700">✅ Enregistrer</button>
+        </div>
+        <div id="sig-preview-veri" style="display:none;margin-top:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Signature enregistrée :</div>
+          <img id="sig-img-veri" style="max-width:100%;border:1px solid var(--border);border-radius:8px;background:#fff">
+          <button onclick="clearSignatureVeri()" style="margin-top:6px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);color:#dc2626;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">🗑️ Supprimer</button>
         </div>
       </div>
     </div>
@@ -3280,6 +3300,7 @@ function rapportChanged(){
   r.respContact=document.getElementById('r-resp-contact').value;
   r.conclusions=document.getElementById('r-conclusions').value;
   r.observations=document.getElementById('r-observations').value;
+  const _veriNom=document.getElementById('sig-verificateur-nom'); if(_veriNom) r.veriNom=_veriNom.value;
   r.updatedAt=Date.now();
   clearTimeout(saveTimer);
   saveTimer=setTimeout(async()=>{
@@ -3791,82 +3812,86 @@ function viewConclusionPhoto(idx){
 //  SIGNATURE PAD
 // ════════════════════════════════════════════
 let sigDrawing = false;
-let sigCtx = null;
+let sigCtx = null, sigCtxVeri = null;
+
+function _initOnePad(canvasId, ctxRef, restoreSrc, previewId, imgId, onDraw){
+  const old = document.getElementById(canvasId);
+  if(!old) return null;
+  const w = old.offsetWidth;
+  if(!w){ setTimeout(()=>_initOnePad(canvasId,ctxRef,restoreSrc,previewId,imgId,onDraw),120); return null; }
+  const canvas = old.cloneNode(false);
+  canvas.id = canvasId;
+  old.parentNode.replaceChild(canvas, old);
+  canvas.width = w; canvas.height = 130;
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle='#1a1a2e'; ctx.lineWidth=2.5; ctx.lineCap='round'; ctx.lineJoin='round';
+  let drawing = false;
+  function getPos(e){ const r=canvas.getBoundingClientRect(); const src=e.touches?e.touches[0]:e; return{x:(src.clientX-r.left)*(canvas.width/r.width),y:(src.clientY-r.top)*(canvas.height/r.height)}; }
+  canvas.addEventListener('mousedown',  e=>{ drawing=true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); });
+  canvas.addEventListener('mousemove',  e=>{ if(!drawing) return; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); });
+  canvas.addEventListener('mouseup',    ()=>{ drawing=false; });
+  canvas.addEventListener('mouseleave', ()=>{ drawing=false; });
+  canvas.addEventListener('touchstart', e=>{ e.preventDefault(); drawing=true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); },{passive:false});
+  canvas.addEventListener('touchmove',  e=>{ e.preventDefault(); if(!drawing) return; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); },{passive:false});
+  canvas.addEventListener('touchend',   ()=>{ drawing=false; });
+  if(restoreSrc){
+    const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,canvas.width,canvas.height); img.src=restoreSrc;
+    document.getElementById(previewId).style.display='block';
+    document.getElementById(imgId).src=restoreSrc;
+  }
+  onDraw(ctx);
+  return ctx;
+}
 
 function initSignaturePad(){
-  // Afficher le nom du rédacteur
   const redEl = document.getElementById('sig-redacteur-display');
-  if(redEl && currentUserProfile){
-    redEl.textContent = currentUserProfile.displayName || currentUserProfile.email || '—';
-  }
-
-  const old = document.getElementById('sig-canvas');
-  if(!old) return;
-  // Si l'accordéon est encore fermé, la largeur est 0 — on reporte
-  const w = old.offsetWidth;
-  if(!w){ setTimeout(initSignaturePad, 120); return; }
-
-  // Remplace le canvas pour supprimer les anciens event listeners
-  const canvas = old.cloneNode(false);
-  canvas.id = 'sig-canvas';
-  old.parentNode.replaceChild(canvas, old);
-
-  canvas.width = w;
-  canvas.height = 140;
-  sigCtx = canvas.getContext('2d');
-  sigCtx.strokeStyle = '#1a1a2e';
-  sigCtx.lineWidth = 2.5;
-  sigCtx.lineCap = 'round';
-  sigCtx.lineJoin = 'round';
-  sigDrawing = false;
-
-  function getPos(e){
-    const r = canvas.getBoundingClientRect();
-    const src = e.touches ? e.touches[0] : e;
-    return {x:(src.clientX-r.left)*(canvas.width/r.width), y:(src.clientY-r.top)*(canvas.height/r.height)};
-  }
-  canvas.addEventListener('mousedown',  e=>{ sigDrawing=true; const p=getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x,p.y); });
-  canvas.addEventListener('mousemove',  e=>{ if(!sigDrawing) return; const p=getPos(e); sigCtx.lineTo(p.x,p.y); sigCtx.stroke(); });
-  canvas.addEventListener('mouseup',    ()=>{ sigDrawing=false; });
-  canvas.addEventListener('mouseleave', ()=>{ sigDrawing=false; });
-  canvas.addEventListener('touchstart', e=>{ e.preventDefault(); sigDrawing=true; const p=getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x,p.y); },{passive:false});
-  canvas.addEventListener('touchmove',  e=>{ e.preventDefault(); if(!sigDrawing) return; const p=getPos(e); sigCtx.lineTo(p.x,p.y); sigCtx.stroke(); },{passive:false});
-  canvas.addEventListener('touchend',   ()=>{ sigDrawing=false; });
-
-  // Restaurer signature existante
-  if(S.currentRapport && S.currentRapport.signature){
-    const img = new Image();
-    img.onload = ()=>sigCtx.drawImage(img,0,0,canvas.width,canvas.height);
-    img.src = S.currentRapport.signature;
-    document.getElementById('sig-preview').style.display='block';
-    document.getElementById('sig-img').src = S.currentRapport.signature;
-  }
+  if(redEl && currentUserProfile) redEl.textContent = currentUserProfile.displayName||currentUserProfile.email||'—';
+  const r = S.currentRapport;
+  sigCtx     = _initOnePad('sig-canvas',     sigCtx,     r?.signature,     'sig-preview',      'sig-img',      c=>{ sigCtx=c; });
+  sigCtxVeri = _initOnePad('sig-canvas-veri',sigCtxVeri, r?.signatureVeri, 'sig-preview-veri', 'sig-img-veri', c=>{ sigCtxVeri=c; });
+  // Restaurer nom vérificateur
+  const vNom = document.getElementById('sig-verificateur-nom');
+  if(vNom && r) vNom.value = r.veriNom||'';
 }
 
 function clearSignature(){
-  const canvas = document.getElementById('sig-canvas');
-  if(!canvas) return;
-  if(!sigCtx){ sigCtx = canvas.getContext('2d'); }
+  const canvas=document.getElementById('sig-canvas'); if(!canvas) return;
+  if(!sigCtx) sigCtx=canvas.getContext('2d');
   sigCtx.clearRect(0,0,canvas.width,canvas.height);
   document.getElementById('sig-preview').style.display='none';
   document.getElementById('sig-img').src='';
   if(S.currentRapport){ S.currentRapport.signature=null; rapportChanged(); }
-  canvas._sigInited = false;
-  sigDrawing = false;
 }
 
 function saveSignature(){
-  const canvas = document.getElementById('sig-canvas');
-  if(!canvas || !sigCtx) return;
-  const dataUrl = canvas.toDataURL('image/png');
-  // Check if canvas is empty (all transparent)
-  const pixels = sigCtx.getImageData(0,0,canvas.width,canvas.height).data;
-  const hasContent = pixels.some((v,i)=>i%4===3 && v>0);
-  if(!hasContent){ toast('⚠️ Tracez votre signature d\'abord'); return; }
-  if(S.currentRapport){ S.currentRapport.signature = dataUrl; rapportChanged(); }
-  document.getElementById('sig-img').src = dataUrl;
-  document.getElementById('sig-preview').style.display = 'block';
-  toast('✅ Signature enregistrée');
+  const canvas=document.getElementById('sig-canvas'); if(!canvas||!sigCtx) return;
+  const pixels=sigCtx.getImageData(0,0,canvas.width,canvas.height).data;
+  if(!pixels.some((v,i)=>i%4===3&&v>0)){ toast('⚠️ Tracez votre signature d\'abord'); return; }
+  const dataUrl=canvas.toDataURL('image/png');
+  if(S.currentRapport){ S.currentRapport.signature=dataUrl; rapportChanged(); }
+  document.getElementById('sig-img').src=dataUrl;
+  document.getElementById('sig-preview').style.display='block';
+  toast('✅ Signature rédacteur enregistrée');
+}
+
+function clearSignatureVeri(){
+  const canvas=document.getElementById('sig-canvas-veri'); if(!canvas) return;
+  if(!sigCtxVeri) sigCtxVeri=canvas.getContext('2d');
+  sigCtxVeri.clearRect(0,0,canvas.width,canvas.height);
+  document.getElementById('sig-preview-veri').style.display='none';
+  document.getElementById('sig-img-veri').src='';
+  if(S.currentRapport){ S.currentRapport.signatureVeri=null; rapportChanged(); }
+}
+
+function saveSignatureVeri(){
+  const canvas=document.getElementById('sig-canvas-veri'); if(!canvas||!sigCtxVeri) return;
+  const pixels=sigCtxVeri.getImageData(0,0,canvas.width,canvas.height).data;
+  if(!pixels.some((v,i)=>i%4===3&&v>0)){ toast('⚠️ Tracez la signature du vérificateur d\'abord'); return; }
+  const dataUrl=canvas.toDataURL('image/png');
+  if(S.currentRapport){ S.currentRapport.signatureVeri=dataUrl; rapportChanged(); }
+  document.getElementById('sig-img-veri').src=dataUrl;
+  document.getElementById('sig-preview-veri').style.display='block';
+  toast('✅ Signature vérificateur enregistrée');
 }
 
 function pickNetModalPhoto(){
@@ -5074,27 +5099,44 @@ async function doWordDocx(){
     else children.push(para('Aucun réseau actif renseigné.',{color:DGRAY,size:22}));
     children.push(sp(200));
 
-    // ─── SIGNATURE ───
-    children.push(subTitle('Signature du responsable'));
+    // ─── SIGNATURES ───
+    children.push(subTitle('Signatures'));
     children.push(sp(40));
-    const sigImg = r.signature ? parseImg(r.signature) : null;
-    if(sigImg){
-      children.push(new Paragraph({
-        spacing:{before:40,after:40},
-        alignment:AlignmentType.LEFT,
-        children:[new ImageRun({type:sigImg.type,data:sigImg.data,transformation:{width:200,height:80},altText:{title:'Signature',description:'Signature',name:'Signature'}})]
-      }));
-    } else {
-      // Ligne pour signature manuscrite si pas encore enregistrée
-      children.push(new Paragraph({
-        spacing:{before:80,after:80},
-        border:{bottom:{style:BorderStyle.SINGLE,size:4,color:MGRAY}},
-        children:[mkRun('',{size:36})]
-      }));
+
+    // Helpers pour une cellule signature
+    function makeSigCell(label, sigDataUrl, nom, date){
+      const sigParsed = sigDataUrl ? parseImg(sigDataUrl) : null;
+      const cellChildren = [];
+      // Titre de colonne
+      cellChildren.push(new Paragraph({spacing:{before:0,after:80},children:[mkRun(label,{bold:true,size:20,color:NAVY})]}));
+      // Signature ou ligne vide
+      if(sigParsed){
+        cellChildren.push(new Paragraph({spacing:{before:0,after:40},children:[new ImageRun({type:sigParsed.type,data:sigParsed.data,transformation:{width:160,height:64},altText:{title:label,description:label,name:label}})]}));
+      } else {
+        cellChildren.push(new Paragraph({spacing:{before:60,after:60},border:{bottom:{style:BorderStyle.SINGLE,size:4,color:MGRAY}},children:[mkRun('',{size:32})]}));
+      }
+      // Nom
+      cellChildren.push(new Paragraph({spacing:{before:20,after:8},children:[mkRun(nom||'—',{bold:true,size:20,color:DGRAY})]}));
+      // Date
+      cellChildren.push(new Paragraph({spacing:{before:0,after:0},children:[mkRun(date,{italics:true,size:18,color:'9CA3AF'})]}));
+      return new TableCell({
+        width:{size:4600,type:WidthType.DXA},
+        borders:{top:{style:BorderStyle.NONE},bottom:{style:BorderStyle.NONE},left:{style:BorderStyle.NONE},right:{style:BorderStyle.NONE}},
+        margins:{top:0,bottom:0,left:200,right:200},
+        children:cellChildren
+      });
     }
+
     const redacteur = currentUserProfile?(currentUserProfile.displayName||currentUserProfile.email):'—';
-    children.push(para(redacteur,{size:20,color:DGRAY,bold:true,after:20}));
-    children.push(para(dateGen,{size:18,color:'9CA3AF',italics:true,after:80}));
+    const veriNom = r.veriNom||'';
+    children.push(new Table({
+      width:{size:9200,type:WidthType.DXA},
+      borders:{top:{style:BorderStyle.NONE},bottom:{style:BorderStyle.NONE},insideH:{style:BorderStyle.NONE},insideV:{style:BorderStyle.SINGLE,size:4,color:MGRAY},left:{style:BorderStyle.NONE},right:{style:BorderStyle.NONE}},
+      rows:[new TableRow({children:[
+        makeSigCell('Rédacteur', r.signature, redacteur, dateGen),
+        makeSigCell('Vérificateur', r.signatureVeri||null, veriNom, dateGen)
+      ]})]
+    }));
     children.push(sp(200));
 
     // ─── HEADER & FOOTER ───
