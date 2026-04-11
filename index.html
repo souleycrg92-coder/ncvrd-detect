@@ -1539,7 +1539,10 @@ body > *{position:relative;z-index:1}
           </div>
           <div style="margin-bottom:20px">
             <label style="font-size:12px;font-weight:700;color:#3d4a5e;margin-bottom:6px;display:block">MOT DE PASSE</label>
-            <input id="login-password" type="password" placeholder="••••••••" style="width:100%;padding:12px 14px;border:1.5px solid #dde1ea;border-radius:10px;font-size:15px;font-family:Inter,sans-serif;box-sizing:border-box;outline:none">
+            <div style="position:relative">
+              <input id="login-password" type="password" placeholder="••••••••" style="width:100%;padding:12px 44px 12px 14px;border:1.5px solid #dde1ea;border-radius:10px;font-size:15px;font-family:Inter,sans-serif;box-sizing:border-box;outline:none">
+              <button type="button" onclick="togglePwd('login-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:#9ca3af;font-size:18px;line-height:1" title="Afficher/masquer">👁</button>
+            </div>
           </div>
           <div id="login-error" style="color:#dc2626;font-size:13px;margin-bottom:12px;display:none"></div>
           <button onclick="loginUser()" style="width:100%;padding:13px;background:#1d4ed8;color:#fff;border:none;border-radius:12px;font-weight:800;font-size:16px;cursor:pointer;font-family:Inter,sans-serif">Se connecter →</button>
@@ -1557,7 +1560,10 @@ body > *{position:relative;z-index:1}
           </div>
           <div style="margin-bottom:12px">
             <label style="font-size:12px;font-weight:700;color:#3d4a5e;margin-bottom:6px;display:block">MOT DE PASSE</label>
-            <input id="reg-password" type="password" placeholder="Minimum 6 caractères" style="width:100%;padding:12px 14px;border:1.5px solid #dde1ea;border-radius:10px;font-size:15px;font-family:Inter,sans-serif;box-sizing:border-box;outline:none">
+            <div style="position:relative">
+              <input id="reg-password" type="password" placeholder="Minimum 6 caractères" style="width:100%;padding:12px 44px 12px 14px;border:1.5px solid #dde1ea;border-radius:10px;font-size:15px;font-family:Inter,sans-serif;box-sizing:border-box;outline:none">
+              <button type="button" onclick="togglePwd('reg-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:#9ca3af;font-size:18px;line-height:1" title="Afficher/masquer">👁</button>
+            </div>
           </div>
           <div style="margin-bottom:12px">
             <label style="font-size:12px;font-weight:700;color:#3d4a5e;margin-bottom:6px;display:block" id="reg-role-label">👷 MON RÔLE</label>
@@ -2834,6 +2840,7 @@ function toast(msg){
 // ════════════════════════════════════════════
 function openModal(id){document.getElementById(id).classList.add('show')}
 function closeModal(id){document.getElementById(id).classList.remove('show')}
+function togglePwd(inputId,btn){const inp=document.getElementById(inputId);if(!inp)return;const show=inp.type==='password';inp.type=show?'text':'password';btn.textContent=show?'🙈':'👁';}
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
 
 // ════════════════════════════════════════════
