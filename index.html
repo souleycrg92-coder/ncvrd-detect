@@ -5579,24 +5579,61 @@ async function doWordDocx(){
     async function ensureDataUrl(src){
       if(!src) return null;
       if(src.startsWith('data:')) return src;
+      // Essai 1 : fetch (fonctionne si CORS configuré sur Firebase Storage)
       try {
-        const res = await fetch(src);
-        const blob = await res.blob();
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
+        const res = await fetch(src, {mode:'cors'});
+        if(res.ok){
+          const blob = await res.blob();
+          return await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        }
       } catch(e) {
-        Logger.warn('Export', 'Impossible de charger image', e?.message);
-        return null;
+        Logger.warn('Export', 'fetch image échoué, essai canvas', e?.message);
       }
+      // Essai 2 : canvas (crossOrigin anonymous — ne nécessite pas de config CORS côté code)
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          try {
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth || 800; c.height = img.naturalHeight || 600;
+            c.getContext('2d').drawImage(img, 0, 0);
+            resolve(c.toDataURL('image/jpeg', 0.88));
+          } catch(e2) { resolve(null); }
+        };
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+    }
+
+    // docx.js ne supporte PAS WebP — conversion en JPEG si nécessaire
+    async function toJpegForDocx(dataUrl){
+      if(!dataUrl) return null;
+      if(!dataUrl.startsWith('data:image/webp')) return dataUrl;
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth || 800; c.height = img.naturalHeight || 600;
+            c.getContext('2d').drawImage(img, 0, 0);
+            resolve(c.toDataURL('image/jpeg', 0.88));
+          } catch(e) { resolve(null); }
+        };
+        img.onerror = () => resolve(null);
+        img.src = dataUrl;
+      });
     }
 
     async function imgDims(u){return new Promise(r=>{const i=new Image();i.onload=()=>r({w:i.naturalWidth,h:i.naturalHeight});i.onerror=()=>r({w:400,h:300});i.src=u;});}
     async function makeImgRun(dataUrl){
       dataUrl = await ensureDataUrl(dataUrl);
+      dataUrl = await toJpegForDocx(dataUrl);   // WebP → JPEG
       const p=parseImg(dataUrl);if(!p)return null;
       // Toujours respecter le ratio réel de la photo (portrait ou paysage)
       let w=408,h=306; // ratio 4:3 paysage par défaut
@@ -5620,6 +5657,7 @@ async function doWordDocx(){
     async function makeImgRunHalf(dataUrl){
       // Même logique que makeImgRun mais pour une largeur max de 190px (2 colonnes)
       dataUrl = await ensureDataUrl(dataUrl);
+      dataUrl = await toJpegForDocx(dataUrl);   // WebP → JPEG
       const p=parseImg(dataUrl);if(!p)return null;
       let w=190,h=143;
       try{
@@ -5707,7 +5745,8 @@ async function doWordDocx(){
     // ─── Plan de situation ───
     if(r.planSituation){
       children.push(subTitle('Plan de situation'));
-      const planImg = parseImg(r.planSituation);
+      const planSrc = await toJpegForDocx(await ensureDataUrl(r.planSituation));
+      const planImg = parseImg(planSrc);
       if(planImg){
         children.push(new Paragraph({
           spacing:{before:60,after:60},
