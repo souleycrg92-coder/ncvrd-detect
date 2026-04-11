@@ -1269,11 +1269,6 @@ html[data-terrain="1"] {
       <!-- Ligne néon bas -->
       <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,120,255,.6) 40%,rgba(0,200,255,.5) 60%,transparent);opacity:.8"></div>
     </div>
-    <!-- ═════════════════════════════════════════════════════════════
-         DASHBOARD STATS — Feature 1
-         ═════════════════════════════════════════════════════════════ -->
-    <div id="dashboard-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 14px 6px;margin-bottom:6px"></div>
-
     <div class="search-box">
       <input class="search-inp" id="search-chantier" placeholder="🔍  Rechercher chantier, client, référence…" oninput="filterChantiers(this.value)">
     </div>
@@ -3461,9 +3456,6 @@ function switchTab(tab){
 function renderChantiers(list){
   const el=document.getElementById('chantier-list');
 
-  // Feature 1: Render dashboard stats
-  renderDashboardStats();
-
   // Compter et afficher les badges
   const myUid_rc   = currentUserProfile?.uid;
   const encours    = S.chantiers.filter(c => c.statut !== 'termine' && (!c.createdBy || c.createdBy === myUid_rc || isAdminRole(currentUserProfile?.role)));
@@ -4797,8 +4789,8 @@ async function compressImage(file, maxW=1024, maxSizeKB=300){
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-          // Choisir le meilleur format disponible
-          const fmt = _supportsWebP ? 'image/webp' : 'image/jpeg';
+          // Toujours JPEG — le WebP est rejeté par docx.js (export Word) et certains serveurs
+          const fmt = 'image/jpeg';
           const maxBytes = maxSizeKB * 1024;
 
           // Essayer différentes qualités jusqu'à obtenir la taille cible
@@ -4832,7 +4824,9 @@ async function savePhoto(dataUrl){
   const photo={id:uid(),rapportId:S.currentRapport?S.currentRapport.id:'',
     numero:S.photoCount,dataUrl,caption:document.getElementById('photo-caption').value,
     section:document.getElementById('photo-section').value,
-    gpsLat,gpsLng,synced:!S.isOffline,takenAt:new Date().toLocaleString('fr-FR')};
+    gpsLat,gpsLng,synced:!S.isOffline,
+    createdAt:Date.now(),                              // nécessaire pour cleanOldLocalPhotos
+    takenAt:new Date().toLocaleString('fr-FR')};
   await db.put('photos',photo);
   S.photos.push(photo);
   document.getElementById('photo-caption').value='';
@@ -5448,7 +5442,14 @@ function _wblock(lines,obsColor){
 function exportRapportWord(){
   const r=S.currentRapport;
   if(!r){toast('⚠️ Aucun rapport ouvert');return}
-  toast('⏳ Génération du Word… (photos incluses)');
+  // Diagnostic : compter les photos disponibles
+  const nbGeneral = (S.photos||[]).filter(p=>p.rapportId===r.id).length;
+  const nbConclusion = (r.conclusionPhotos||[]).filter(Boolean).length;
+  const nbReseaux = (r.networks||[]).filter(n=>n.active).reduce((s,n)=>{
+    return s + ((n.photos&&n.photos.length) ? n.photos.length : (n.photo?1:0));
+  },0);
+  const total = nbGeneral + nbConclusion + nbReseaux;
+  toast(`⏳ Génération Word… ${total} photo(s) détectée(s)`);
   doWordDocx().catch(e=>{
     Logger.error('Export','exportRapportWord',e?.message);
     toast('⚠️ Erreur export Word : '+(e?.message||e));
@@ -5575,36 +5576,55 @@ async function doWordDocx(){
     function b64ToArr(b64){const bin=atob(b64);const a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return a;}
     function parseImg(dataUrl){if(!dataUrl||typeof dataUrl!=='string')return null;const m=dataUrl.match(/^data:image\/(\w+);base64,(.+)$/);if(!m)return null;return{type:m[1]==='jpg'?'jpeg':m[1],data:b64ToArr(m[2])};}
 
-    // Convertit n'importe quelle URL (data: OU https://) en data URL base64
+    // Convertit n'importe quelle URL (data: OU https://) en data URL JPEG base64
     async function ensureDataUrl(src){
       if(!src) return null;
-      if(src.startsWith('data:')) return src;
-      // Essai 1 : fetch (fonctionne si CORS configuré sur Firebase Storage)
+      if(src.startsWith('data:')) return src;   // déjà base64 → retour direct
+      // Essai 1 : fetch avec CORS (Firebase Storage supporte CORS par défaut)
       try {
         const res = await fetch(src, {mode:'cors'});
         if(res.ok){
           const blob = await res.blob();
-          return await new Promise((resolve, reject) => {
+          const raw = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => resolve(reader.result);
             reader.onerror = reject;
             reader.readAsDataURL(blob);
           });
+          return raw; // on retourne tel quel, toJpegForDocx s'en occupe
         }
       } catch(e) {
-        Logger.warn('Export', 'fetch image échoué, essai canvas', e?.message);
+        Logger.warn('Export', 'fetch CORS échoué', e?.message);
       }
-      // Essai 2 : canvas (crossOrigin anonymous — ne nécessite pas de config CORS côté code)
+      // Essai 2 : fetch sans mode CORS (no-cors → opaque, on ne peut pas lire le blob)
+      // → pas utile, on passe directement à l'img
+      // Essai 3 : <img> sans crossOrigin (l'image s'affiche dans le DOM → canvas)
       return new Promise((resolve) => {
         const img = new Image();
-        img.crossOrigin = 'anonymous';
         img.onload = () => {
           try {
             const c = document.createElement('canvas');
-            c.width = img.naturalWidth || 800; c.height = img.naturalHeight || 600;
+            c.width = img.naturalWidth || 800;
+            c.height = img.naturalHeight || 600;
             c.getContext('2d').drawImage(img, 0, 0);
-            resolve(c.toDataURL('image/jpeg', 0.88));
-          } catch(e2) { resolve(null); }
+            // Peut lever "tainted canvas" si CORS non configuré, mais on capture l'erreur
+            resolve(c.toDataURL('image/jpeg', 0.85));
+          } catch(e2) {
+            // Canvas tainté → on tente avec crossOrigin
+            const img2 = new Image();
+            img2.crossOrigin = 'anonymous';
+            img2.onload = () => {
+              try {
+                const c2 = document.createElement('canvas');
+                c2.width = img2.naturalWidth || 800;
+                c2.height = img2.naturalHeight || 600;
+                c2.getContext('2d').drawImage(img2, 0, 0);
+                resolve(c2.toDataURL('image/jpeg', 0.85));
+              } catch(e3) { resolve(null); }
+            };
+            img2.onerror = () => resolve(null);
+            img2.src = src + (src.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+          }
         };
         img.onerror = () => resolve(null);
         img.src = src;
@@ -6020,21 +6040,54 @@ function doWord(){
 // ════════════════════════════════════════════
 let _notifUnsubscribe = null;
 
+const NOTIF_TTL_MS = 24 * 60 * 60 * 1000; // 24 heures
+
+// Supprime les notifications de plus de 24h pour l'utilisateur courant
+async function cleanOldNotifications(){
+  if(!FIREBASE_CONFIGURED || !fdb || !currentUserProfile?.uid) return;
+  const cutoff = Date.now() - NOTIF_TTL_MS;
+  try {
+    const snap = await fdb.collection('notifications')
+      .where('toUid','==',currentUserProfile.uid)
+      .limit(100).get();
+    if(snap.empty) return;
+    const batch = fdb.batch();
+    let count = 0;
+    snap.docs.forEach(doc => {
+      const d = doc.data();
+      if((d.createdAt || 0) < cutoff){
+        batch.delete(doc.ref);
+        count++;
+      }
+    });
+    if(count > 0) await batch.commit();
+  } catch(e){
+    Logger.warn('Notifications', 'Erreur nettoyage 24h', e?.message);
+  }
+}
+
 async function initNotifications(){
   if(!FIREBASE_CONFIGURED || !fdb || !currentUserProfile) return;
   const uid = currentUserProfile.uid;
   if(!uid) return;
   if(_notifUnsubscribe) _notifUnsubscribe();
-  // Filtre sur toUid uniquement (pas de filtre 'read' pour éviter l'index composite)
-  // Le filtrage des non-lues se fait côté client
+
+  // Nettoyer les notifs de plus de 24h dès l'ouverture
+  cleanOldNotifications();
+
+  // Pas de orderBy → tri côté client pour éviter l'index composite Firestore
   _notifUnsubscribe = fdb.collection('notifications')
     .where('toUid','==',uid)
-    .orderBy('createdAt','desc')
     .limit(50)
     .onSnapshot(snap => {
-      const unread = snap.docs.filter(d => !d.data().read);
-      const count  = unread.length;
-      const badge  = document.getElementById('notif-badge');
+      const cutoff = Date.now() - NOTIF_TTL_MS;
+      // Filtrer côté client : non-lues ET moins de 24h
+      const unread = snap.docs.filter(d => {
+        const data = d.data();
+        return !data.read && (data.createdAt || 0) >= cutoff;
+      });
+      const count = unread.length;
+      const badge = document.getElementById('notif-badge');
       if(badge){
         badge.textContent = count > 9 ? '9+' : count;
         badge.style.display = count > 0 ? 'flex' : 'none';
@@ -6042,7 +6095,7 @@ async function initNotifications(){
       snap.docChanges().forEach(change => {
         if(change.type==='added'){
           const d = change.doc.data();
-          if(!d.read && Date.now() - d.createdAt < 10000) toast('🔔 ' + d.message);
+          if(!d.read && Date.now() - (d.createdAt||0) < 10000) toast('🔔 ' + (d.message||''));
         }
       });
       if(document.getElementById('notif-panel')?.style.display !== 'none') renderNotifList();
@@ -6054,20 +6107,29 @@ async function initNotifications(){
 async function renderNotifList(){
   const listEl = document.getElementById('notif-list');
   if(!listEl || !fdb || !currentUserProfile) return;
+  const cutoff = Date.now() - NOTIF_TTL_MS;
   try {
     const snap = await fdb.collection('notifications')
       .where('toUid','==',currentUserProfile.uid)
-      .limit(20).get();
-    if(snap.empty){ listEl.innerHTML='<div style="text-align:center;color:#5a6c8a;font-size:12px;padding:20px">Aucune notification</div>'; return; }
-    // Trier côté client pour éviter l'index Firestore composite
-    const docs = snap.docs.slice().sort((a,b)=>(b.data().createdAt||0)-(a.data().createdAt||0));
+      .limit(50).get();
+
+    // Filtrer : moins de 24h, trier du plus récent au plus ancien
+    const docs = snap.docs
+      .filter(doc => (doc.data().createdAt || 0) >= cutoff)
+      .sort((a,b) => (b.data().createdAt||0) - (a.data().createdAt||0));
+
+    if(!docs.length){
+      listEl.innerHTML='<div style="text-align:center;color:#5a6c8a;font-size:12px;padding:20px">Aucune notification</div>';
+      return;
+    }
     listEl.innerHTML = docs.map(doc => {
       const d = doc.data();
       const time = d.createdAt ? new Date(d.createdAt).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+      const age  = d.createdAt ? _notifAgeLabel(Date.now() - d.createdAt) : '';
       return `<div class="notif-item ${d.read?'read':'unread'}" onclick="openNotifChantier('${doc.id}','${d.chantierId||''}')">
         <div class="notif-title">${d.type==='chantier_invite'?'📋 Invitation chantier':'🔔 Notification'}</div>
         <div class="notif-body">${Validator.sanitize(d.message||'')}</div>
-        <div class="notif-time">${time}</div>
+        <div class="notif-time">${time}${age?' · '+age:''}</div>
       </div>`;
     }).join('');
   } catch(e){
@@ -6076,12 +6138,24 @@ async function renderNotifList(){
   }
 }
 
+// Affiche "il y a X min / h" pour la notification
+function _notifAgeLabel(ms){
+  const min = Math.floor(ms / 60000);
+  if(min < 1) return 'à l\'instant';
+  if(min < 60) return `il y a ${min} min`;
+  const h = Math.floor(min / 60);
+  return `il y a ${h}h`;
+}
+
 function toggleNotifPanel(){
   const panel = document.getElementById('notif-panel');
   if(!panel) return;
   const isOpen = panel.style.display !== 'none';
   panel.style.display = isOpen ? 'none' : 'block';
-  if(!isOpen) renderNotifList();
+  if(!isOpen){
+    cleanOldNotifications(); // purge silencieuse à chaque ouverture
+    renderNotifList();
+  }
 }
 
 async function markAllNotifsRead(){
@@ -6216,7 +6290,11 @@ function sanitizeForFirestore(val){
 // ── Écriture Firestore (texte + URLs déjà disponibles) ──
 async function _writeRapportToFirestore(r, teamId){
   const firestoreData = {...r};
-  delete firestoreData.planSituation;
+  // planSituation : supprimer si base64 (trop lourd), conserver si URL Firebase (après upload)
+  if(!firestoreData.planSituation || firestoreData.planSituation.startsWith('data:')){
+    delete firestoreData.planSituation;
+  }
+  // Signatures : toujours locales (non partagées avec les collaborateurs)
   delete firestoreData.signature;
   delete firestoreData.signatureVeri;
   // Garder uniquement les URLs (exclure les base64 encore en attente d'upload)
@@ -7318,54 +7396,6 @@ async function loadDemoData(){
 }
 
 // ════════════════════════════════════════════
-//  FEATURE 1: TABLEAU DE BORD STATISTIQUES
-// ════════════════════════════════════════════
-function renderDashboardStats(){
-  const thisMonth = new Date().getMonth();
-  const thisYear = new Date().getFullYear();
-
-  // Chantiers en cours ce mois
-  const chantiersThisMonth = S.chantiers.filter(c => {
-    if(c.statut === 'termine') return false;
-    const d = new Date(c.createdAt);
-    return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
-  }).length;
-
-  // Rapports créés ce mois
-  const rapportsThisMonth = (S.rapports || []).filter(r => {
-    const d = new Date(r.updatedAt || r.createdAt);
-    return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
-  }).length;
-
-  // Photos ce mois
-  const photosThisMonth = S.photos.filter(p => {
-    const d = new Date(p.createdAt);
-    return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
-  }).length;
-
-  // Collaborateurs
-  const collabCount = currentUserProfile?.teamId ? 5 : 1; // Simulation si pas de team
-
-  const stats = [
-    { label: 'Chantiers en cours', value: chantiersThisMonth, icon: '🏗️', color: '#00aaff' },
-    { label: 'Rapports créés', value: rapportsThisMonth, icon: '📋', color: '#00ff88' },
-    { label: 'Photos prises', value: photosThisMonth, icon: '📷', color: '#ff6d00' },
-    { label: 'Collaborateurs', value: collabCount, icon: '👥', color: '#a855f7' }
-  ];
-
-  const el = document.getElementById('dashboard-stats');
-  if(!el) return;
-
-  el.innerHTML = stats.map(s => `
-    <div style="background:rgba(0,100,200,.08);border:1px solid rgba(0,100,200,.2);border-radius:10px;padding:12px;text-align:center">
-      <div style="font-size:24px;margin-bottom:4px">${s.icon}</div>
-      <div style="font-size:24px;font-weight:900;color:${s.color};margin-bottom:2px">${s.value}</div>
-      <div style="font-size:11px;color:var(--muted);font-weight:600">${s.label}</div>
-    </div>
-  `).join('');
-}
-
-// ════════════════════════════════════════════
 //  FEATURE 2: RECHERCHE RAPPORTS
 // ════════════════════════════════════════════
 async function searchRapports(q){
@@ -7572,7 +7602,8 @@ function openRapportPreview(chantierId){
 let _chatUnsubscribe = null;
 
 function initRapportChat(rapportId){
-  if(!FIREBASE_CONFIGURED) return;
+  if(!FIREBASE_CONFIGURED){ _showChatError('Firebase non configuré'); return; }
+  if(!currentUserProfile?.teamId){ _showChatError('Profil utilisateur manquant'); return; }
   const r = S.currentRapport;
   if(!r) return;
 
@@ -7593,8 +7624,16 @@ function initRapportChat(rapportId){
       messages.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
       renderChatMessages(messages);
     }, err => {
-      Logger.warn('Chat', 'Erreur écoute messages', err.message);
+      Logger.warn('Chat', 'Erreur écoute messages', err?.message);
+      _showChatError(err?.code === 'permission-denied'
+        ? 'Accès refusé — vérifiez les règles Firestore (les sous-collections doivent être autorisées)'
+        : (err?.message || 'Erreur inconnue'));
     });
+}
+
+function _showChatError(msg){
+  const el = document.getElementById('chat-messages-list');
+  if(el) el.innerHTML = `<div style="color:#ef4444;font-size:12px;padding:8px;background:rgba(239,68,68,.08);border-radius:8px;border:1px solid rgba(239,68,68,.2)">⚠️ Chat indisponible : ${msg}</div>`;
 }
 
 function renderChatMessages(messages){
@@ -7649,8 +7688,11 @@ async function sendChatMessage(){
       .set(msg);
     input.value = '';
   } catch(e){
-    Logger.error('Chat', 'Erreur envoi message', e.message);
-    toast('⚠️ Erreur lors de l\'envoi du message');
+    Logger.error('Chat', 'Erreur envoi message', e?.message);
+    const detail = e?.code === 'permission-denied'
+      ? 'Accès refusé — vérifiez les règles Firestore'
+      : (e?.message || 'Erreur inconnue');
+    toast('⚠️ Message non envoyé : ' + detail);
   }
 }
 
@@ -7781,7 +7823,7 @@ if('serviceWorker' in navigator){
 //  FEATURE 12: SYNC QUEUE BADGE
 // ════════════════════════════════════════════
 function renderSyncQueueBadge(){
-  const queue = JSON.parse(localStorage.getItem('syncQueue') || '[]');
+  const queue = getSyncQueue();   // utilise SYNC_QUEUE_KEY = 'ncvrd_sync_queue'
   const badge = document.getElementById('sync-queue-badge');
   if(!badge) return;
 
@@ -7794,7 +7836,7 @@ function renderSyncQueueBadge(){
 }
 
 function showSyncQueueModal(){
-  const queue = JSON.parse(localStorage.getItem('syncQueue') || '[]');
+  const queue = getSyncQueue();   // utilise SYNC_QUEUE_KEY = 'ncvrd_sync_queue'
   const listEl = document.getElementById('sync-queue-list');
   if(!listEl) return;
 
@@ -7846,9 +7888,6 @@ async function initApp(){
   const t=today();
   document.getElementById('nc-debut').value=t;
   await updateProfileScreen();
-
-  // Feature 1: Render dashboard stats
-  renderDashboardStats();
 
   // Feature 5: Hide splash screen
   hideSplashScreen();
