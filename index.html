@@ -5494,13 +5494,23 @@ async function doWordDocx(){
   const c = S.currentChantier || S.chantiers.find(x=>x.id===S.activeChantier) || {};
   const dateGen = new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
 
-  await new Promise((resolve,reject)=>{
-    if(window.docx) return resolve();
-    const s=document.createElement('script');
-    s.src='https://unpkg.com/docx@8.5.0/build/index.umd.js';
-    s.onload=resolve; s.onerror=()=>reject(new Error('Impossible de charger docx.js'));
-    document.head.appendChild(s);
-  }).catch(e=>{toast('⚠️ '+e.message);});
+  // Charger docx.js et JSZip (nécessaire pour corriger les types d'image)
+  await Promise.all([
+    new Promise((resolve,reject)=>{
+      if(window.docx) return resolve();
+      const s=document.createElement('script');
+      s.src='https://unpkg.com/docx@8.5.0/build/index.umd.js';
+      s.onload=resolve; s.onerror=()=>reject(new Error('Impossible de charger docx.js'));
+      document.head.appendChild(s);
+    }),
+    new Promise((resolve)=>{
+      if(window.JSZip) return resolve();
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      s.onload=resolve; s.onerror=resolve; // non bloquant
+      document.head.appendChild(s);
+    })
+  ]).catch(e=>{toast('⚠️ '+e.message);});
   if(!window.docx) return;
 
   try {
@@ -5740,6 +5750,55 @@ async function doWordDocx(){
     }
     // Compteur global d'images réellement intégrées (pour toast de résultat)
     let _imgOk = 0, _imgTotal = 0;
+
+    // ── Correctif docx.js v8 : renomme les fichiers JPEG stockés en .png → .jpeg ──
+    // docx.js génère toujours l'extension .png dans le zip, forçant image/png comme
+    // content-type. Word ne peut pas décoder des données JPEG avec content-type image/png.
+    // Ce fix post-traite le zip pour que l'extension corresponde au vrai format.
+    async function fixDocxJpeg(blob){
+      if(!window.JSZip) return blob;
+      try {
+        const zip = await JSZip.loadAsync(blob);
+        const renames = {};
+        // Trouver les fichiers .png contenant en réalité des données JPEG (FF D8 FF)
+        for(const [name,file] of Object.entries(zip.files)){
+          if(name.startsWith('word/media/') && name.endsWith('.png') && !file.dir){
+            const data = await file.async('uint8array');
+            if(data[0]===0xFF && data[1]===0xD8 && data[2]===0xFF){
+              renames[name] = name.replace(/\.png$/, '.jpeg');
+            }
+          }
+        }
+        if(!Object.keys(renames).length) return blob;
+        // Renommer les fichiers média
+        for(const [oldName,newName] of Object.entries(renames)){
+          const data = await zip.files[oldName].async('uint8array');
+          zip.file(newName, data);
+          zip.remove(oldName);
+        }
+        // Corriger les références dans tous les fichiers XML/rels
+        for(const [xmlName,file] of Object.entries(zip.files)){
+          if(!file.dir && (xmlName.endsWith('.xml') || xmlName.endsWith('.rels'))){
+            let content = await file.async('string');
+            let changed = false;
+            for(const [oldName,newName] of Object.entries(renames)){
+              const ob = oldName.split('/').pop();
+              const nb = newName.split('/').pop();
+              if(content.includes(ob)){
+                content = content.split(ob).join(nb);
+                changed = true;
+              }
+            }
+            if(changed) zip.file(xmlName, content);
+          }
+        }
+        return await zip.generateAsync({type:'blob', compression:'DEFLATE',
+          compressionOptions:{level:6}});
+      } catch(e){
+        console.warn('[Word] fixDocxJpeg échoué:', e.message);
+        return blob;
+      }
+    }
 
     // Insère les photos par paires côte à côte dans un tableau 2 colonnes
     async function photoTable(photoItems){
@@ -5994,7 +6053,8 @@ async function doWordDocx(){
       }]
     });
 
-    const blob=await Packer.toBlob(doc);
+    const _rawBlob=await Packer.toBlob(doc);
+    const blob=await fixDocxJpeg(_rawBlob); // corrige les JPEG stockés en .png par docx.js v8
     const fname=((c.name||r.id||'rapport').replace(/[^a-z0-9]/gi,'_').toLowerCase());
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
