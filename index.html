@@ -3337,10 +3337,15 @@ function showScreen(id){
 }
 
 function goBack(){
-  // Feature 8 & 9: Clean up chat and presence listeners
-  if(_chatUnsubscribe) _chatUnsubscribe();
-  if(_presenceUnsubscribe) _presenceUnsubscribe();
-  if(_presenceInterval) clearInterval(_presenceInterval);
+  // ── Sauvegarder immédiatement avant de quitter (flush du timer de debounce) ──
+  if(S.activeScreen === 'screen-rapport'){
+    clearTimeout(saveTimer);
+    saveRapportNow();
+  }
+  // Nettoyer les listeners chat + présence
+  if(_chatUnsubscribe){ _chatUnsubscribe(); _chatUnsubscribe = null; }
+  if(_presenceUnsubscribe){ _presenceUnsubscribe(); _presenceUnsubscribe = null; }
+  if(_presenceInterval){ clearInterval(_presenceInterval); _presenceInterval = null; }
   if(S.currentRapport) clearPresence(S.currentRapport.id);
 
   if(S.activeScreen==='s-camera'){stopCamera();showScreen('screen-rapport')}
@@ -5574,8 +5579,29 @@ async function doWordDocx(){
     // Image helpers
     function b64ToArr(b64){const bin=atob(b64);const a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return a;}
     function parseImg(dataUrl){if(!dataUrl||typeof dataUrl!=='string')return null;const m=dataUrl.match(/^data:image\/(\w+);base64,(.+)$/);if(!m)return null;return{type:m[1]==='jpg'?'jpeg':m[1],data:b64ToArr(m[2])};}
+
+    // Convertit n'importe quelle URL (data: OU https://) en data URL base64
+    async function ensureDataUrl(src){
+      if(!src) return null;
+      if(src.startsWith('data:')) return src;
+      try {
+        const res = await fetch(src);
+        const blob = await res.blob();
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch(e) {
+        Logger.warn('Export', 'Impossible de charger image', e?.message);
+        return null;
+      }
+    }
+
     async function imgDims(u){return new Promise(r=>{const i=new Image();i.onload=()=>r({w:i.naturalWidth,h:i.naturalHeight});i.onerror=()=>r({w:400,h:300});i.src=u;});}
     async function makeImgRun(dataUrl){
+      dataUrl = await ensureDataUrl(dataUrl);
       const p=parseImg(dataUrl);if(!p)return null;
       // Toujours respecter le ratio réel de la photo (portrait ou paysage)
       let w=408,h=306; // ratio 4:3 paysage par défaut
@@ -5598,6 +5624,7 @@ async function doWordDocx(){
     }
     async function makeImgRunHalf(dataUrl){
       // Même logique que makeImgRun mais pour une largeur max de 190px (2 colonnes)
+      dataUrl = await ensureDataUrl(dataUrl);
       const p=parseImg(dataUrl);if(!p)return null;
       let w=190,h=143;
       try{
@@ -7505,14 +7532,15 @@ function initRapportChat(rapportId){
   // Unsubscribe previous listener
   if(_chatUnsubscribe) _chatUnsubscribe();
 
-  // Listen for chat messages in real-time
+  // Écoute temps réel sans orderBy (tri côté client pour éviter l'index Firestore)
   _chatUnsubscribe = fdb.collection('teams').doc(currentUserProfile.teamId)
     .collection('rapports').doc(rapportId)
     .collection('messages')
-    .orderBy('createdAt', 'asc')
     .onSnapshot(snap => {
       const messages = [];
-      snap.forEach(doc => messages.push(doc.data()));
+      snap.forEach(doc => messages.push({id: doc.id, ...doc.data()}));
+      // Tri par createdAt côté client
+      messages.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
       renderChatMessages(messages);
     }, err => {
       Logger.warn('Chat', 'Erreur écoute messages', err.message);
@@ -7617,13 +7645,14 @@ function listenPresence(rapportId){
   _presenceUnsubscribe = fdb.collection('teams').doc(currentUserProfile.teamId)
     .collection('rapports').doc(r.id)
     .collection('presence')
-    .where('at', '>', Date.now() - 45000)
     .onSnapshot(snap => {
+      const now = Date.now();
       const others = [];
       snap.forEach(doc => {
         const data = doc.data();
-        if(data.name !== currentUserProfile.displayName) {
-          others.push(data.name);
+        // Filtrer côté client : actif depuis moins de 45 secondes et pas soi-même
+        if(data.at && (now - data.at) < 45000 && doc.id !== currentUserProfile.uid){
+          others.push(data.name || 'Un collaborateur');
         }
       });
 
