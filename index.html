@@ -1115,9 +1115,12 @@ html[data-terrain="1"] {
 
 <!-- ─── PANNEAU NOTIFICATIONS ──────────────────────────────────────── -->
 <div id="notif-panel" style="display:none;position:fixed;top:58px;right:8px;width:300px;max-height:400px;overflow-y:auto;background:rgba(10,18,40,.97);border:1px solid rgba(0,140,255,.3);border-radius:14px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.6);backdrop-filter:blur(20px)">
-  <div style="padding:14px 16px 10px;border-bottom:1px solid rgba(0,140,255,.15);display:flex;align-items:center;justify-content:space-between">
+  <div style="padding:14px 16px 10px;border-bottom:1px solid rgba(0,140,255,.15);display:flex;align-items:center;justify-content:space-between;gap:8px">
     <span style="font-weight:700;color:#e2e8f0;font-size:14px">🔔 Notifications</span>
-    <button onclick="markAllNotifsRead()" style="background:none;border:none;color:rgba(0,140,255,.8);font-size:11px;cursor:pointer;font-family:Inter,sans-serif">Tout marquer lu</button>
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <button onclick="markAllNotifsRead()" style="background:none;border:none;color:rgba(0,140,255,.8);font-size:11px;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap">✓ Tout lu</button>
+      <button onclick="deleteAllNotifs()" style="background:none;border:none;color:rgba(239,68,68,.8);font-size:11px;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap">🗑 Tout supprimer</button>
+    </div>
   </div>
   <div id="notif-list" style="padding:8px"></div>
 </div>
@@ -6172,6 +6175,28 @@ async function markAllNotifsRead(){
   } catch(e){
     Logger.error('Notifications', 'Erreur marquage notifications lues', e?.message);
     toast('⚠️ Erreur mise à jour des notifications');
+  }
+}
+
+async function deleteAllNotifs(){
+  if(!fdb || !currentUserProfile) return;
+  if(!confirm('Supprimer toutes vos notifications ? Cette action est irréversible.')) return;
+  try {
+    toast('🗑 Suppression en cours…');
+    const snap = await fdb.collection('notifications')
+      .where('toUid','==',currentUserProfile.uid).limit(100).get();
+    if(snap.empty){ toast('Aucune notification à supprimer.'); return; }
+    const batch = fdb.batch();
+    snap.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+    const badge = document.getElementById('notif-badge');
+    if(badge) badge.style.display = 'none';
+    const list = document.getElementById('notif-list');
+    if(list) list.innerHTML = '<div style="color:rgba(148,163,184,.6);font-size:12px;text-align:center;padding:20px">Aucune notification</div>';
+    toast('✅ Toutes les notifications ont été supprimées');
+  } catch(e){
+    Logger.error('Notifications', 'Erreur suppression notifications', e?.message);
+    toast('⚠️ Erreur lors de la suppression des notifications');
   }
 }
 
