@@ -3919,17 +3919,18 @@ function renderModifHistory(){
 
 // ── Erreur sync visible ──
 let _syncErrTimer;
-function showSyncError(){
+function showSyncError(detail){
   const bar = document.getElementById('autosave-bar');
   if(!bar) return;
   bar.style.color='#ef4444';
   bar.style.background='rgba(239,68,68,.08)';
-  bar.textContent='⚠️ Synchronisation échouée — données sauvegardées localement';
+  const extra = detail ? ` (${detail.slice(0,80)})` : '';
+  bar.textContent='⚠️ Synchronisation échouée — données sauvegardées localement' + extra;
   clearTimeout(_syncErrTimer);
   _syncErrTimer = setTimeout(()=>{
     bar.style.color='';
     bar.style.background='';
-  }, 5000);
+  }, 8000);
 }
 
 let saveTimer;
@@ -6094,13 +6095,14 @@ async function syncChantierToFirebase(c){
   if(!FIREBASE_CONFIGURED || !currentUserProfile?.teamId) return;
   if(!navigator.onLine){ addToSyncQueue('chantier', c.id); return; }
   const teamId = c._teamId || currentUserProfile.teamId;
-  const data = {...c}; delete data._teamId;
+  let data = {...c}; delete data._teamId;
+  data = sanitizeForFirestore(data);
   try {
     await fdb.collection('teams').doc(teamId).collection('chantiers').doc(c.id).set(data,{merge:true});
   } catch(e){
     Logger.warn('Sync', `syncChantier échoué pour ${c.id}`, e?.message);
     addToSyncQueue('chantier', c.id);
-    showSyncError();
+    showSyncError(e?.message);
   }
 }
 
@@ -6157,6 +6159,21 @@ async function uploadRapportPhotos(r){
   }
 }
 
+// ── Nettoyage récursif : supprime les undefined (rejetés par Firestore) ──
+function sanitizeForFirestore(val){
+  if(Array.isArray(val)){
+    return val.map(sanitizeForFirestore).filter(v => v !== undefined);
+  }
+  if(val !== null && typeof val === 'object'){
+    const out = {};
+    for(const [k, v] of Object.entries(val)){
+      if(v !== undefined){ out[k] = sanitizeForFirestore(v); }
+    }
+    return out;
+  }
+  return val;
+}
+
 // ── Écriture Firestore (texte + URLs déjà disponibles) ──
 async function _writeRapportToFirestore(r, teamId){
   const firestoreData = {...r};
@@ -6176,11 +6193,11 @@ async function _writeRapportToFirestore(r, teamId){
   firestoreData.lastModifiedAt   = Date.now();
   firestoreData.modifHistory     = r.modifHistory || [];
   try {
-    await fdb.collection('teams').doc(teamId).collection('rapports').doc(r.id).set(firestoreData,{merge:true});
+    await fdb.collection('teams').doc(teamId).collection('rapports').doc(r.id).set(sanitizeForFirestore(firestoreData),{merge:true});
   } catch(e){
     Logger.warn('Sync', `_writeRapportToFirestore échoué pour ${r.id}`, e?.message);
     addToSyncQueue('rapport', r.id);
-    showSyncError();
+    showSyncError(e?.message);
   }
 }
 
