@@ -3390,30 +3390,35 @@ function toggleAcc(btn){
 //  CHANTIERS
 // ════════════════════════════════════════════
 async function loadChantiers(){
-  if(FIREBASE_CONFIGURED && currentUserProfile){
+  // Helper : timeout une promesse pour éviter de bloquer hors ligne
+  function withTimeout(promise, ms=8000){
+    return Promise.race([promise, new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),ms))]);
+  }
+
+  if(FIREBASE_CONFIGURED && currentUserProfile && !S.isOffline){
     const p = currentUserProfile;
     try{
       let all = [];
 
       if(isGlobalAdmin(p.role)){
         // DG / QHSE : tous les chantiers de toutes les équipes
-        const teamsSnap = await fdb.collection('teams').get();
+        const teamsSnap = await withTimeout(fdb.collection('teams').get());
         for(const teamDoc of teamsSnap.docs){
-          const snap = await fdb.collection('teams').doc(teamDoc.id).collection('chantiers').get();
+          const snap = await withTimeout(fdb.collection('teams').doc(teamDoc.id).collection('chantiers').get());
           snap.docs.forEach(d=>all.push({id:d.id,...d.data(),_teamId:teamDoc.id}));
         }
 
       } else if(isAdminRole(p.role)){
         // Responsable / Directeur d'agence : tous les chantiers de leur équipe
-        const snap = await fdb.collection('teams').doc(p.teamId).collection('chantiers').get();
+        const snap = await withTimeout(fdb.collection('teams').doc(p.teamId).collection('chantiers').get());
         snap.docs.forEach(d=>all.push({id:d.id,...d.data(),_teamId:p.teamId}));
 
       } else {
         // Technicien : seulement ses chantiers + ceux où il est collaborateur
         const uid = p.uid;
         const teamId = p.teamId;
-        const q1 = await fdb.collection('teams').doc(teamId).collection('chantiers').where('createdBy','==',uid).get();
-        const q2 = await fdb.collection('teams').doc(teamId).collection('chantiers').where('collaborators','array-contains',uid).get();
+        const q1 = await withTimeout(fdb.collection('teams').doc(teamId).collection('chantiers').where('createdBy','==',uid).get());
+        const q2 = await withTimeout(fdb.collection('teams').doc(teamId).collection('chantiers').where('collaborators','array-contains',uid).get());
         const seen = new Set();
         [...q1.docs,...q2.docs].forEach(d=>{ if(!seen.has(d.id)){seen.add(d.id); all.push({id:d.id,...d.data(),_teamId:teamId});} });
       }
@@ -3422,10 +3427,10 @@ async function loadChantiers(){
       S.chantiers = all;
       renderChantiers(S.chantiers);
       return;
-    }catch(e){ Logger.error('Chantiers', 'Chargement Firebase échoué, fallback local', e?.message); }
+    }catch(e){ Logger.warn('Chantiers', 'Chargement Firebase échoué, fallback local', e?.message); }
   }
   // Fallback local IndexedDB
-  S.chantiers=await db.getAll('chantiers');
+  S.chantiers=await db._idb.getAll('chantiers');
   renderChantiers(S.chantiers);
 }
 
@@ -8152,12 +8157,12 @@ async function monthlyCleanup(manual = false){
 }
 
 async function initApp(){
-  await db.open();
-  await DynLists.load();
+  await db.open().catch(()=>{});
+  await DynLists.load().catch(()=>{});
   DynLists.populateSelects();
-  await loadChantiers();
-  await loadConsignes();
-  await loadDossier();
+  await loadChantiers().catch(e=>Logger.warn('Init','loadChantiers échoué',e?.message));
+  await loadConsignes().catch(()=>{});
+  await loadDossier().catch(()=>{});
   if(!FIREBASE_CONFIGURED) await loadDemoData();
   S.photos=await db.getAll('photos');
   S.gpsPoints=await db.getAll('gps_points');
@@ -8189,6 +8194,15 @@ async function initApp(){
 }
 
 async function init(){
+  // Sécurité : si le splash est toujours visible après 10s, le cacher et afficher le login
+  setTimeout(()=>{
+    const sp = document.getElementById('splash-screen');
+    if(sp && getComputedStyle(sp).display !== 'none'){
+      hideSplashScreen();
+      if(!currentUser) showScreen('s-login');
+    }
+  }, 10000);
+
   await db.open();
   await DynLists.load();
   DynLists.populateSelects();
