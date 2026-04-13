@@ -3872,19 +3872,24 @@ async function createChantier(){
 }
 
 async function createChantierDirect(){
-  if(FIREBASE_CONFIGURED && !currentUser){ toast('⚠️ Vous devez être connecté pour créer un chantier.'); showScreen('s-login'); return; }
-  // Feature 4: Auto-generate reference number
-  const reference = await getNextRapportRef();
-  const c={id:uid(),name:'Nouveau chantier – '+today(),address:'',client:'',
-    reference:reference,dateDebut:today(),dateFin:'',status:'active',createdAt:Date.now(),
-    createdBy: currentUserProfile?.uid || 'local',
-    collaborators: []};
-  await db.put('chantiers',c);
-  syncChantierToFirebase(c);
-  S.chantiers.unshift(c);
-  renderChantiers(S.chantiers);
-  toast('✅ Chantier créé');
-  setTimeout(()=>openChantier(c.id),150);
+  try {
+    if(FIREBASE_CONFIGURED && !currentUser){ toast('⚠️ Vous devez être connecté pour créer un chantier.'); showScreen('s-login'); return; }
+    // Feature 4: Auto-generate reference number
+    const reference = await getNextRapportRef();
+    const c={id:uid(),name:'Nouveau chantier – '+today(),address:'',client:'',
+      reference:reference,dateDebut:today(),dateFin:'',status:'active',createdAt:Date.now(),
+      createdBy: currentUserProfile?.uid || 'local',
+      collaborators: []};
+    await db.put('chantiers',c);
+    syncChantierToFirebase(c);
+    S.chantiers.unshift(c);
+    renderChantiers(S.chantiers);
+    toast('✅ Chantier créé');
+    setTimeout(()=>openChantier(c.id).catch(e=>{toast('❌ '+e.message);Logger.error('Chantier','openChantier',e?.message)}),150);
+  } catch(e){
+    toast('❌ Erreur création chantier : '+(e?.message||e));
+    Logger.error('Chantier','createChantierDirect',e?.message);
+  }
 }
 
 function chantierRefChanged(){

@@ -1,5 +1,5 @@
-// Service Worker for NCVRD Detect PWA — v2
-const CACHE_NAME = 'ncvrd-detect-v2';
+// Service Worker for NCVRD Detect PWA — v3
+const CACHE_NAME = 'ncvrd-detect-v3';
 
 // Ressources locales à cacher obligatoirement
 const LOCAL_ASSETS = [
