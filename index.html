@@ -1563,7 +1563,6 @@ html[data-terrain="1"] {
     <div class="sec-hdr">Export du rapport</div>
     <div class="btn-row">
       <button class="btn-big btn-card" style="flex:1;background:var(--blue);color:#fff;border-color:var(--blue)" onclick="exportRapportWord()">📝 Word</button>
-      <button class="btn-big btn-card" style="flex:1;background:rgba(100,200,255,.15);border:1px solid rgba(100,200,255,.3);color:var(--accent)" onclick="exportRapportPDF()">📄 PDF</button>
     </div>
     <div class="btn-row" style="margin-top:0">
       <button class="btn-big btn-card" style="flex:1" onclick="openInviteChantierModal(S.currentChantier&&S.currentChantier.id)">📤 Partager</button>
@@ -1830,6 +1829,7 @@ html[data-terrain="1"] {
     <button class="btn-big btn-card" onclick="copyInviteCode()" style="border-left:4px solid var(--accent)">🔗 Copier le code d'invitation</button>
     <button class="btn-big btn-card" onclick="openModal('m-install')">📱 Installer sur mobile</button>
     <button class="btn-big btn-card" onclick="cleanOldLocalPhotos()">🧹 Nettoyer les photos locales</button>
+    <button class="btn-big btn-card" onclick="monthlyCleanup(true)" style="border-left:4px solid rgba(220,38,38,.4);color:rgba(220,38,38,.85)">🗑️ Supprimer toutes les photos et rapports</button>
     <button class="btn-big btn-card" onclick="clearAllData()">🗑️ Effacer les données locales</button>
     <div class="sec-hdr">Session</div>
     <button class="btn-big" style="background:rgba(255,71,87,.1);color:#ff4757;border:1px solid rgba(255,71,87,.3);border-radius:14px;padding:14px;font-weight:700;font-size:15px;cursor:pointer;margin:0 14px 8px;display:block;width:calc(100% - 28px)" onclick="logoutUser()">🚪 Se déconnecter</button>
@@ -5446,31 +5446,7 @@ function exportRapportWord(){
   const r=S.currentRapport;
   if(!r){toast('⚠️ Aucun rapport ouvert');return}
 
-  // Diagnostic détaillé AVANT génération
-  const rapPhotos  = (S.photos||[]).filter(p=>p.rapportId===r.id);
-  const withData   = rapPhotos.filter(p=>p.dataUrl && p.dataUrl.startsWith('data:'));
-  const withNull   = rapPhotos.filter(p=>!p.dataUrl);
-  const withUrl    = rapPhotos.filter(p=>p.dataUrl && !p.dataUrl.startsWith('data:'));
-
-  // Log console pour débogage (F12)
-  console.log('[Word Diag] Photos générales pour ce rapport :', rapPhotos.length);
-  console.log('[Word Diag]  -> avec base64 dataUrl :', withData.length);
-  console.log('[Word Diag]  -> dataUrl null/vide    :', withNull.length);
-  console.log('[Word Diag]  -> URL distante (HTTPS) :', withUrl.length);
-  withData.forEach((p,i)=>console.log('  Photo '+(i+1)+': type='+p.dataUrl.substring(5,25)+', taille='+Math.round(p.dataUrl.length/1024)+'ko'));
-  withUrl.forEach((p,i) =>console.log('  Photo URL '+(i+1)+': '+p.dataUrl.substring(0,80)));
-  withNull.forEach((p,i)=>console.log('  Photo NULL '+(i+1)+': id='+p.id+', synced='+p.synced+', createdAt='+p.createdAt));
-
-  const nbConclusion = (r.conclusionPhotos||[]).filter(Boolean).length;
-  const nbReseaux = (r.networks||[]).filter(n=>n.active).reduce((s,n)=>{
-    return s + ((n.photos&&n.photos.length) ? n.photos.length : (n.photo?1:0));
-  },0);
-
-  // Toast informatif
-  let info = '⏳ Génération Word… '+rapPhotos.length+' photo(s) générale(s)';
-  if(withNull.length) info += ' (⚠️ '+withNull.length+' sans données locales)';
-  if(withUrl.length)  info += ' + '+withUrl.length+' URL distante(s)';
-  toast(info);
+  toast('⏳ Génération du rapport Word…');
 
   doWordDocx().catch(e=>{
     Logger.error('Export','exportRapportWord',e?.message);
@@ -5622,24 +5598,53 @@ async function doWordDocx(){
     async function ensureDataUrl(src){
       if(!src) return null;
       if(src.startsWith('data:')) return src;   // déjà base64 → retour direct
-      // Essai 1 : fetch avec CORS (Firebase Storage supporte CORS par défaut)
+
+      // Helper : convertit un Blob en dataURL
+      const blobToDataUrl = blob => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      // Essai 1 : fetch avec CORS (Firebase Storage supporte CORS si configuré)
       try {
         const res = await fetch(src, {mode:'cors'});
         if(res.ok){
-          const blob = await res.blob();
-          const raw = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          });
-          return raw; // on retourne tel quel, toJpegForDocx s'en occupe
+          return await blobToDataUrl(await res.blob());
         }
       } catch(e) {
         Logger.warn('Export', 'fetch CORS échoué', e?.message);
       }
-      // Essai 2 : fetch sans mode CORS (no-cors → opaque, on ne peut pas lire le blob)
-      // → pas utile, on passe directement à l'img
+
+      // Essai 2 : Firebase Storage SDK — pour les anciens rapports dont les photos
+      // sont déjà des URLs Firebase (avant le correctif). On tente plusieurs méthodes.
+      if(src.includes('firebasestorage.googleapis.com') && fstorage){
+        try {
+          const ref = fstorage.refFromURL(src);
+          const freshUrl = await ref.getDownloadURL();
+          // 2a : URL fraîche simple (Firebase Storage download URLs supportent CORS)
+          try {
+            const r1 = await fetch(freshUrl);
+            if(r1.ok) return await blobToDataUrl(await r1.blob());
+          } catch(_){}
+          // 2b : API REST Firebase avec token d'authentification (schéma "Firebase")
+          if(fauth && fauth.currentUser){
+            try {
+              const idToken = await fauth.currentUser.getIdToken();
+              const m = freshUrl.match(/\/b\/([^/]+)\/o\/([^?]+)/);
+              if(m){
+                const restUrl = `https://firebasestorage.googleapis.com/v0/b/${m[1]}/o/${m[2]}?alt=media`;
+                const r2 = await fetch(restUrl, {headers:{'Authorization':'Firebase '+idToken}});
+                if(r2.ok) return await blobToDataUrl(await r2.blob());
+              }
+            } catch(_){}
+          }
+        } catch(e) {
+          Logger.warn('Export', 'Firebase Storage fetch échoué', e?.message);
+        }
+      }
+
       // Essai 3 : <img> sans crossOrigin (l'image s'affiche dans le DOM → canvas)
       return new Promise((resolve) => {
         const img = new Image();
@@ -6377,16 +6382,23 @@ async function uploadPhotoToStorage(base64DataUrl, path){
 // ── Upload toutes les photos base64 d'un rapport et remplace par URL ──
 async function uploadRapportPhotos(r){
   if(!fstorage || !FIREBASE_CONFIGURED) return;
-  const uid  = currentUserProfile?.uid || 'unknown';
   const base = `rapports/${r.id}`;
+
+  // ── STRATÉGIE : ne JAMAIS remplacer les base64 dans r (IndexedDB local).
+  // Les URLs Firebase sont stockées dans des champs _xxxUrls séparés.
+  // → _writeRapportToFirestore utilise ces champs pour Firestore.
+  // → L'export Word lit toujours les champs base64 originaux.
+  // → Un champ _xxxUrls non null = déjà uploadé, pas de re-upload.
 
   // Photos de conclusion
   if(r.conclusionPhotos?.length){
+    if(!r._conclusionUrls) r._conclusionUrls = [];
     for(let i=0; i<r.conclusionPhotos.length; i++){
+      if(r._conclusionUrls[i]) continue; // déjà uploadé
       const src = r.conclusionPhotos[i];
       if(src && src.startsWith('data:')){
         const url = await uploadPhotoToStorage(src, `${base}/conclusion_${i}.jpg`);
-        if(url){ r.conclusionPhotos[i] = url; }
+        if(url) r._conclusionUrls[i] = url;
       }
     }
   }
@@ -6394,20 +6406,22 @@ async function uploadRapportPhotos(r){
   if(r.networks?.length){
     for(const n of r.networks){
       if(n.photos?.length){
+        if(!n._photosUrls) n._photosUrls = [];
         for(let i=0; i<n.photos.length; i++){
+          if(n._photosUrls[i]) continue; // déjà uploadé
           const src = n.photos[i];
           if(src && src.startsWith('data:')){
             const url = await uploadPhotoToStorage(src, `${base}/reseau_${n.id}_${i}.jpg`);
-            if(url){ n.photos[i] = url; }
+            if(url) n._photosUrls[i] = url;
           }
         }
       }
     }
   }
   // Plan de situation
-  if(r.planSituation?.startsWith('data:')){
+  if(!r._planUrl && r.planSituation?.startsWith('data:')){
     const url = await uploadPhotoToStorage(r.planSituation, `${base}/plan_situation.jpg`);
-    if(url){ r.planSituation = url; }
+    if(url) r._planUrl = url;
   }
 }
 
@@ -6436,13 +6450,25 @@ async function _writeRapportToFirestore(r, teamId){
   // Signatures : toujours locales (non partagées avec les collaborateurs)
   delete firestoreData.signature;
   delete firestoreData.signatureVeri;
-  // Garder uniquement les URLs (exclure les base64 encore en attente d'upload)
-  firestoreData.conclusionPhotos = (r.conclusionPhotos||[]).filter(s => s && !s.startsWith('data:'));
+  // Utiliser les URLs Firebase uploadées pour Firestore (pas les base64 locales)
+  // Les champs _xxxUrls restent en IndexedDB uniquement
+  firestoreData.conclusionPhotos = (r._conclusionUrls||[]).filter(u => u && !u.startsWith('data:'));
+  delete firestoreData._conclusionUrls;
+  delete firestoreData._planUrl;
+  // planSituation : utiliser l'URL Firebase si disponible
+  if(r._planUrl){
+    firestoreData.planSituation = r._planUrl;
+  } else if(!firestoreData.planSituation || firestoreData.planSituation.startsWith('data:')){
+    delete firestoreData.planSituation;
+  }
   if(firestoreData.networks){
-    firestoreData.networks = firestoreData.networks.map(n => ({
-      ...n,
-      photos: (n.photos||[]).filter(s => s && !s.startsWith('data:'))
-    }));
+    firestoreData.networks = firestoreData.networks.map(n => {
+      const nClean = {...n};
+      // Envoyer les URLs Firebase uploadées comme photos pour Firestore
+      nClean.photos = (n._photosUrls||[]).filter(u => u && !u.startsWith('data:'));
+      delete nClean._photosUrls;
+      return nClean;
+    });
   }
   firestoreData.lastModifiedBy   = currentUserProfile.uid;
   firestoreData.lastModifiedName = currentUserProfile.displayName || currentUserProfile.email || '—';
@@ -7586,16 +7612,6 @@ async function openRapportFromSearch(rapportId){
 }
 
 // ════════════════════════════════════════════
-//  FEATURE 3: PDF EXPORT
-// ════════════════════════════════════════════
-function exportRapportPDF(){
-  const r = S.currentRapport;
-  if(!r){ toast('⚠️ Aucun rapport ouvert'); return; }
-  toast('📄 Impression PDF…');
-  window.print();
-}
-
-// ════════════════════════════════════════════
 //  FEATURE 4: NUMÉROTATION AUTOMATIQUE RAPPORTS
 // ════════════════════════════════════════════
 async function getNextRapportRef(){
@@ -8017,6 +8033,105 @@ async function cleanOldLocalPhotos(){
   }
 }
 
+// ════════════════════════════════════════════
+//  FEATURE 14: NETTOYAGE MENSUEL AUTOMATIQUE
+// ════════════════════════════════════════════
+
+// Supprime récursivement tous les fichiers d'un dossier Firebase Storage
+async function deleteStorageFolder(folderRef){
+  try {
+    const list = await folderRef.listAll();
+    await Promise.all(list.items.map(item => item.delete().catch(()=>{})));
+    await Promise.all(list.prefixes.map(prefix => deleteStorageFolder(prefix)));
+  } catch(e){
+    Logger.warn('MonthlyCleanup', 'deleteStorageFolder échoué', e?.message);
+  }
+}
+
+/**
+ * Nettoyage mensuel : supprime toutes les photos et tous les rapports
+ * (IndexedDB local + Firestore + Firebase Storage).
+ * Appelé automatiquement au premier lancement de chaque nouveau mois.
+ * @param {boolean} manual - true = déclenché manuellement (demande confirmation)
+ */
+async function monthlyCleanup(manual = false){
+  const now = new Date();
+  const currentKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const lastKey = localStorage.getItem('ncvrd_last_monthly_cleanup');
+
+  // Vérification : si déjà nettoyé ce mois-ci et pas en mode manuel, on quitte
+  if(!manual && lastKey === currentKey) return;
+
+  if(manual){
+    const ok = confirm('🗑️ Nettoyage complet\n\nToutes les photos et tous les rapports vont être supprimés définitivement (données locales et cloud).\n\nCette action est irréversible. Continuer ?');
+    if(!ok) return;
+  }
+
+  toast('⏳ Nettoyage en cours…');
+  let errors = 0;
+
+  try {
+    // 1. Vider les stores IndexedDB locaux
+    await db._idb.clear('photos').catch(()=>{ errors++; });
+    await db._idb.clear('rapports').catch(()=>{ errors++; });
+    await db._idb.clear('chantiers').catch(()=>{ errors++; });
+    await db._idb.clear('gps_points').catch(()=>{ errors++; });
+
+    // 2. Supprimer dans Firestore (toutes les collections de l'équipe)
+    if(FIREBASE_CONFIGURED && fdb && currentUserProfile?.teamId){
+      const teamId = currentUserProfile.teamId;
+      for(const store of ['rapports','chantiers','photos','gps_points']){
+        try {
+          const snap = await fdb.collection('teams').doc(teamId).collection(store).get();
+          if(snap.docs.length > 0){
+            // Firestore batch limité à 500 ops, on découpe si nécessaire
+            const chunks = [];
+            for(let i=0; i<snap.docs.length; i+=400) chunks.push(snap.docs.slice(i,i+400));
+            for(const chunk of chunks){
+              const batch = fdb.batch();
+              chunk.forEach(d => batch.delete(d.ref));
+              await batch.commit();
+            }
+          }
+        } catch(e){
+          Logger.warn('MonthlyCleanup', `Firestore '${store}' nettoyage échoué`, e?.message);
+          errors++;
+        }
+      }
+    }
+
+    // 3. Supprimer les fichiers Firebase Storage sous rapports/
+    if(FIREBASE_CONFIGURED && fstorage){
+      await deleteStorageFolder(fstorage.ref('rapports'));
+    }
+
+    // 4. Mettre à jour la mémoire vive
+    S.photos = [];
+    S.gpsPoints = [];
+    S.photoCount = 0;
+    S.chantiers = [];
+    S.currentRapport = null;
+
+    // 5. Enregistrer la clé du dernier nettoyage
+    localStorage.setItem('ncvrd_last_monthly_cleanup', currentKey);
+
+    // Rafraîchir l'interface
+    await loadChantiers().catch(()=>{});
+    await updateProfileScreen().catch(()=>{});
+
+    if(errors === 0){
+      toast(manual
+        ? '✅ Nettoyage terminé — photos et rapports supprimés'
+        : '✅ Nettoyage mensuel automatique effectué');
+    } else {
+      toast(`⚠️ Nettoyage terminé avec ${errors} erreur(s)`);
+    }
+  } catch(e){
+    Logger.error('MonthlyCleanup', 'Erreur critique', e?.message);
+    toast('❌ Erreur lors du nettoyage : ' + (e?.message || e));
+  }
+}
+
 async function initApp(){
   await db.open();
   await DynLists.load();
@@ -8045,6 +8160,9 @@ async function initApp(){
 
   // Feature 13: Clean old photos
   await cleanOldLocalPhotos();
+
+  // Feature 14: Nettoyage mensuel automatique (silencieux, 1x par mois)
+  await monthlyCleanup(false);
 
   initNotifications(); // démarrer le listener notifications temps réel
   updateTerrainBtn();  // synchroniser l'apparence du bouton mode terrain
@@ -8085,6 +8203,7 @@ async function init(){
       currentUserProfile = null;
       if(nav) nav.style.display='none';
       if(topbar) topbar.style.display='none';
+      hideSplashScreen();
       showScreen('s-login');
     }
   });
