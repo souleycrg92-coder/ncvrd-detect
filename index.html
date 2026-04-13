@@ -3555,6 +3555,9 @@ function _virtualRender(container, items){
   sentinel.className = 'virtual-sentinel';
   sentinel.style.cssText = 'height:1px;width:100%';
 
+  // Ajouter la sentinelle EN PREMIER (avant tout appendBatch)
+  container.appendChild(sentinel);
+
   function _appendBatch(){
     const end = Math.min(_rendered + BATCH, total);
     const frag = document.createDocumentFragment();
@@ -3578,7 +3581,6 @@ function _virtualRender(container, items){
 
   // Premier lot
   _appendBatch();
-  container.appendChild(sentinel);
 
   // Observer la sentinelle pour charger la suite automatiquement
   if(_rendered < total){
