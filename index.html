@@ -2496,12 +2496,16 @@ class CloudDB {
   async open(){ await this._idb.open(); return this; }
   setTeam(teamId){ this._teamId = teamId; }
 
+  // Stores qui ne sont jamais synchronisés sur Firestore (IndexedDB uniquement)
+  static LOCAL_ONLY = new Set(['photos','gps_points']);
+  _isLocalOnly(store){ return CloudDB.LOCAL_ONLY.has(store); }
+
   _col(store){
     return fdb.collection('teams').doc(this._teamId).collection(store);
   }
 
   async getAll(store){
-    if(!FIREBASE_CONFIGURED || !this._teamId) return this._idb.getAll(store);
+    if(!FIREBASE_CONFIGURED || !this._teamId || this._isLocalOnly(store)) return this._idb.getAll(store);
     try {
       const snap = await this._col(store).get();
       return snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -2511,7 +2515,7 @@ class CloudDB {
     }
   }
   async get(store, id){
-    if(!FIREBASE_CONFIGURED || !this._teamId) return this._idb.get(store,id);
+    if(!FIREBASE_CONFIGURED || !this._teamId || this._isLocalOnly(store)) return this._idb.get(store,id);
     try {
       const doc = await this._col(store).doc(String(id)).get();
       return doc.exists ? {id:doc.id,...doc.data()} : null;
@@ -2521,7 +2525,7 @@ class CloudDB {
     }
   }
   async put(store, data){
-    if(!FIREBASE_CONFIGURED || !this._teamId) return this._idb.put(store,data);
+    if(!FIREBASE_CONFIGURED || !this._teamId || this._isLocalOnly(store)) return this._idb.put(store,data);
     try {
       const d = {...data};
       await this._col(store).doc(String(d.id)).set(d,{merge:true});
@@ -2532,7 +2536,7 @@ class CloudDB {
     }
   }
   async del(store, id){
-    if(!FIREBASE_CONFIGURED || !this._teamId) return this._idb.del(store,id);
+    if(!FIREBASE_CONFIGURED || !this._teamId || this._isLocalOnly(store)) return this._idb.del(store,id);
     // Supprimer toujours en local ET en Firestore (les deux en parallèle)
     const results = await Promise.allSettled([
       this._col(store).doc(String(id)).delete(),
