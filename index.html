@@ -5987,8 +5987,9 @@ async function doWordDocx(){
             if(changed) zip.file(xmlName, content);
           }
         }
-        return await zip.generateAsync({type:'blob', compression:'DEFLATE',
-          compressionOptions:{level:6}});
+        return await zip.generateAsync({type:'blob',
+          mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          compression:'DEFLATE', compressionOptions:{level:6}});
       } catch(e){
         console.warn('[Word] fixDocxJpeg échoué:', e.message);
         return blob;
