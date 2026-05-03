@@ -3685,6 +3685,21 @@ async function loadChantiers(){
       }
 
       all.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
+      // Filtrer les chantiers supprimés localement (tombstone)
+      // Firestore offline persistence peut retourner un doc supprimé si la règle serveur a rejeté le delete
+      const _tomb = JSON.parse(localStorage.getItem('ncvrd_deleted_ids') || '[]');
+      if(_tomb.length){
+        const _allIds = all.map(c => String(c.id));
+        // Nettoyer le tombstone : retirer les IDs qui ne sont plus dans Firestore (delete réussi côté serveur)
+        const _stillInFS = _tomb.filter(tid => _allIds.includes(tid));
+        if(_stillInFS.length !== _tomb.length){
+          localStorage.setItem('ncvrd_deleted_ids', JSON.stringify(_stillInFS));
+        }
+        // Filtrer : exclure les IDs du tombstone des résultats
+        all = all.filter(c => !_tomb.includes(String(c.id)));
+      }
+
       S.chantiers = all;
       renderChantiers(S.chantiers);
       return;
@@ -3975,7 +3990,28 @@ async function deleteChantier(id){
   let firestoreOk = true;
   if(FIREBASE_CONFIGURED && fdb && teamId){
     try {
-      await fdb.collection('teams').doc(teamId).collection('chantiers').doc(String(id)).delete();
+      const _cRef = fdb.collection('teams').doc(teamId).collection('chantiers').doc(String(id));
+      await _cRef.delete();
+      // Vérification côté serveur : avec offline persistence, delete() résout même si le serveur refuse.
+      // On force une lecture depuis le serveur pour confirmer la suppression réelle.
+      try {
+        const _check = await _cRef.get({ source: 'server' });
+        if(_check.exists){
+          // Firestore serveur a encore le document → règle Firestore bloque le delete
+          Logger.warn('Delete', `Suppression Firestore rejetée côté serveur pour ${id} — règles Firestore ?`);
+          firestoreOk = false;
+          // Pas besoin de retenter ici : le tombstone local protège déjà l'affichage
+        } else {
+          // Suppression confirmée côté serveur → retirer du tombstone
+          try {
+            const _tomb2 = JSON.parse(localStorage.getItem('ncvrd_deleted_ids') || '[]');
+            localStorage.setItem('ncvrd_deleted_ids', JSON.stringify(_tomb2.filter(t => t !== String(id))));
+          } catch(e){}
+        }
+      } catch(_verifyErr){
+        // Erreur de vérification (hors ligne, timeout…) → on garde le tombstone, c'est ok
+        Logger.info('Delete', `Vérification serveur impossible (hors ligne ?) pour ${id}`, _verifyErr?.message);
+      }
     } catch(e){
       firestoreOk = false;
       Logger.warn('Delete', 'Suppression chantier Firestore échouée', e?.message);
@@ -3988,6 +4024,16 @@ async function deleteChantier(id){
   // 4. Supprimer les backups localStorage (évite toute restauration parasite)
   try { localStorage.removeItem(`ncvrd_backup_chantier_${id}`); } catch(e){}
   try { localStorage.removeItem(`ncvrd_backup_rapport_${id}`); } catch(e){}
+
+  // 4b. Ajouter au tombstone (liste noire locale des IDs supprimés)
+  //     Garantit que le chantier n'est pas ré-affiché même si Firestore
+  //     rejette la suppression silencieusement (offline persistence masque les erreurs serveur)
+  try {
+    const tomb = JSON.parse(localStorage.getItem('ncvrd_deleted_ids') || '[]');
+    const sid = String(id);
+    if(!tomb.includes(sid)) tomb.push(sid);
+    localStorage.setItem('ncvrd_deleted_ids', JSON.stringify(tomb.slice(-100)));
+  } catch(e){}
 
   // 5. Vider le contexte courant si c'est ce chantier qui est ouvert
   //    (évite que l'autosave ou saveRapportNow() re-crée le chantier en Firestore)
@@ -4004,8 +4050,8 @@ async function deleteChantier(id){
   if(firestoreOk){
     toast('🗑️ Chantier supprimé');
   } else {
-    toast(`⚠️ Erreur suppression Firestore — teamId: "${teamId}"`, 6000);
-    console.error('[deleteChantier] Suppression Firestore échouée. teamId:', teamId, '| id chantier:', id);
+    toast(`⚠️ Suppression locale OK — mais rejeté par le serveur Firestore (règles). Le chantier ne réapparaîtra plus sur cet appareil, mais peut rester visible sur d'autres appareils.`, 8000);
+    console.error('[deleteChantier] Suppression Firestore échouée/rejetée. teamId:', teamId, '| id chantier:', id);
   }
 }
 
