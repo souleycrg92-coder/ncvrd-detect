@@ -6447,10 +6447,10 @@ function _wp(text,bold,size,color,shading){
   const shd=shading?`<w:pPr><w:shd w:val="clear" w:color="auto" w:fill="${shading}"/></w:pPr>`:'';
   return `<w:p>${shd}<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>${b}${sz}${col}</w:rPr><w:t xml:space="preserve">${_xmlEsc(text)}</w:t></w:r></w:p>`;
 }
-// Titre de section (fond bleu #0E2841 + texte blanc, style CR.docx)
+// Titre de section (fond gris clair F9F9F9 + texte bleu foncé #0E2841)
 function _wh(num,text){
-  const fill='0E2841';
-  return `<w:p><w:pPr><w:shd w:val="clear" w:color="auto" w:fill="${fill}"/><w:spacing w:before="240" w:after="120"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:bCs/><w:sz w:val="24"/><w:szCs w:val="24"/><w:color w:val="FFFFFF"/></w:rPr><w:t xml:space="preserve">${_xmlEsc(num+'. '+text.toUpperCase())}</w:t></w:r></w:p>`;
+  const fill='F9F9F9';
+  return `<w:p><w:pPr><w:shd w:val="clear" w:color="auto" w:fill="${fill}"/><w:spacing w:before="240" w:after="120"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:bCs/><w:sz w:val="24"/><w:szCs w:val="24"/><w:color w:val="0E2841"/></w:rPr><w:t xml:space="preserve">${_xmlEsc(num+'. '+text.toUpperCase())}</w:t></w:r></w:p>`;
 }
 // Sous-titre (texte bleu souligné)
 function _wh3(text){
@@ -6458,9 +6458,9 @@ function _wh3(text){
 }
 // Ligne de tableau
 function _wrow(cells,header){
-  const rPr=header?`<w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:bCs/><w:sz w:val="20"/><w:color w:val="FFFFFF"/></w:rPr>`:`<w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="20"/><w:color w:val="595959"/></w:rPr>`;
-  const trPr=header?`<w:trPr><w:shd w:val="clear" w:color="auto" w:fill="0E2841"/></w:trPr>`:'';
-  return `<w:tr>${trPr}${cells.map((cell,i)=>`<w:tc><w:tcPr><w:tcBorders><w:top w:val="single" w:sz="4" w:color="C5CCE0"/><w:left w:val="single" w:sz="4" w:color="C5CCE0"/><w:bottom w:val="single" w:sz="4" w:color="C5CCE0"/><w:right w:val="single" w:sz="4" w:color="C5CCE0"/></w:tcBorders><w:shd w:val="clear" w:color="auto" w:fill="${header?'0E2841':'FFFFFF'}"/></w:tcPr><w:p><w:r>${rPr}<w:t xml:space="preserve">${_xmlEsc(cell)}</w:t></w:r></w:p></w:tc>`).join('')}</w:tr>`;
+  const rPr=header?`<w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:bCs/><w:sz w:val="20"/><w:color w:val="0E2841"/></w:rPr>`:`<w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="20"/><w:color w:val="595959"/></w:rPr>`;
+  const trPr=header?`<w:trPr><w:shd w:val="clear" w:color="auto" w:fill="F9F9F9"/></w:trPr>`:'';
+  return `<w:tr>${trPr}${cells.map((cell,i)=>`<w:tc><w:tcPr><w:tcBorders><w:top w:val="single" w:sz="4" w:color="C5CCE0"/><w:left w:val="single" w:sz="4" w:color="C5CCE0"/><w:bottom w:val="single" w:sz="4" w:color="C5CCE0"/><w:right w:val="single" w:sz="4" w:color="C5CCE0"/></w:tcBorders><w:shd w:val="clear" w:color="auto" w:fill="${header?'F9F9F9':'FFFFFF'}"/></w:tcPr><w:p><w:r>${rPr}<w:t xml:space="preserve">${_xmlEsc(cell)}</w:t></w:r></w:p></w:tc>`).join('')}</w:tr>`;
 }
 // Ligne tableau zébré (ligne paire)
 function _wrowEven(cells){
@@ -6607,9 +6607,9 @@ async function doWordDocx(){
     function sectionTitle(num,text){
       return new Paragraph({
         spacing:{before:280,after:0},
-        shading:{type:ShadingType.CLEAR,fill:NAVY},
+        shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},
         border:{bottom:{style:BorderStyle.SINGLE,size:14,color:ORANGE}},
-        children:[mkRun('  '+num+'  ',{size:26,bold:true,color:ORANGE}),mkRun(text.toUpperCase(),{size:26,bold:true,color:WHITE})]
+        children:[mkRun('  '+num+'  ',{size:26,bold:true,color:ORANGE}),mkRun(text.toUpperCase(),{size:26,bold:true,color:NAVY})]
       });
     }
     function subTitle(text){
@@ -6644,7 +6644,7 @@ async function doWordDocx(){
       return new Table({
         width:{size:CW,type:WidthType.DXA},columnWidths:w,
         rows:[
-          new TableRow({tableHeader:true,children:headers.map((h,i)=>mkCell(h,{w:w[i],fill:NAVY,bold:true,header:true,align:AlignmentType.CENTER}))}),
+          new TableRow({tableHeader:true,children:headers.map((h,i)=>mkCell(h,{w:w[i],fill:'F9F9F9',bold:true,color:NAVY,align:AlignmentType.CENTER}))}),
           ...rows.map((row,ri)=>new TableRow({children:row.map((cell,ci)=>mkCell(cell,{w:w[ci],fill:ri%2===0?WHITE:LGRAY,borders}))}))
         ]
       });
