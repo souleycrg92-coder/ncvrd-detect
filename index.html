@@ -5846,12 +5846,14 @@ async function _generateOuvragesWord(ouvrages, filename){
   // Bannière.png = image complète (logo + visuel) créée par NeoConceptVRD
   const bannerBytes = await fetchImgBytes('Banni%C3%A8re.png');
 
-  // ── En-tête de page : Bannière.png pleine largeur bord à bord ──
-  // Word montre 21,17 cm × 3,94 cm — image étendue dans les marges via indent négatif
-  // A4 total = 11906 DXA = 794px ; marges = 1440 DXA chaque côté
+  // ── En-tête de page : Bannière.png collée en haut à gauche, pleine largeur ──
+  // Word : 21,17 cm × 3,94 cm. On colle l'image au bord page via indent négatif.
+  // Marge page = 1440 DXA (1 po). On ajoute 300 DXA de sécurité pour garantir
+  // que l'image couvre bien bord gauche ET bord droit sans blanc résiduel.
   const MARGIN_DXA  = 1440;
-  const PAGE_W_PX   = Math.round((TW + 2 * MARGIN_DXA) / 1440 * 96); // ~794px (A4 full)
-  const BANNER_H_PX = 149; // 3,94 cm → 3.94/2.54*96 ≈ 149px
+  const OVER        = 300; // sur-débordement de sécurité
+  const PAGE_W_PX   = Math.round((TW + 2 * MARGIN_DXA + 2 * OVER) / 1440 * 96); // ~834px
+  const BANNER_H_PX = 149; // 3,94 cm = 149px à 96 dpi
 
   let hdrChildren;
   if(bannerBytes){
@@ -5862,8 +5864,10 @@ async function _generateOuvragesWord(ouvrages, filename){
           type: 'png',
           transformation: { width: PAGE_W_PX, height: BANNER_H_PX }
         })],
-        spacing: { before:0, after:0 },
-        indent:  { left: -MARGIN_DXA, right: -MARGIN_DXA }, // déborde dans les marges
+        // Supprimer tout espace avant/après (pas de blanc au-dessus de la bannière)
+        spacing: { before:0, after:0, line:240, lineRule:'auto' },
+        // Indent négatif = marge + sécurité : l'image part du bord gauche de la page
+        indent:  { left: -(MARGIN_DXA + OVER), right: -(MARGIN_DXA + OVER) },
       })
     ];
   } else {
@@ -5979,7 +5983,13 @@ async function _generateOuvragesWord(ouvrages, filename){
   const doc = new Document({
     sections:[{
       headers:    { default: pageHeader },
-      properties: { page:{ margin:{ top:1440, bottom:1440, left:1440, right:1440 } } },
+      properties: { page:{ margin:{
+        header: 0,    // bannière collée au bord haut de la page (0 espace avant)
+        top:    2400, // corps commence après la bannière (149px ≈ 2235 DXA + marge)
+        bottom: 1440,
+        left:   1440,
+        right:  1440,
+      }}},
       children:   docChildren,
     }]
   });
