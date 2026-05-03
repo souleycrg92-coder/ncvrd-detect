@@ -6230,6 +6230,19 @@ const _LOGO_NEOCONCEPT_B64 = 'iVBORw0KGgoAAAANSUhEUgAAALEAAACoCAYAAACv8A+WAAAAAX
 
 //  EXPORT WORD — Nouveau modèle Professionnel BTP
 // ════════════════════════════════════════════
+// Convertit un dataURL base64 en {type, data:Uint8Array} pour docx.js ImageRun
+// Fonction globale — utilisée par doWordDocx ET _generateOuvragesWord
+function parseImg(dataUrl){
+  if(!dataUrl || typeof dataUrl !== 'string') return null;
+  const m = dataUrl.trim().match(/^data:image\/([a-zA-Z0-9+]+);base64,([\s\S]+)$/);
+  if(!m) return null;
+  let type = m[1].toLowerCase();
+  if(type === 'jpg') type = 'jpeg';
+  const b64  = m[2].replace(/\s/g, '');
+  const data = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  return {type, data};
+}
+
 async function doWordDocx(){
   const r = S.currentRapport;
   const c = S.currentChantier || S.chantiers.find(x=>x.id===S.activeChantier) || {};
@@ -6345,22 +6358,7 @@ async function doWordDocx(){
       });
     }
 
-    // Image helpers — on passe la base64 directement (string) à docx.js ImageRun
-    // Docx.js appelle Buffer.from(string, 'base64') en interne → plus fiable que Uint8Array dans le navigateur
-    function parseImg(dataUrl){
-      if(!dataUrl||typeof dataUrl!=='string') return null;
-      // Nettoyer les éventuels espaces/retours à la ligne résiduels
-      const clean = dataUrl.trim();
-      const m = clean.match(/^data:image\/([a-zA-Z0-9+]+);base64,([\s\S]+)$/);
-      if(!m) return null;
-      let type = m[1].toLowerCase();
-      if(type==='jpg') type='jpeg';
-      // Supprimer les éventuels whitespace dans la base64 (safety)
-      const b64 = m[2].replace(/\s/g,'');
-      // Convertir en Uint8Array (comme le logo) — docx.js v8 est plus fiable avec des bytes
-      const data = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-      return {type, data};
-    }
+    // parseImg est maintenant globale (définie avant exportWord)
 
     // Convertit n'importe quelle URL (data: OU https://) en data URL JPEG base64
     async function ensureDataUrl(src){
