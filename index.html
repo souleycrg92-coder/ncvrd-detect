@@ -5726,14 +5726,15 @@ async function exportAllOuvrages(){
 }
 
 async function _generateOuvragesWord(ouvrages, filename){
-  if(!window.docx){
-    await new Promise((res,rej)=>{
-      const s=document.createElement('script');
-      s.src='https://unpkg.com/docx@8.5.0/build/index.js';
-      s.onload=res; s.onerror=()=>rej(new Error('Impossible de charger docx.js'));
-      document.head.appendChild(s);
-    });
-  }
+  await new Promise((resolve, reject)=>{
+    if(window.docx) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/docx@8.5.0/build/index.umd.js';
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('Impossible de charger docx.js — vérifiez votre connexion'));
+    document.head.appendChild(s);
+  });
+  if(!window.docx){ toast('❌ docx.js non disponible'); return; }
   const {Document,Packer,Paragraph,Table,TableRow,TableCell,TextRun,
          HeadingLevel,AlignmentType,WidthType,ImageRun} = window.docx;
   const BLUE='1E4DB7'; const GRAY='64748B'; const LT='EFF6FF';
