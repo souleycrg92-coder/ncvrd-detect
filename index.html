@@ -5848,25 +5848,38 @@ async function _generateOuvragesWord(ouvrages, filename){
     fetchImgBytes('LOGO_HD.png'),
   ]);
 
-  // ── En-tête de page : bannière gauche + logo droit ──
+  // ── En-tête de page : logo gauche + bannière droite (comme le modèle ODT) ──
+  // Largeurs : logo ≈ 1200 DXA, bannière = TW - 1200 DXA
+  // Pixels docx.js à 96 dpi : 1 DXA = 96/1440 px → bannière ≈ 522px wide
+  const W_LOGO   = 1200;
+  const W_BANNER = TW - W_LOGO; // 7831 DXA
+  // Hauteur du header : ~90px ; bannière étirée sur toute la largeur restante
+  const PX_LOGO_W   = Math.round(W_LOGO   / 1440 * 96); // 80px
+  const PX_LOGO_H   = Math.round(W_LOGO   / 1440 * 96); // 80px (logo quasi-carré)
+  const PX_BANNER_W = Math.round(W_BANNER / 1440 * 96); // 522px
+  const PX_BANNER_H = 90;                                // hauteur cible de l'en-tête
+
   let hdrChildren;
   if(bannerBytes && logoBytes){
     const hdrTable = new Table({
-      width:   { size:100, type:WidthType.PERCENTAGE },
+      width:   { size:TW, type:WidthType.DXA },
       borders: noBorders,
       rows:[ new TableRow({ children:[
+        // ← Logo NeoConceptVRD à gauche
         new TableCell({
-          children:[ mkP([new ImageRun({data:bannerBytes, type:'png', transformation:{width:440,height:84}})]) ],
+          children:[ mkP([new ImageRun({data:logoBytes, type:'png',
+                          transformation:{width:PX_LOGO_W, height:PX_LOGO_H}})]) ],
           borders: noBorders,
           margins: { top:0, bottom:0, left:0, right:0 },
-          width:   { size:TW-1200, type:WidthType.DXA },
+          width:   { size:W_LOGO, type:WidthType.DXA },
         }),
+        // → Bannière à droite, pleine largeur restante
         new TableCell({
-          children:[ mkP([new ImageRun({data:logoBytes, type:'png', transformation:{width:90,height:85}})],
-                         {alignment:AlignmentType.RIGHT}) ],
+          children:[ mkP([new ImageRun({data:bannerBytes, type:'png',
+                          transformation:{width:PX_BANNER_W, height:PX_BANNER_H}})]) ],
           borders: noBorders,
           margins: { top:0, bottom:0, left:0, right:0 },
-          width:   { size:1200, type:WidthType.DXA },
+          width:   { size:W_BANNER, type:WidthType.DXA },
         }),
       ]})],
     });
