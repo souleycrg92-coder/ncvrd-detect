@@ -4151,6 +4151,36 @@ async function openChantier(id){
         const remote = {id, ...snap.data()};
         // Utiliser Firestore si : pas de version locale OU Firestore est plus récent
         if(!rapport || (remote.lastModifiedAt||0) >= (rapport.updatedAt||0)){
+          // ── Fusion : Firestore ne stocke pas les base64 (trop lourd).
+          //    On réinjecte depuis le local les données purement locales
+          //    pour ne pas perdre les photos, plan, signatures. ──
+          if(rapport){
+            // Photos des réseaux : Firestore a des URLs Storage (ou []), local a des base64
+            if(rapport.networks?.length && remote.networks?.length){
+              remote.networks = remote.networks.map(rn => {
+                const ln = rapport.networks.find(x => x.id === rn.id);
+                if(!ln) return rn;
+                // Photos : URLs Storage de Firestore + base64 locales
+                const storageUrls = (rn.photos||[]).filter(p => p && !p.startsWith('data:'));
+                const localB64    = (ln.photos||[]).filter(p => p?.startsWith('data:'));
+                rn.photos = [...storageUrls, ...localB64];
+                // Métadonnées Storage locales (_photosUrls)
+                if(ln._photosUrls?.length) rn._photosUrls = ln._photosUrls;
+                return rn;
+              });
+            }
+            // planSituation : Firestore l'efface si base64
+            if(!remote.planSituation && rapport.planSituation) remote.planSituation = rapport.planSituation;
+            if(rapport._planUrl) remote._planUrl = rapport._planUrl;
+            // conclusionPhotos : idem
+            const remoteStorageConc = (remote.conclusionPhotos||[]).filter(p => p && !p.startsWith('data:'));
+            const localB64Conc      = (rapport.conclusionPhotos||[]).filter(p => p?.startsWith('data:'));
+            remote.conclusionPhotos = [...remoteStorageConc, ...localB64Conc];
+            if(rapport._conclusionUrls?.length) remote._conclusionUrls = rapport._conclusionUrls;
+            // Signatures : toujours locales (Firestore les efface)
+            if(rapport.signature)     remote.signature     = rapport.signature;
+            if(rapport.signatureVeri) remote.signatureVeri = rapport.signatureVeri;
+          }
           rapport = remote;
           await db.put('rapports', rapport);
         }
