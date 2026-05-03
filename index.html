@@ -1547,6 +1547,7 @@ html[data-terrain="1"] {
     </div>
     <div class="btn-row" style="margin-top:0">
       <button class="btn-big btn-card" style="flex:1" onclick="openInviteChantierModal(S.currentChantier&&S.currentChantier.id)">📤 Partager</button>
+      <button class="btn-big btn-card" id="btn-refresh-chantier" style="flex:0 0 auto;padding:0 16px" onclick="refreshChantierNow()" title="Actualiser le chantier depuis le serveur">🔄</button>
     </div>
     <div style="height:10px"></div>
   </div>
@@ -4114,6 +4115,24 @@ function resetFilters(){
   if(p) p.value='all';
   if(rb) rb.style.display='none';
   renderChantiers(S.chantiers);
+}
+
+async function refreshChantierNow(){
+  const c = S.currentChantier;
+  if(!c) return;
+  const btn = document.getElementById('btn-refresh-chantier');
+  if(btn){ btn.disabled = true; btn.textContent = '⏳'; }
+  try {
+    // 1. Sauvegarder les modifications en cours avant de recharger
+    await saveRapportNow();
+    // 2. Recharger depuis Firestore (openChantier fait déjà une lecture serveur fraîche)
+    await openChantier(c.id);
+    toast('✅ Chantier actualisé');
+  } catch(e){
+    toast('❌ Erreur actualisation : ' + (e?.message || e));
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = '🔄'; }
+  }
 }
 
 async function openChantier(id){
