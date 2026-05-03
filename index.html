@@ -6957,17 +6957,17 @@ async function doWordDocx(){
     // ─── PAGE DE COUVERTURE ───
     // (Logo retiré : déjà présent dans l'en-tête Bannière.png)
     children.push(sp(600));
-    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:NAVY},children:[mkRun('  ',{size:48})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:NAVY},children:[mkRun(_ent.nom,{size:60,bold:true,color:WHITE})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:NAVY},children:[mkRun(_ent.sous,{size:26,color:'A8C4E8',italics:true})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:ORANGE},children:[mkRun('  ',{size:18})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun('  ',{size:48})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.nom,{size:60,bold:true,color:'156082'})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.sous,{size:26,color:'156082',italics:true})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:'156082'},children:[mkRun('  ',{size:18})]}));
     children.push(sp(600));
     children.push(para('COMPTE RENDU DE DÉTECTION',{align:AlignmentType.CENTER,bold:true,size:44,color:NAVY,before:0,after:60}));
     children.push(para('DES RÉSEAUX ENTERRÉS',{align:AlignmentType.CENTER,bold:true,size:44,color:NAVY,before:0,after:200}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:LGRAY},border:{top:brd(MGRAY),left:brd(ORANGE,20),bottom:brd(MGRAY),right:brd(ORANGE,20)},children:[mkRun(((c.name||r.adresse||c.address||'Chantier').toUpperCase()),{size:26,color:NAVY,bold:true})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:LGRAY},border:{top:brd(MGRAY),left:brd('156082',20),bottom:brd(MGRAY),right:brd('156082',20)},children:[mkRun(((c.name||r.adresse||c.address||'Chantier').toUpperCase()),{size:26,color:NAVY,bold:true})]}));
     children.push(sp(500));
-    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:ORANGE},children:[mkRun('  ',{size:10})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:NAVY},children:[mkRun(_ent.adresse+'   |   Tél : '+_ent.tel+'   |   '+_ent.email,{size:18,color:'A8C4E8'})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:'156082'},children:[mkRun('  ',{size:10})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.adresse+'   |   Tél : '+_ent.tel+'   |   '+_ent.email,{size:18,color:'156082'})]}));
     children.push(new Paragraph({children:[new PageBreak()]}));
 
     // ─── §1 INFORMATIONS GÉNÉRALES ───
