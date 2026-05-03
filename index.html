@@ -3989,7 +3989,15 @@ async function deleteChantier(id){
   try { localStorage.removeItem(`ncvrd_backup_chantier_${id}`); } catch(e){}
   try { localStorage.removeItem(`ncvrd_backup_rapport_${id}`); } catch(e){}
 
-  // 5. Retirer de la liste mémoire (comparaison string pour éviter bug type number/string)
+  // 5. Vider le contexte courant si c'est ce chantier qui est ouvert
+  //    (évite que l'autosave ou saveRapportNow() re-crée le chantier en Firestore)
+  if(S.currentChantier && String(S.currentChantier.id) === String(id)){
+    clearTimeout(saveTimer); // Annuler tout autosave en attente
+    S.currentChantier = null;
+    S.currentRapport  = null;
+  }
+
+  // 6. Retirer de la liste mémoire (comparaison string pour éviter bug type number/string)
   S.chantiers = S.chantiers.filter(c => String(c.id) !== String(id));
   renderChantiers(S.chantiers);
 
@@ -4307,6 +4315,9 @@ function rapportChanged(){
   r.updatedAt=Date.now();
   clearTimeout(saveTimer);
   saveTimer=setTimeout(async()=>{
+    // Guard : vérifier que le rapport existe encore en IDB (suppression concurrente)
+    const _stillExists = await db._idb.get('rapports', r.id).catch(()=>null);
+    if(!_stillExists) return;
     await db.put('rapports',r);
     syncRapportToFirebase(r);
     const bar=document.getElementById('autosave-bar');
@@ -4317,14 +4328,22 @@ function rapportChanged(){
 // ── Sauvegarde d'urgence (fermeture / mise en arrière-plan) ──
 async function saveRapportNow(){
   const r=S.currentRapport; if(!r) return;
+  const c=S.currentChantier;
   clearTimeout(saveTimer);
   r.updatedAt=Date.now();
   try {
+    // Vérifier que le rapport existe encore en IDB avant toute écriture
+    // (évite de re-créer rapport/chantier si supprimé entre-temps)
+    const _existsR = await db._idb.get('rapports', r.id).catch(()=>null);
+    if(!_existsR) return;
     await db.put('rapports',r);
     syncRapportToFirebase(r);
-    if(S.currentChantier){
-      await db.put('chantiers',S.currentChantier);
-      syncChantierToFirebase(S.currentChantier);
+    if(c){
+      const _existsC = await db._idb.get('chantiers', c.id).catch(()=>null);
+      if(_existsC){
+        await db.put('chantiers',c);
+        syncChantierToFirebase(c);
+      }
     }
   } catch(e){}
 }
