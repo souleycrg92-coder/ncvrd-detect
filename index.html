@@ -6590,7 +6590,7 @@ async function doWordDocx(){
     } = window.docx;
 
     // ── Palette BTP ──
-    const NAVY='0A2F41', STEEL='0A2F41', ORANGE='E8620A';
+    const NAVY='0E425A', STEEL='0E425A', ORANGE='E8620A';
     const LGRAY='F4F6F9', MGRAY='D1D5DB', DGRAY='374151';
     const WHITE='FFFFFF', FONT='Calibri';
     const CW=9638; // A4 marges 1134 (0.79")
@@ -6958,16 +6958,16 @@ async function doWordDocx(){
     // (Logo retiré : déjà présent dans l'en-tête Bannière.png)
     children.push(sp(600));
     children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun('  ',{size:48})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.nom,{size:60,bold:true,color:'156082'})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.sous,{size:26,color:'156082',italics:true})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:'156082'},children:[mkRun('  ',{size:18})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.nom,{size:60,bold:true,color:'0E425A'})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.sous,{size:26,color:'0E425A',italics:true})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:'0E425A'},children:[mkRun('  ',{size:18})]}));
     children.push(sp(600));
     children.push(para('COMPTE RENDU DE DÉTECTION',{align:AlignmentType.CENTER,bold:true,size:44,color:NAVY,before:0,after:60}));
     children.push(para('DES RÉSEAUX ENTERRÉS',{align:AlignmentType.CENTER,bold:true,size:44,color:NAVY,before:0,after:200}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:LGRAY},border:{top:brd(MGRAY),left:brd('156082',20),bottom:brd(MGRAY),right:brd('156082',20)},children:[mkRun(((c.name||r.adresse||c.address||'Chantier').toUpperCase()),{size:26,color:NAVY,bold:true})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:LGRAY},border:{top:brd(MGRAY),left:brd('0E425A',20),bottom:brd(MGRAY),right:brd('0E425A',20)},children:[mkRun(((c.name||r.adresse||c.address||'Chantier').toUpperCase()),{size:26,color:NAVY,bold:true})]}));
     children.push(sp(500));
-    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:'156082'},children:[mkRun('  ',{size:10})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.adresse+'   |   Tél : '+_ent.tel+'   |   '+_ent.email,{size:18,color:'156082'})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:'0E425A'},children:[mkRun('  ',{size:10})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.adresse+'   |   Tél : '+_ent.tel+'   |   '+_ent.email,{size:18,color:'0E425A'})]}));
     children.push(new Paragraph({children:[new PageBreak()]}));
 
     // ─── §1 INFORMATIONS GÉNÉRALES ───
