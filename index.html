@@ -6608,14 +6608,14 @@ async function doWordDocx(){
       return new Paragraph({
         spacing:{before:280,after:0},
         shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},
-        border:{bottom:{style:BorderStyle.SINGLE,size:14,color:ORANGE}},
-        children:[mkRun('  '+num+'  ',{size:26,bold:true,color:ORANGE}),mkRun(text.toUpperCase(),{size:26,bold:true,color:NAVY})]
+        border:{bottom:{style:BorderStyle.SINGLE,size:14,color:NAVY}},
+        children:[mkRun('  '+num+'  ',{size:26,bold:true,color:NAVY}),mkRun(text.toUpperCase(),{size:26,bold:true,color:NAVY})]
       });
     }
     function subTitle(text){
       return new Paragraph({
         spacing:{before:160,after:80},
-        border:{left:{style:BorderStyle.SINGLE,size:16,color:ORANGE,space:8}},
+        border:{left:{style:BorderStyle.SINGLE,size:16,color:NAVY,space:8}},
         indent:{left:180},
         children:[mkRun(text,{size:24,bold:true,color:NAVY})]
       });
