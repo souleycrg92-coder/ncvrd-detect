@@ -3953,22 +3953,39 @@ function chantierDragEnd(){
 
 async function deleteChantier(id){
   if(!confirm('Supprimer ce chantier et son rapport ? Cette action est irréversible.')) return;
-  // 1. Suppression locale (IndexedDB)
-  await db.del('chantiers', id);
-  await db.del('rapports', id);
-  // 2. Suppression Firestore
-  if(FIREBASE_CONFIGURED && fdb && currentUserProfile?.teamId){
-    const teamId = currentUserProfile.teamId;
+
+  // Toujours utiliser le teamId de l'utilisateur connecté (pas db._teamId qui peut
+  // avoir été modifié par openChantier pour un chantier d'une autre équipe)
+  const teamId = currentUserProfile?.teamId;
+  if(teamId) db.setTeam(teamId); // reset au bon teamId avant suppression
+
+  // 1. Suppression IndexedDB (directe, sans passer par Firestore)
+  await db._idb.del('chantiers', id).catch(()=>{});
+  await db._idb.del('rapports',  id).catch(()=>{});
+
+  // 2. Suppression Firestore (explicite avec le bon teamId)
+  let firestoreOk = true;
+  if(FIREBASE_CONFIGURED && fdb && teamId){
     try {
-      await fdb.collection('teams').doc(teamId).collection('chantiers').doc(id).delete();
-    } catch(e){ Logger.warn('Delete', 'Suppression chantier Firestore échouée', e?.message); }
+      await fdb.collection('teams').doc(teamId).collection('chantiers').doc(String(id)).delete();
+    } catch(e){
+      firestoreOk = false;
+      Logger.warn('Delete', 'Suppression chantier Firestore échouée', e?.message);
+    }
     try {
-      await fdb.collection('teams').doc(teamId).collection('rapports').doc(id).delete();
+      await fdb.collection('teams').doc(teamId).collection('rapports').doc(String(id)).delete();
     } catch(e){ Logger.warn('Delete', 'Suppression rapport Firestore échouée', e?.message); }
   }
-  S.chantiers = S.chantiers.filter(c => c.id !== id);
+
+  // 3. Retirer de la liste mémoire (comparaison en string pour éviter bug type number/string)
+  S.chantiers = S.chantiers.filter(c => String(c.id) !== String(id));
   renderChantiers(S.chantiers);
-  toast('🗑️ Chantier supprimé');
+
+  if(firestoreOk){
+    toast('🗑️ Chantier supprimé');
+  } else {
+    toast('⚠️ Supprimé localement — erreur Firestore (vérifiez votre connexion)', 4000);
+  }
 }
 
 let _searchTimer;
