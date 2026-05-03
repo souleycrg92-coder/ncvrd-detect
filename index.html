@@ -5906,11 +5906,12 @@ async function _generateOuvragesWord(ouvrages, filename){
          BorderStyle, ShadingType} = window.docx;
 
   // ── Couleurs ODT ──
-  const C_YELLOW = 'FFE599'; // Titre "CARACTERISTIQUE OUVRAGE"
-  const C_BLUE   = '9CC2E5'; // Sections REPRESENTATION / OBSERVATION / CANALISATION
-  const C_LBLUE  = 'BDD6EE'; // Labels / en-têtes colonnes
+  const C_YELLOW = 'F9F9F9'; // Titre "CARACTERISTIQUE OUVRAGE" — fond gris clair
+  const C_BLUE   = 'F9F9F9'; // Sections REPRESENTATION / OBSERVATION / CANALISATION — fond gris clair
+  const C_LBLUE  = 'F4F6F9'; // Labels / en-têtes colonnes — gris très léger
   const C_WHITE  = 'FFFFFF';
   const C_BLACK  = '000000';
+  const C_NAVY   = '0E2841'; // Texte bleu foncé pour titres et headers
 
   // ── Largeurs colonnes (DXA, extraites de l'ODT) ──
   const COLS = [1453, 1063, 1063, 930, 797, 1706, 820, 1195];
@@ -5944,7 +5945,7 @@ async function _generateOuvragesWord(ouvrages, filename){
   // ── Helper : cellule texte simple ──
   function txtC(text, fill, w, span, bold=false, size=18){
     return mkC(fill, [
-      mkP([new TextRun({ text:String(text||''), bold, size, font:'Calibri', color:C_BLACK })])
+      mkP([new TextRun({ text:String(text||''), bold, size, font:'Calibri', color:bold?C_NAVY:C_BLACK })])
     ], w, span);
   }
 
@@ -5952,7 +5953,7 @@ async function _generateOuvragesWord(ouvrages, filename){
   function titleRow(text, fill){
     return new TableRow({ children:[
       mkC(fill, [
-        mkP([new TextRun({text, bold:true, size:20, font:'Calibri', color:C_BLACK})],
+        mkP([new TextRun({text, bold:true, size:20, font:'Calibri', color:C_NAVY})],
             {alignment:AlignmentType.CENTER})
       ], TW, 8)
     ]});
