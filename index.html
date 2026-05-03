@@ -6865,13 +6865,8 @@ async function doWordDocx(){
     const children=[];
 
     // ─── PAGE DE COUVERTURE ───
-    // Logo NEOCONCEPT VRD
-    const _logoBytes = Uint8Array.from(atob(_LOGO_NEOCONCEPT_B64), c=>c.charCodeAt(0));
-    children.push(new Paragraph({
-      spacing:{before:200,after:200},
-      alignment:AlignmentType.CENTER,
-      children:[new ImageRun({type:'png',data:_logoBytes,transformation:{width:150,height:142},altText:{title:'Logo',description:'Logo NEOCONCEPT VRD',name:'logo'}})]
-    }));
+    // (Logo retiré : déjà présent dans l'en-tête Bannière.png)
+    children.push(sp(600));
     children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:NAVY},children:[mkRun('  ',{size:48})]}));
     children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:NAVY},children:[mkRun('NEOCONCEPT VRD',{size:60,bold:true,color:WHITE})]}));
     children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:NAVY},children:[mkRun('Géodétection & Géoréférencement des Réseaux',{size:26,color:'A8C4E8',italics:true})]}));
