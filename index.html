@@ -872,6 +872,16 @@ html[data-terrain="1"] {
 [data-terrain="1"] .nav-btn.active::before { background: #ffffff !important; }
 [data-terrain="1"] .nav-icon { filter: none !important; }
 
+/* ── Boutons observation ouvrage ── */
+.ouv-obs-btn{
+  padding:8px 4px;border-radius:8px;border:1.5px solid var(--border);
+  background:var(--input);color:var(--muted);font-size:11px;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:all .18s;text-align:center;
+}
+.ouv-obs-btn.active{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#4ade80}
+.ouv-obs-btn.ouv-obs-bad.active{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#f87171}
+.ouv-obs-btn.ouv-obs-na.active{background:rgba(148,163,184,.15);border-color:rgba(148,163,184,.35);color:#94a3b8}
+
 /* Cards */
 [data-terrain="1"] .card {
   background: #ffffff !important;
@@ -1116,6 +1126,9 @@ html[data-terrain="1"] {
   <button class="nav-btn" id="nav-consignes" onclick="showScreen('s-consignes')">
     <span class="nav-icon">📋</span>Consignes
   </button>
+  <button class="nav-btn" id="nav-ouvrages" onclick="showScreen('s-ouvrages')">
+    <span class="nav-icon">🏗️</span>Ouvrages
+  </button>
   <button class="nav-btn" id="nav-profil" onclick="showScreen('s-profil')">
     <span class="nav-icon">👤</span>Profil
   </button>
@@ -1296,7 +1309,9 @@ html[data-terrain="1"] {
     <div class="sec-hdr">Actions</div>
     <button class="btn-big btn-accent" onclick="createChantierDirect()">➕ Nouveau chantier</button>
     <button class="btn-big btn-card" onclick="showScreen('s-dossier')">📄 Documents</button>
+    <!-- Datalist clients pour auto-complétion -->
     <button class="btn-big btn-card" onclick="showScreen('s-consignes')">📋 Consignes de sécurité</button>
+    <button class="btn-big btn-card" onclick="showScreen('s-ouvrages')">🏗️ Ouvrages</button>
   </div>
 
   <!-- ══════════════════ SCREEN RAPPORT ══════════════════ -->
@@ -1735,6 +1750,213 @@ html[data-terrain="1"] {
 
     <button class="btn-big btn-accent" onclick="openModal('m-add-consigne')">➕ Ajouter une consigne</button>
     <div style="height:10px"></div>
+  </div>
+
+  <!-- ══════════════════ SCREEN OUVRAGES (liste) ══════════════════ -->
+  <div class="screen" id="s-ouvrages" style="display:none;padding-bottom:80px">
+    <div style="background:linear-gradient(135deg,#050d20,#0a1e3a);padding:22px 16px 18px;border-bottom:1px solid rgba(100,180,255,.15)">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">NCVRD Detect</div>
+      <div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:2px">🏗️ Ouvrages</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.6)">Fiches caractéristiques d'ouvrages VRD</div>
+    </div>
+    <div style="padding:14px 14px 0;display:flex;gap:8px">
+      <button onclick="openNewOuvrage()" style="flex:1;padding:13px;background:linear-gradient(135deg,var(--accent),#0070cc);color:#fff;border:none;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit">➕ Nouvel ouvrage</button>
+      <button onclick="exportAllOuvrages()" style="padding:13px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--text);border-radius:14px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit" title="Exporter tous les ouvrages en Word">📥 Tout exporter</button>
+    </div>
+    <div id="ouvrages-count" style="padding:8px 16px 0;font-size:12px;color:var(--muted)"></div>
+    <div id="ouvrages-list" style="padding:10px 14px 20px"></div>
+  </div>
+
+  <!-- ══════════════════ SCREEN OUVRAGE FORMULAIRE ══════════════════ -->
+  <div class="screen" id="s-ouvrage-form" style="display:none;padding-bottom:80px">
+    <!-- Barre d'actions -->
+    <div style="padding:12px 14px;display:flex;gap:8px;border-bottom:1px solid var(--border);background:var(--card)">
+      <button onclick="saveOuvrage()" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--accent),#0070cc);color:#fff;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit">💾 Enregistrer</button>
+      <button onclick="exportSingleOuvrage()" style="padding:12px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--text);border-radius:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit" title="Exporter en Word">📥 Word</button>
+      <button onclick="_currentOuvrage&&deleteOuvrage(_currentOuvrage.id)" style="padding:12px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit" title="Supprimer cet ouvrage">🗑️</button>
+    </div>
+
+    <!-- ─── SECTION 1 : Identification ─── -->
+    <div class="acc-section">
+      <button class="acc-toggle" onclick="toggleAcc(this)">
+        <span>🏗️ Identification de l'ouvrage</span><span class="acc-chevron open">▼</span>
+      </button>
+      <div class="acc-body open">
+        <div class="form-group">
+          <label class="form-label">Nature du réseau</label>
+          <select class="form-select" id="ouv-nature">
+            <option value="">— Sélectionner —</option>
+            <option>Adduction d'eau potable (AEP)</option>
+            <option>Assainissement</option>
+            <option>Gaz</option>
+            <option>Électricité HTA/BT</option>
+            <option>Éclairage public</option>
+            <option>Télécom / Fibre</option>
+            <option>Eau pluviale</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type d'ouvrage</label>
+          <select class="form-select" id="ouv-type">
+            <option value="">— Sélectionner —</option>
+            <option>Regard de visite</option>
+            <option>Chambre de tirage</option>
+            <option>Poste de sectionnement</option>
+            <option>Boîte de branchement</option>
+            <option>Borne fontaine</option>
+            <option>Avaloir / grille</option>
+            <option>Clapet anti-retour</option>
+            <option>Vanne de sectionnement</option>
+            <option>Coffret / Armoire</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Numéro d'ouvrage</label>
+            <input class="form-input" id="ouv-numero" placeholder="Ex : R01, C-12…">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Classe / Marque</label>
+            <input class="form-input" id="ouv-classe" placeholder="Ex : D400, C250…">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:10px">
+          <label class="form-label">Dimensions</label>
+          <input class="form-input" id="ouv-dimensions" placeholder="Ex : Ø800mm, 1200×600mm…">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Aération</label>
+            <select class="form-select" id="ouv-aeration">
+              <option value="">—</option><option>Oui</option><option>Non</option><option>N/A</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Alarme</label>
+            <select class="form-select" id="ouv-alarme">
+              <option value="">—</option><option>Oui</option><option>Non</option><option>N/A</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Verrous</label>
+            <select class="form-select" id="ouv-verrous">
+              <option value="">—</option><option>Oui</option><option>Non</option><option>N/A</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SECTION 2 : Photos ─── -->
+    <div class="acc-section">
+      <button class="acc-toggle" onclick="toggleAcc(this)">
+        <span>📸 Représentation (photos)</span><span class="acc-chevron open">▼</span>
+      </button>
+      <div class="acc-body open">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <!-- Photo extérieure -->
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Vue extérieure</div>
+            <div id="ouv-photo-ext-preview" onclick="ouvragePickPhoto('ext')"
+                 style="height:130px;border-radius:12px;border:1.5px dashed var(--inputborder);background:var(--input);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;overflow:hidden">
+              <span style="font-size:28px">📷</span>
+              <span style="font-size:11px;color:var(--muted)">Ajouter photo</span>
+            </div>
+            <button onclick="ouvragePickPhoto('ext')" style="width:100%;margin-top:6px;padding:7px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📁 Choisir fichier</button>
+            <button onclick="ouvrageDeletePhoto('ext')" id="ouv-del-ext" style="width:100%;margin-top:4px;padding:7px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;color:#f87171;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:none">🗑️ Supprimer</button>
+            <input type="file" id="ouv-photo-ext-input" accept="image/*" style="display:none" onchange="ouvrageHandlePhoto(this,'ext')">
+          </div>
+          <!-- Photo intérieure -->
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Vue intérieure</div>
+            <div id="ouv-photo-int-preview" onclick="ouvragePickPhoto('int')"
+                 style="height:130px;border-radius:12px;border:1.5px dashed var(--inputborder);background:var(--input);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;overflow:hidden">
+              <span style="font-size:28px">📷</span>
+              <span style="font-size:11px;color:var(--muted)">Ajouter photo</span>
+            </div>
+            <button onclick="ouvragePickPhoto('int')" style="width:100%;margin-top:6px;padding:7px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📁 Choisir fichier</button>
+            <button onclick="ouvrageDeletePhoto('int')" id="ouv-del-int" style="width:100%;margin-top:4px;padding:7px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;color:#f87171;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:none">🗑️ Supprimer</button>
+            <input type="file" id="ouv-photo-int-input" accept="image/*" style="display:none" onchange="ouvrageHandlePhoto(this,'int')">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SECTION 3 : Observations ─── -->
+    <div class="acc-section">
+      <button class="acc-toggle" onclick="toggleAcc(this)">
+        <span>🔍 Observations</span><span class="acc-chevron open">▼</span>
+      </button>
+      <div class="acc-body open">
+        <div class="form-group">
+          <label class="form-label">État de la structure</label>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px" id="ouv-obs-structure">
+            <button type="button" onclick="setOuvrageObs('structure','Bon',this)" class="ouv-obs-btn">Bon</button>
+            <button type="button" onclick="setOuvrageObs('structure','Correcte',this)" class="ouv-obs-btn">Correcte</button>
+            <button type="button" onclick="setOuvrageObs('structure','Mauvaise',this)" class="ouv-obs-btn ouv-obs-bad">Mauvaise</button>
+            <button type="button" onclick="setOuvrageObs('structure','Non visible',this)" class="ouv-obs-btn ouv-obs-na">Non vis.</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">État physique</label>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px" id="ouv-obs-physique">
+            <button type="button" onclick="setOuvrageObs('physique','Bon',this)" class="ouv-obs-btn">Bon</button>
+            <button type="button" onclick="setOuvrageObs('physique','Correcte',this)" class="ouv-obs-btn">Correcte</button>
+            <button type="button" onclick="setOuvrageObs('physique','Mauvaise',this)" class="ouv-obs-btn ouv-obs-bad">Mauvaise</button>
+            <button type="button" onclick="setOuvrageObs('physique','Non visible',this)" class="ouv-obs-btn ouv-obs-na">Non vis.</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">État d'entretien</label>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px" id="ouv-obs-entretien">
+            <button type="button" onclick="setOuvrageObs('entretien','Bon',this)" class="ouv-obs-btn">Bon</button>
+            <button type="button" onclick="setOuvrageObs('entretien','Correcte',this)" class="ouv-obs-btn">Correcte</button>
+            <button type="button" onclick="setOuvrageObs('entretien','Mauvaise',this)" class="ouv-obs-btn ouv-obs-bad">Mauvaise</button>
+            <button type="button" onclick="setOuvrageObs('entretien','Non visible',this)" class="ouv-obs-btn ouv-obs-na">Non vis.</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Niveau d'encombrement</label>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px" id="ouv-obs-encombrement">
+            <button type="button" onclick="setOuvrageObs('encombrement','Bon',this)" class="ouv-obs-btn">Bon</button>
+            <button type="button" onclick="setOuvrageObs('encombrement','Correcte',this)" class="ouv-obs-btn">Correcte</button>
+            <button type="button" onclick="setOuvrageObs('encombrement','Mauvaise',this)" class="ouv-obs-btn ouv-obs-bad">Mauvaise</button>
+            <button type="button" onclick="setOuvrageObs('encombrement','Non visible',this)" class="ouv-obs-btn ouv-obs-na">Non vis.</button>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Observations complémentaires</label>
+          <textarea class="form-input" id="ouv-observation" rows="3" placeholder="Remarques, pathologies observées…" style="resize:vertical;min-height:70px"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SECTION 4 : Canalisations ─── -->
+    <div class="acc-section">
+      <button class="acc-toggle" onclick="toggleAcc(this)">
+        <span>🔧 Caractéristiques canalisations / réseaux</span><span class="acc-chevron open">▼</span>
+      </button>
+      <div class="acc-body open">
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+          <table style="width:100%;border-collapse:collapse;min-width:560px;font-size:12px">
+            <thead>
+              <tr style="background:rgba(0,100,200,.18)">
+                <th style="padding:8px 5px;text-align:left;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap">#</th>
+                <th style="padding:8px 5px;text-align:left;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap">Regard amont/aval</th>
+                <th style="padding:8px 5px;text-align:left;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border)">Réseau</th>
+                <th style="padding:8px 5px;text-align:left;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border)">DN (mm)</th>
+                <th style="padding:8px 5px;text-align:left;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border)">Matériaux</th>
+                <th style="padding:8px 5px;text-align:left;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap">Prof. (m)</th>
+                <th style="padding:8px 5px;text-align:left;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border)">Observation</th>
+              </tr>
+            </thead>
+            <tbody id="ouv-canalisations"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ══════════════════ SCREEN PROFIL ══════════════════ -->
@@ -3256,10 +3478,10 @@ class AppDB {
   constructor(){this.db=null}
   open(){
     return new Promise((res,rej)=>{
-      const r=indexedDB.open('detecapp_v3',2);
+      const r=indexedDB.open('detecapp_v3',3);
       r.onupgradeneeded=e=>{
         const db=e.target.result;
-        ['chantiers','rapports','photos','gps_points','consignes','documents'].forEach(s=>{
+        ['chantiers','rapports','photos','gps_points','consignes','documents','ouvrages'].forEach(s=>{
           if(!db.objectStoreNames.contains(s)) db.createObjectStore(s,{keyPath:'id'});
         });
       };
@@ -3293,20 +3515,24 @@ const today=()=>new Date().toISOString().split('T')[0];
 // ════════════════════════════════════════════
 //  ROUTING
 // ════════════════════════════════════════════
-const SCREENS=['screen-home','screen-rapport','s-camera','s-photos','s-dossier','s-consignes','s-profil','s-login','s-admin'];
+const SCREENS=['screen-home','screen-rapport','s-camera','s-photos','s-dossier','s-consignes','s-ouvrages','s-ouvrage-form','s-profil','s-login','s-admin'];
 const NAV_MAP={
   'screen-home':'nav-home',
-  's-photos':'nav-photos','s-dossier':'nav-dossier','s-consignes':'nav-consignes','s-profil':'nav-profil','s-admin':'nav-admin'
+  's-photos':'nav-photos','s-dossier':'nav-dossier','s-consignes':'nav-consignes',
+  's-ouvrages':'nav-ouvrages','s-ouvrage-form':'nav-ouvrages',
+  's-profil':'nav-profil','s-admin':'nav-admin'
 };
 const TITLES={
   'screen-home':'NCVRD Detect','screen-rapport':'📋 Rapport',
   's-camera':'📷 Caméra','s-photos':'📸 Photos',
-  's-dossier':'📄 Documents','s-consignes':'📋 Consignes','s-profil':'👤 Profil','s-admin':'⚙️ Admin'
+  's-dossier':'📄 Documents','s-consignes':'📋 Consignes',
+  's-ouvrages':'🏗️ Ouvrages','s-ouvrage-form':'🏗️ Fiche ouvrage',
+  's-profil':'👤 Profil','s-admin':'⚙️ Admin'
 };
 
 function showScreen(id){
   // ── Bloquer l'accès si non connecté ──
-  const PROTECTED = ['screen-home','screen-rapport','s-camera','s-photos','s-dossier','s-consignes','s-profil','s-admin'];
+  const PROTECTED = ['screen-home','screen-rapport','s-camera','s-photos','s-dossier','s-consignes','s-ouvrages','s-ouvrage-form','s-profil','s-admin'];
   if(FIREBASE_CONFIGURED && !currentUser && PROTECTED.includes(id)){
     id = 's-login';
   }
@@ -3335,7 +3561,7 @@ function showScreen(id){
     titleEl.nextElementSibling&&(titleEl.nextElementSibling.style.display='none');
   }
 
-  const needsBack=['screen-rapport','s-camera','s-photos','s-dossier','s-consignes','s-profil'];
+  const needsBack=['screen-rapport','s-camera','s-photos','s-dossier','s-consignes','s-ouvrages','s-ouvrage-form','s-profil'];
   backBtn.style.display=needsBack.includes(id)?'flex':'none';
 
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -3345,6 +3571,8 @@ function showScreen(id){
   if(id==='s-photos'){renderAllPhotos()}
   if(id==='s-consignes'){renderConsignes()}
   if(id==='s-dossier'){loadDossier().then(()=>renderDossier()); loadSharedDocs();}
+  if(id==='s-ouvrages'){loadOuvrages().then(()=>renderOuvrages()).catch(()=>{});}
+  if(id==='s-ouvrage-form'){_renderOuvrageCanalisations();}
   if(id==='s-profil'){updateProfile(); if(FIREBASE_CONFIGURED && currentUserProfile) updateProfileScreen();}
   if(id==='s-camera'){initCamera()}
   if(id==='screen-home'){stopCamera()}
@@ -5247,6 +5475,385 @@ async function deleteDocument(docId){
   S_docs = S_docs.filter(d => d.id !== docId);
   renderDossier();
   toast('🗑️ Document supprimé');
+}
+
+// ════════════════════════════════════════════
+//  OUVRAGES — Caractéristiques d'ouvrages VRD
+// ════════════════════════════════════════════
+
+let S_ouvrages = [];
+let _currentOuvrage = null;
+const OUV_CANALISATION_COUNT = 5;
+const OUV_OBS_KEY = {structure:'etatStructure', physique:'etatPhysique', entretien:'etatEntretien', encombrement:'etatEncombrement'};
+
+function _ouvrageEmptyCanalisations(){
+  return Array.from({length: OUV_CANALISATION_COUNT}, () =>
+    ({regard:'', reseau:'', dn:'', materiaux:'', profondeur:'', observation:''}));
+}
+
+async function loadOuvrages(){
+  S_ouvrages = await db._idb.getAll('ouvrages').catch(()=>[]);
+  S_ouvrages.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+}
+
+function renderOuvrages(){
+  const list  = document.getElementById('ouvrages-list');
+  const count = document.getElementById('ouvrages-count');
+  if(!list) return;
+  const n = S_ouvrages.length;
+  if(count) count.textContent = n ? `${n} fiche${n>1?'s':''} enregistrée${n>1?'s':''}` : '';
+  if(!n){
+    list.innerHTML = `<div style="text-align:center;color:var(--muted);padding:50px 0">
+      <div style="font-size:40px;margin-bottom:12px">🏗️</div>
+      <div style="font-size:14px;font-weight:600">Aucun ouvrage enregistré</div>
+      <div style="font-size:12px;margin-top:6px">Appuyez sur « Nouvel ouvrage » pour commencer</div>
+    </div>`;
+    return;
+  }
+  const NATURE_COLORS = {
+    'Adduction d\'eau potable (AEP)':{bg:'rgba(56,189,248,.12)',color:'#38bdf8'},
+    'Assainissement':{bg:'rgba(120,113,108,.15)',color:'#a8a29e'},
+    'Gaz':{bg:'rgba(251,191,36,.12)',color:'#fbbf24'},
+    'Électricité HTA/BT':{bg:'rgba(167,139,250,.12)',color:'#a78bfa'},
+    'Éclairage public':{bg:'rgba(253,224,71,.12)',color:'#fde047'},
+    'Télécom / Fibre':{bg:'rgba(52,211,153,.12)',color:'#34d399'},
+    'Eau pluviale':{bg:'rgba(96,165,250,.12)',color:'#60a5fa'},
+    'Autre':{bg:'rgba(148,163,184,.12)',color:'#94a3b8'},
+  };
+  const OBS_EMOJI = {Bon:'🟢',Correcte:'🟡',Mauvaise:'🔴','Non visible':'⚫'};
+  list.innerHTML = S_ouvrages.map(o => {
+    const nc = NATURE_COLORS[o.natureReseau] || {bg:'rgba(148,163,184,.12)',color:'#94a3b8'};
+    const etatBadge = o.etatStructure
+      ? `<span style="font-size:12px;color:var(--muted)">${OBS_EMOJI[o.etatStructure]||''} ${escHtml(o.etatStructure)}</span>` : '';
+    const dateStr = o.createdAt ? new Date(o.createdAt).toLocaleDateString('fr-FR') : '';
+    return `
+    <div style="background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:800;font-size:15px;color:var(--text);margin-bottom:4px">${escHtml(o.numeroOuvrage||'Ouvrage sans numéro')}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px">
+            ${o.natureReseau?`<span style="background:${nc.bg};color:${nc.color};border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">${escHtml(o.natureReseau)}</span>`:''}
+            ${o.typeOuvrage?`<span style="background:rgba(255,255,255,.06);color:var(--muted);border-radius:20px;padding:2px 9px;font-size:10px;font-weight:600">${escHtml(o.typeOuvrage)}</span>`:''}
+          </div>
+          ${etatBadge}
+        </div>
+        <div style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0">${dateStr}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button onclick="openOuvrage('${o.id}')" style="flex:1;padding:9px;background:rgba(0,140,255,.12);border:1px solid rgba(0,140,255,.25);color:var(--accent);border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">✏️ Ouvrir</button>
+        <button onclick="exportSingleOuvrage('${o.id}')" style="padding:9px 13px;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text);border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit" title="Exporter en Word">📥</button>
+        <button onclick="deleteOuvrage('${o.id}')" style="padding:9px 13px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit" title="Supprimer">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openNewOuvrage(){
+  _currentOuvrage = {
+    id: uid(),
+    natureReseau:'', typeOuvrage:'', numeroOuvrage:'', classeMarque:'',
+    dimensions:'', aeration:'', alarme:'', verrous:'',
+    photoExt: null, photoInt: null,
+    etatStructure:'', etatPhysique:'', etatEntretien:'', etatEncombrement:'',
+    observation:'',
+    canalisations: _ouvrageEmptyCanalisations(),
+    createdAt: Date.now(), updatedAt: Date.now(),
+    createdBy: currentUserProfile?.uid || 'local'
+  };
+  _populateOuvrageForm(_currentOuvrage);
+  showScreen('s-ouvrage-form');
+}
+
+async function openOuvrage(id){
+  let o = S_ouvrages.find(x => x.id === id);
+  if(!o) o = await db._idb.get('ouvrages', id).catch(()=>null);
+  if(!o){ toast('❌ Ouvrage introuvable'); return; }
+  if(!o.canalisations || o.canalisations.length < OUV_CANALISATION_COUNT)
+    o.canalisations = _ouvrageEmptyCanalisations();
+  _currentOuvrage = o;
+  _populateOuvrageForm(o);
+  showScreen('s-ouvrage-form');
+}
+
+function _populateOuvrageForm(o){
+  const setVal = (id, val) => { const el=document.getElementById(id); if(el) el.value=val||''; };
+  setVal('ouv-nature',     o.natureReseau);
+  setVal('ouv-type',       o.typeOuvrage);
+  setVal('ouv-numero',     o.numeroOuvrage);
+  setVal('ouv-classe',     o.classeMarque);
+  setVal('ouv-dimensions', o.dimensions);
+  setVal('ouv-aeration',   o.aeration);
+  setVal('ouv-alarme',     o.alarme);
+  setVal('ouv-verrous',    o.verrous);
+  setVal('ouv-observation',o.observation);
+  // Photos
+  _renderOuvragePhotoPreview('ext', o.photoExt);
+  _renderOuvragePhotoPreview('int', o.photoInt);
+  // Boutons observation
+  Object.entries(OUV_OBS_KEY).forEach(([field, key]) => {
+    const val = o[key] || '';
+    const group = document.getElementById('ouv-obs-'+field);
+    if(!group) return;
+    group.querySelectorAll('.ouv-obs-btn').forEach(btn => {
+      const btnVal = btn.textContent.trim();
+      const matches = btnVal === val || (btnVal === 'Non vis.' && val === 'Non visible');
+      btn.classList.toggle('active', matches);
+    });
+  });
+  // Tableau canalisations
+  _renderOuvrageCanalisations();
+}
+
+function _renderOuvrageCanalisations(){
+  const tbody = document.getElementById('ouv-canalisations');
+  if(!tbody || !_currentOuvrage) return;
+  const lines = _currentOuvrage.canalisations || _ouvrageEmptyCanalisations();
+  tbody.innerHTML = lines.map((c, i) => `
+    <tr style="${i%2===0?'background:rgba(255,255,255,.02)':''}">
+      <td style="padding:5px 4px;color:var(--muted);font-weight:700;font-size:11px;text-align:center">${i+1}</td>
+      <td style="padding:3px"><input class="form-input" style="padding:5px 6px;font-size:11px;min-width:80px" value="${escHtml(c.regard||'')}" oninput="_ouv_canalInput(${i},'regard',this.value)" placeholder="Amont/Aval"></td>
+      <td style="padding:3px"><input class="form-input" style="padding:5px 6px;font-size:11px;min-width:60px" value="${escHtml(c.reseau||'')}" oninput="_ouv_canalInput(${i},'reseau',this.value)" placeholder="AEP…"></td>
+      <td style="padding:3px"><input class="form-input" style="padding:5px 6px;font-size:11px;min-width:50px" value="${escHtml(c.dn||'')}" oninput="_ouv_canalInput(${i},'dn',this.value)" placeholder="150"></td>
+      <td style="padding:3px"><input class="form-input" style="padding:5px 6px;font-size:11px;min-width:60px" value="${escHtml(c.materiaux||'')}" oninput="_ouv_canalInput(${i},'materiaux',this.value)" placeholder="PVC…"></td>
+      <td style="padding:3px"><input class="form-input" style="padding:5px 6px;font-size:11px;min-width:55px" value="${escHtml(c.profondeur||'')}" oninput="_ouv_canalInput(${i},'profondeur',this.value)" placeholder="1.20"></td>
+      <td style="padding:3px"><input class="form-input" style="padding:5px 6px;font-size:11px;min-width:80px" value="${escHtml(c.observation||'')}" oninput="_ouv_canalInput(${i},'observation',this.value)" placeholder="Remarques…"></td>
+    </tr>`).join('');
+}
+
+function _ouv_canalInput(idx, field, val){
+  if(_currentOuvrage?.canalisations?.[idx]) _currentOuvrage.canalisations[idx][field] = val;
+}
+
+function setOuvrageObs(field, val, btn){
+  if(!_currentOuvrage) return;
+  _currentOuvrage[OUV_OBS_KEY[field]] = val;
+  const group = document.getElementById('ouv-obs-'+field);
+  if(group) group.querySelectorAll('.ouv-obs-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function _renderOuvragePhotoPreview(side, dataUrl){
+  const preview = document.getElementById('ouv-photo-'+side+'-preview');
+  const delBtn  = document.getElementById('ouv-del-'+side);
+  if(!preview) return;
+  if(dataUrl){
+    preview.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:10px">`;
+    if(delBtn) delBtn.style.display = 'block';
+  } else {
+    preview.innerHTML = '<span style="font-size:28px">📷</span><span style="font-size:11px;color:var(--muted)">Ajouter photo</span>';
+    preview.style.cssText += ';display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px';
+    if(delBtn) delBtn.style.display = 'none';
+  }
+}
+
+function ouvragePickPhoto(side){
+  const inp = document.getElementById('ouv-photo-'+side+'-input');
+  if(inp){ inp.value=''; inp.click(); }
+}
+
+async function ouvrageHandlePhoto(input, side){
+  if(!input.files[0] || !_currentOuvrage) return;
+  try {
+    const compressed = await compressImage(input.files[0], 1024, 300);
+    const reader = new FileReader();
+    reader.onload = e => {
+      if(side==='ext') _currentOuvrage.photoExt = e.target.result;
+      else             _currentOuvrage.photoInt = e.target.result;
+      _renderOuvragePhotoPreview(side, e.target.result);
+    };
+    reader.readAsDataURL(compressed);
+  } catch(e){ toast('❌ Erreur photo : '+e.message); }
+  input.value = '';
+}
+
+function ouvrageDeletePhoto(side){
+  if(!_currentOuvrage) return;
+  if(side==='ext') _currentOuvrage.photoExt = null;
+  else             _currentOuvrage.photoInt = null;
+  _renderOuvragePhotoPreview(side, null);
+}
+
+async function saveOuvrage(){
+  if(!_currentOuvrage) return;
+  const getVal = id => { const el=document.getElementById(id); return el?el.value.trim():''; };
+  Object.assign(_currentOuvrage, {
+    natureReseau: getVal('ouv-nature'),
+    typeOuvrage:  getVal('ouv-type'),
+    numeroOuvrage:getVal('ouv-numero'),
+    classeMarque: getVal('ouv-classe'),
+    dimensions:   getVal('ouv-dimensions'),
+    aeration:     getVal('ouv-aeration'),
+    alarme:       getVal('ouv-alarme'),
+    verrous:      getVal('ouv-verrous'),
+    observation:  getVal('ouv-observation'),
+    updatedAt:    Date.now()
+  });
+  try {
+    await db._idb.put('ouvrages', _currentOuvrage);
+    const idx = S_ouvrages.findIndex(x => x.id === _currentOuvrage.id);
+    if(idx >= 0) S_ouvrages[idx] = _currentOuvrage;
+    else S_ouvrages.unshift(_currentOuvrage);
+    toast('✅ Ouvrage enregistré');
+  } catch(e){ toast('❌ Erreur sauvegarde : '+e.message); }
+}
+
+async function deleteOuvrage(id){
+  if(!id) return;
+  if(!confirm('Supprimer cet ouvrage ? Action irréversible.')) return;
+  try {
+    await db._idb.del('ouvrages', id);
+    S_ouvrages = S_ouvrages.filter(x => x.id !== id);
+    if(_currentOuvrage?.id === id) _currentOuvrage = null;
+    showScreen('s-ouvrages');
+    renderOuvrages();
+    toast('🗑️ Ouvrage supprimé');
+  } catch(e){ toast('❌ Erreur suppression : '+e.message); }
+}
+
+// ──────── Export Word ────────
+
+async function exportSingleOuvrage(id){
+  const o = id ? (S_ouvrages.find(x=>x.id===id) || await db._idb.get('ouvrages',id).catch(()=>null)) : _currentOuvrage;
+  if(!o){ toast('❌ Ouvrage introuvable'); return; }
+  toast('⏳ Génération Word…');
+  try { await _generateOuvragesWord([o], o.numeroOuvrage||'Ouvrage'); }
+  catch(e){ toast('❌ '+e.message); }
+}
+
+async function exportAllOuvrages(){
+  if(!S_ouvrages.length){ toast('⚠️ Aucun ouvrage à exporter'); return; }
+  if(!confirm(`Exporter les ${S_ouvrages.length} ouvrages en un seul document Word ?`)) return;
+  toast('⏳ Génération Word…');
+  try { await _generateOuvragesWord(S_ouvrages, 'Ouvrages_NCVRD'); }
+  catch(e){ toast('❌ '+e.message); }
+}
+
+async function _generateOuvragesWord(ouvrages, filename){
+  if(!window.docx){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://unpkg.com/docx@8.5.0/build/index.js';
+      s.onload=res; s.onerror=()=>rej(new Error('Impossible de charger docx.js'));
+      document.head.appendChild(s);
+    });
+  }
+  const {Document,Packer,Paragraph,Table,TableRow,TableCell,TextRun,
+         HeadingLevel,AlignmentType,WidthType,ImageRun} = window.docx;
+  const BLUE='1E4DB7'; const GRAY='64748B'; const LT='EFF6FF';
+
+  function mkPara(runs, opts={}){
+    return new Paragraph({children: Array.isArray(runs)?runs:[runs], ...opts});
+  }
+  function mkCell(text, opts={}){
+    return new TableCell({
+      children:[mkPara([new TextRun({text:String(text||''), size:18, ...opts.run})])],
+      shading:{fill: opts.fill||'FFFFFF'},
+      margins:{top:70,bottom:70,left:100,right:100},
+      ...(opts.width?{width:{size:opts.width,type:WidthType.PERCENTAGE}}:{})
+    });
+  }
+  function mkHdrCell(text){ return mkCell(text,{run:{bold:true,color:'FFFFFF'},fill:'1E4DB7'}); }
+  function row2(label, val){
+    return new TableRow({children:[
+      mkCell(label,{run:{bold:true,color:GRAY},fill:LT,width:32}),
+      mkCell(val,{width:68})
+    ]});
+  }
+  function obsRow(label, val){
+    const items = ['Bon','Correcte','Mauvaise','Non visible'];
+    const runs = items.flatMap(v => [
+      new TextRun({text: v===val?'☑ ':'☐ ', size:18, color: v===val?(v==='Bon'?'16A34A':v==='Mauvaise'?'DC2626':'CA8A04'):GRAY, bold:v===val}),
+      new TextRun({text: v+'   ', size:18, color: v===val?'000000':GRAY, bold:v===val})
+    ]);
+    return new TableRow({children:[
+      mkCell(label,{run:{bold:true,color:GRAY},fill:LT,width:30}),
+      new TableCell({children:[mkPara(runs)],margins:{top:70,bottom:70,left:100,right:100},width:{size:70,type:WidthType.PERCENTAGE}})
+    ]});
+  }
+
+  const children = [];
+  // En-tête du document
+  children.push(mkPara([new TextRun({text:'CARACTÉRISTIQUES D\'OUVRAGES VRD',bold:true,size:40,color:BLUE})],{alignment:AlignmentType.CENTER,spacing:{after:160}}));
+  children.push(mkPara([new TextRun({text:`Généré le ${new Date().toLocaleDateString('fr-FR')} — NCVRD Detect`,size:18,color:GRAY})],{alignment:AlignmentType.CENTER,spacing:{after:400}}));
+
+  for(const o of ouvrages){
+    // Titre ouvrage
+    children.push(mkPara([new TextRun({text:`${o.numeroOuvrage||'Ouvrage sans numéro'}  —  ${o.typeOuvrage||''}`,bold:true,size:30,color:BLUE})],{heading:HeadingLevel.HEADING_1,spacing:{before:300,after:120}}));
+
+    // ── 1. Identification ──
+    children.push(mkPara([new TextRun({text:'1. Identification',bold:true,size:22,color:GRAY})],{spacing:{before:100,after:80}}));
+    children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:[
+      row2('Nature du réseau', o.natureReseau),
+      row2('Type d\'ouvrage',  o.typeOuvrage),
+      row2('Numéro d\'ouvrage',o.numeroOuvrage),
+      row2('Classe / Marque',  o.classeMarque),
+      row2('Dimensions',       o.dimensions),
+      row2('Aération',         o.aeration),
+      row2('Alarme',           o.alarme),
+      row2('Verrous',          o.verrous),
+    ]}));
+    children.push(mkPara([],{spacing:{after:180}}));
+
+    // ── 2. Photos ──
+    children.push(mkPara([new TextRun({text:'2. Représentation',bold:true,size:22,color:GRAY})],{spacing:{before:80,after:80}}));
+    const photoCells = [];
+    for(const [label, dataUrl] of [['Vue extérieure',o.photoExt],['Vue intérieure',o.photoInt]]){
+      let imgPara = mkPara([new TextRun({text:'(Aucune photo)',size:16,italics:true,color:GRAY})]);
+      if(dataUrl){
+        try {
+          const {type, data} = parseImg(dataUrl);
+          imgPara = mkPara([new ImageRun({data, transformation:{width:215,height:175}, type:type==='png'?'png':'jpg'})]);
+        } catch(_){}
+      }
+      photoCells.push(new TableCell({
+        children:[
+          mkPara([new TextRun({text:label,bold:true,size:18,color:GRAY})],{spacing:{after:60}}),
+          imgPara
+        ],
+        margins:{top:100,bottom:100,left:100,right:100}
+      }));
+    }
+    children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:[new TableRow({children:photoCells})]}));
+    children.push(mkPara([],{spacing:{after:180}}));
+
+    // ── 3. Observations ──
+    children.push(mkPara([new TextRun({text:'3. Observations',bold:true,size:22,color:GRAY})],{spacing:{before:80,after:80}}));
+    children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:[
+      obsRow('État de la structure', o.etatStructure),
+      obsRow('État physique',        o.etatPhysique),
+      obsRow('État d\'entretien',    o.etatEntretien),
+      obsRow('Niveau d\'encombrement', o.etatEncombrement),
+    ]}));
+    if(o.observation) children.push(mkPara([new TextRun({text:'Observations : '+o.observation,size:18,italics:true,color:GRAY})],{spacing:{before:100,after:180}}));
+    else children.push(mkPara([],{spacing:{after:180}}));
+
+    // ── 4. Canalisations ──
+    children.push(mkPara([new TextRun({text:'4. Caractéristiques canalisations / réseaux',bold:true,size:22,color:GRAY})],{spacing:{before:80,after:80}}));
+    const canalRows = [
+      new TableRow({children:[
+        mkHdrCell('#'), mkHdrCell('Regard amont/aval'), mkHdrCell('Réseau'),
+        mkHdrCell('DN (mm)'), mkHdrCell('Matériaux'), mkHdrCell('Prof. (m)'), mkHdrCell('Observation')
+      ]})
+    ];
+    (o.canalisations || _ouvrageEmptyCanalisations()).forEach((c, i) => {
+      const fill = i%2===0?'F8FAFC':'FFFFFF';
+      canalRows.push(new TableRow({children:[
+        mkCell(i+1,{fill}), mkCell(c.regard,{fill}), mkCell(c.reseau,{fill}),
+        mkCell(c.dn,{fill}), mkCell(c.materiaux,{fill}), mkCell(c.profondeur,{fill}), mkCell(c.observation,{fill})
+      ]}));
+    });
+    children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:canalRows}));
+    children.push(mkPara([],{spacing:{after:500}}));
+  }
+
+  const doc = new Document({sections:[{children}]});
+  const blob = await Packer.toBlob(doc);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`${filename}_${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.docx`;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+  toast('✅ Document Word généré');
 }
 
 // ════════════════════════════════════════════
@@ -8400,8 +9007,9 @@ async function monthlyCleanup(manual = false){
   localStorage.setItem('ncvrd_last_monthly_cleanup', currentKey);
 
   // ── Étape 6 : Rafraîchir l'interface ──
-  renderChantiers([]); // vider immédiatement le DOM avant rechargement
-  await loadChantiers().catch(()=>{});
+  // NB : on ne rappelle PAS loadChantiers() ici car les batch deletes Firestore
+  // n'ont pas encore propagé — un re-fetch ramènerait les chantiers fantômes.
+  renderChantiers([]);
   await updateProfileScreen().catch(()=>{});
   showScreen('screen-home'); // retourner à l'accueil si on était dans un rapport
 
@@ -8422,6 +9030,7 @@ async function initApp(){
   await loadChantiers().catch(e=>Logger.warn('Init','loadChantiers échoué',e?.message));
   await loadConsignes().catch(()=>{});
   await loadDossier().catch(()=>{});
+  await loadOuvrages().catch(()=>{});
   if(!FIREBASE_CONFIGURED) await loadDemoData();
   S.photos=await db.getAll('photos');
   S.gpsPoints=await db.getAll('gps_points');
