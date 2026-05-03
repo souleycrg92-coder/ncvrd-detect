@@ -3984,7 +3984,9 @@ async function deleteChantier(id){
   if(firestoreOk){
     toast('🗑️ Chantier supprimé');
   } else {
-    toast('⚠️ Supprimé localement — erreur Firestore (vérifiez votre connexion)', 4000);
+    // Afficher le teamId utilisé pour aider au diagnostic
+    toast(`⚠️ Erreur suppression Firestore — teamId utilisé : "${teamId}" — vérifiez la console`, 6000);
+    console.error('[deleteChantier] Suppression Firestore échouée. teamId:', teamId, '| id chantier:', id);
   }
 }
 
@@ -9218,8 +9220,10 @@ async function monthlyCleanup(manual = false){
       ? '✅ Nettoyage terminé — photos et rapports supprimés'
       : '✅ Nettoyage mensuel automatique effectué');
   } else {
-    Logger.warn('MonthlyCleanup', 'Erreurs partielles', erreurs.join(' | '));
-    toast(`⚠️ Nettoyage partiel (${erreurs.length} erreur${erreurs.length>1?'s':''})`);
+    const detail = erreurs.join(' | ');
+    Logger.warn('MonthlyCleanup', 'Erreurs partielles', detail);
+    console.error('[monthlyCleanup] Erreurs:', detail, '| teamId utilisé:', currentUserProfile?.teamId);
+    toast(`⚠️ Nettoyage partiel — erreur: ${erreurs[0]}`, 8000);
   }
 }
 
