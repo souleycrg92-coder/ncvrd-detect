@@ -5654,14 +5654,11 @@ function ouvragePickPhoto(side){
 async function ouvrageHandlePhoto(input, side){
   if(!input.files[0] || !_currentOuvrage) return;
   try {
-    const compressed = await compressImage(input.files[0], 1024, 300);
-    const reader = new FileReader();
-    reader.onload = e => {
-      if(side==='ext') _currentOuvrage.photoExt = e.target.result;
-      else             _currentOuvrage.photoInt = e.target.result;
-      _renderOuvragePhotoPreview(side, e.target.result);
-    };
-    reader.readAsDataURL(compressed);
+    // compressImage retourne déjà un dataURL (string) — pas besoin de FileReader
+    const dataUrl = await compressImage(input.files[0], 1024, 300);
+    if(side==='ext') _currentOuvrage.photoExt = dataUrl;
+    else             _currentOuvrage.photoInt = dataUrl;
+    _renderOuvragePhotoPreview(side, dataUrl);
   } catch(e){ toast('❌ Erreur photo : '+e.message); }
   input.value = '';
 }
