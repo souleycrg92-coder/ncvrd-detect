@@ -6447,20 +6447,20 @@ function _wp(text,bold,size,color,shading){
   const shd=shading?`<w:pPr><w:shd w:val="clear" w:color="auto" w:fill="${shading}"/></w:pPr>`:'';
   return `<w:p>${shd}<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>${b}${sz}${col}</w:rPr><w:t xml:space="preserve">${_xmlEsc(text)}</w:t></w:r></w:p>`;
 }
-// Titre de section (fond bleu #2F5496 + texte blanc, style CR.docx)
+// Titre de section (fond bleu #0E2841 + texte blanc, style CR.docx)
 function _wh(num,text){
-  const fill='2F5496';
+  const fill='0E2841';
   return `<w:p><w:pPr><w:shd w:val="clear" w:color="auto" w:fill="${fill}"/><w:spacing w:before="240" w:after="120"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:bCs/><w:sz w:val="24"/><w:szCs w:val="24"/><w:color w:val="FFFFFF"/></w:rPr><w:t xml:space="preserve">${_xmlEsc(num+'. '+text.toUpperCase())}</w:t></w:r></w:p>`;
 }
 // Sous-titre (texte bleu souligné)
 function _wh3(text){
-  return `<w:p><w:pPr><w:spacing w:before="160" w:after="80"/><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="2F5496"/></w:pBdr></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:bCs/><w:sz w:val="22"/><w:szCs w:val="22"/><w:color w:val="2F5496"/></w:rPr><w:t>${_xmlEsc(text.toUpperCase())}</w:t></w:r></w:p>`;
+  return `<w:p><w:pPr><w:spacing w:before="160" w:after="80"/><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="0E2841"/></w:pBdr></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:bCs/><w:sz w:val="22"/><w:szCs w:val="22"/><w:color w:val="0E2841"/></w:rPr><w:t>${_xmlEsc(text.toUpperCase())}</w:t></w:r></w:p>`;
 }
 // Ligne de tableau
 function _wrow(cells,header){
   const rPr=header?`<w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:bCs/><w:sz w:val="20"/><w:color w:val="FFFFFF"/></w:rPr>`:`<w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="20"/><w:color w:val="595959"/></w:rPr>`;
-  const trPr=header?`<w:trPr><w:shd w:val="clear" w:color="auto" w:fill="2F5496"/></w:trPr>`:'';
-  return `<w:tr>${trPr}${cells.map((cell,i)=>`<w:tc><w:tcPr><w:tcBorders><w:top w:val="single" w:sz="4" w:color="C5CCE0"/><w:left w:val="single" w:sz="4" w:color="C5CCE0"/><w:bottom w:val="single" w:sz="4" w:color="C5CCE0"/><w:right w:val="single" w:sz="4" w:color="C5CCE0"/></w:tcBorders><w:shd w:val="clear" w:color="auto" w:fill="${header?'2F5496':'FFFFFF'}"/></w:tcPr><w:p><w:r>${rPr}<w:t xml:space="preserve">${_xmlEsc(cell)}</w:t></w:r></w:p></w:tc>`).join('')}</w:tr>`;
+  const trPr=header?`<w:trPr><w:shd w:val="clear" w:color="auto" w:fill="0E2841"/></w:trPr>`:'';
+  return `<w:tr>${trPr}${cells.map((cell,i)=>`<w:tc><w:tcPr><w:tcBorders><w:top w:val="single" w:sz="4" w:color="C5CCE0"/><w:left w:val="single" w:sz="4" w:color="C5CCE0"/><w:bottom w:val="single" w:sz="4" w:color="C5CCE0"/><w:right w:val="single" w:sz="4" w:color="C5CCE0"/></w:tcBorders><w:shd w:val="clear" w:color="auto" w:fill="${header?'0E2841':'FFFFFF'}"/></w:tcPr><w:p><w:r>${rPr}<w:t xml:space="preserve">${_xmlEsc(cell)}</w:t></w:r></w:p></w:tc>`).join('')}</w:tr>`;
 }
 // Ligne tableau zébré (ligne paire)
 function _wrowEven(cells){
@@ -6478,7 +6478,7 @@ function _wtable(headers,rows){
 // Bloc texte avec fond gris clair
 function _wblock(lines,obsColor){
   const fill=obsColor?'FFFBEB':'F2F5FB';
-  const bord=obsColor?'F59E0B':'2F5496';
+  const bord=obsColor?'F59E0B':'0E2841';
   return lines.map(l=>`<w:p><w:pPr><w:shd w:val="clear" w:color="auto" w:fill="${fill}"/><w:pBdr><w:left w:val="single" w:sz="12" w:space="6" w:color="${bord}"/></w:pBdr><w:ind w:left="120"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="22"/><w:color w:val="272727"/></w:rPr><w:t xml:space="preserve">${_xmlEsc(l||' ')}</w:t></w:r></w:p>`).join('');
 }
 
@@ -6590,7 +6590,7 @@ async function doWordDocx(){
     } = window.docx;
 
     // ── Palette BTP ──
-    const NAVY='0E425A', STEEL='0E425A', ORANGE='E8620A';
+    const NAVY='0E2841', STEEL='0E2841', ORANGE='E8620A';
     const LGRAY='F4F6F9', MGRAY='D1D5DB', DGRAY='374151';
     const WHITE='FFFFFF', FONT='Calibri';
     const CW=9638; // A4 marges 1134 (0.79")
@@ -6958,16 +6958,16 @@ async function doWordDocx(){
     // (Logo retiré : déjà présent dans l'en-tête Bannière.png)
     children.push(sp(600));
     children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun('  ',{size:48})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.nom,{size:60,bold:true,color:'0E425A'})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.sous,{size:26,color:'0E425A',italics:true})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:'0E425A'},children:[mkRun('  ',{size:18})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.nom,{size:60,bold:true,color:'0E2841'})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.sous,{size:26,color:'0E2841',italics:true})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:'0E2841'},children:[mkRun('  ',{size:18})]}));
     children.push(sp(600));
     children.push(para('COMPTE RENDU DE DÉTECTION',{align:AlignmentType.CENTER,bold:true,size:44,color:NAVY,before:0,after:60}));
     children.push(para('DES RÉSEAUX ENTERRÉS',{align:AlignmentType.CENTER,bold:true,size:44,color:NAVY,before:0,after:200}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:LGRAY},border:{top:brd(MGRAY),left:brd('0E425A',20),bottom:brd(MGRAY),right:brd('0E425A',20)},children:[mkRun(((c.name||r.adresse||c.address||'Chantier').toUpperCase()),{size:26,color:NAVY,bold:true})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:LGRAY},border:{top:brd(MGRAY),left:brd('0E2841',20),bottom:brd(MGRAY),right:brd('0E2841',20)},children:[mkRun(((c.name||r.adresse||c.address||'Chantier').toUpperCase()),{size:26,color:NAVY,bold:true})]}));
     children.push(sp(500));
-    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:'0E425A'},children:[mkRun('  ',{size:10})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.adresse+'   |   Tél : '+_ent.tel+'   |   '+_ent.email,{size:18,color:'0E425A'})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:'0E2841'},children:[mkRun('  ',{size:10})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.adresse+'   |   Tél : '+_ent.tel+'   |   '+_ent.email,{size:18,color:'0E2841'})]}));
     children.push(new Paragraph({children:[new PageBreak()]}));
 
     // ─── §1 INFORMATIONS GÉNÉRALES ───
