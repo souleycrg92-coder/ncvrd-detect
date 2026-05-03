@@ -3959,11 +3959,19 @@ async function deleteChantier(id){
   const teamId = currentUserProfile?.teamId;
   if(teamId) db.setTeam(teamId); // reset au bon teamId avant suppression
 
-  // 1. Suppression IndexedDB (directe, sans passer par Firestore)
+  // 1. Vider la file de sync pour cet ID (CRITIQUE : évite que flushSyncQueue
+  //    re-crée le chantier dans Firestore après suppression)
+  const cleanedQueue = getSyncQueue().filter(item => String(item.id) !== String(id));
+  saveSyncQueue(cleanedQueue);
+  renderSyncQueueBadge();
+  // Annuler le retry en cours s'il concerne cet ID
+  if(_syncRetryTimer){ clearTimeout(_syncRetryTimer); _syncRetryTimer = null; }
+
+  // 2. Suppression IndexedDB (directe)
   await db._idb.del('chantiers', id).catch(()=>{});
   await db._idb.del('rapports',  id).catch(()=>{});
 
-  // 2. Suppression Firestore (explicite avec le bon teamId)
+  // 3. Suppression Firestore (explicite avec le bon teamId)
   let firestoreOk = true;
   if(FIREBASE_CONFIGURED && fdb && teamId){
     try {
@@ -3977,15 +3985,14 @@ async function deleteChantier(id){
     } catch(e){ Logger.warn('Delete', 'Suppression rapport Firestore échouée', e?.message); }
   }
 
-  // 3. Retirer de la liste mémoire (comparaison en string pour éviter bug type number/string)
+  // 4. Retirer de la liste mémoire (comparaison string pour éviter bug type number/string)
   S.chantiers = S.chantiers.filter(c => String(c.id) !== String(id));
   renderChantiers(S.chantiers);
 
   if(firestoreOk){
     toast('🗑️ Chantier supprimé');
   } else {
-    // Afficher le teamId utilisé pour aider au diagnostic
-    toast(`⚠️ Erreur suppression Firestore — teamId utilisé : "${teamId}" — vérifiez la console`, 6000);
+    toast(`⚠️ Erreur suppression Firestore — teamId: "${teamId}"`, 6000);
     console.error('[deleteChantier] Suppression Firestore échouée. teamId:', teamId, '| id chantier:', id);
   }
 }
@@ -9158,6 +9165,11 @@ async function monthlyCleanup(manual = false){
 
   toast('⏳ Nettoyage en cours…');
   const erreurs = [];
+
+  // ── Étape 0 : Vider toute la file de sync (évite re-création après suppression) ──
+  saveSyncQueue([]);
+  renderSyncQueueBadge();
+  if(_syncRetryTimer){ clearTimeout(_syncRetryTimer); _syncRetryTimer = null; }
 
   // ── Étape 1 : IndexedDB local ──
   for(const store of ['photos','rapports','chantiers','gps_points']){
