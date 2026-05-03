@@ -147,10 +147,53 @@ compressImage(file, maxW, maxSizeKB)  // Compresse en JPEG (maxW=1024, maxSizeKB
 
 ### Export Word
 ```js
-exportWord()             // Export rapport complet en .docx (docx.js v8.5.0 + JSZip)
+exportRapportWord()      // Export rapport chantier complet en .docx → appelle doWordDocx()
+doWordDocx()             // Génère le .docx via docx.js (sections 01-06 + page de couverture)
+exportSingleOuvrage(id)  // Export fiche ouvrage en .docx → appelle _generateOuvragesWord()
+exportAllOuvrages()      // Export tous les ouvrages en un seul .docx
+_generateOuvragesWord(ouvrages, filename) // Génère le .docx ouvrages via docx.js
 fixDocxJpeg(blob)        // Post-processing : corrige le mimeType JPEG dans le ZIP docx
 parseImg(dataUrl)        // Retourne {type, data: Uint8Array} — IMPORTANT: Uint8Array, pas base64
 // Overlay de progression : _showExportOverlay(), _updateExportProgress(text, pct), _hideExportOverlay()
+```
+
+### Charte graphique Word — Rapport chantier
+Constantes définies dans `doWordDocx()` :
+```js
+const NAVY   = '0E2841'; // Bleu foncé : texte titres, numéros, traits, entêtes tableaux
+const ORANGE = 'E8620A'; // Orange (inutilisé dans les titres depuis refonte)
+const LGRAY  = 'F4F6F9'; // Gris clair : labels colonne gauche dans makeInfoTable
+const MGRAY  = 'D1D5DB'; // Gris moyen : bordures légères
+const WHITE  = 'FFFFFF'; // Blanc : fond données
+```
+- **Page de couverture** : fond `F9F9F9`, texte `#0E2841`, bandeaux `#0E2841`
+- **Titres 01→06** (`sectionTitle`) : fond `F9F9F9`, numéro + texte + trait bas → `#0E2841`
+- **Sous-titres** (`subTitle`) : trait gauche `#0E2841`, texte `#0E2841`
+- **Entêtes tableaux** (`makeTable`) : fond `F9F9F9`, texte `#0E2841` gras
+- **Tableau de synthèse** (XML `_wh`, `_wrow`) : même charte
+
+### Charte graphique Word — Rapport ouvrages
+Constantes définies dans `_generateOuvragesWord()` :
+```js
+const C_YELLOW = '0E2841'; // Titre "CARACTERISTIQUE OUVRAGE" — fond bleu foncé
+const C_BLUE   = '0E2841'; // Sections REPRESENTATION / OBSERVATION / CANALISATIONS — fond bleu foncé
+const C_LBLUE  = 'BDD6EE'; // Labels / en-têtes colonnes — bleu clair
+const C_WHITE  = 'FFFFFF'; // Fond données
+const C_BLACK  = '000000'; // Texte données
+const C_NAVY   = '0E2841'; // Texte titres (blanc sur fond foncé) et labels (sur C_LBLUE)
+```
+- **Titres de section** (`titleRow`) : fond `C_YELLOW`/`C_BLUE` (`#0E2841`), texte **blanc**
+- **Labels** (`txtC` bold=true) : fond `C_LBLUE` (`#BDD6EE`), texte `#0E2841` gras
+- **Données** (`txtC` bold=false) : fond blanc, texte noir
+
+### Sélecteur d'entité (IDF / Grand EST)
+Champ `r.entite` sur le rapport (`'idf'` ou `'grand_est'`).  
+Utilisé dans `doWordDocx()` via `_ENTITES[r.entite]` pour la page de couverture et le footer Word :
+```js
+const _ENTITES = {
+  'idf':      { nom:'NEOCONCEPT VRD', adresse:'84/88 Bd de la Mission Marchand, 92400 Courbevoie', ... },
+  'grand_est':{ nom:'NEOCONCEPT VRD GRAND EST', adresse:'16 avenue de l\'Europe - 67300 SCHILTIGHEIM', ... }
+};
 ```
 
 ### Synchronisation
@@ -261,6 +304,9 @@ PUSH_CORRECTION_PHOTOS.bat
 | Chantiers persistent après "supprimer tout" | `loadChantiers()` re-fetchait Firestore avant propagation des batch deletes | Supprimé `await loadChantiers()` dans `monthlyCleanup()` |
 | Chantiers fantômes (race condition sync) | — | Ne jamais appeler `loadChantiers()` juste après batch delete Firestore |
 | **Chantier supprimé revient après refresh** | Causes multiples — voir détail ci-dessous | Voir section "Suppression de chantier — architecture complète" |
+| **Photos réseaux disparaissent après refresh** | `openChantier` remplaçait le rapport local (avec base64) par la version Firestore (base64 stripés) | Merge dans `openChantier` : restaure base64 locaux + URLs Storage Firestore |
+| **Partage collaborateur cassé** | Règle Firestore `allow list` restreinte aux admins → techniciens ne pouvaient pas lister les users | `allow list: if isAuth()` dans `/users/{uid}` |
+| **Notifications ne se déclenchent pas** | Règle Firestore utilisait `resource.data.toUserId` mais le code envoie `toUid` | Corrigé le nom de champ dans `firestore.rules` : `toUserId` → `toUid` |
 
 ---
 
@@ -351,6 +397,45 @@ Toujours utiliser `db._idb.get()` pour vérifier l'existence locale avant de syn
 
 ---
 
+## Photos — Merge Firestore ↔ IDB dans `openChantier`
+
+**Problème** : `syncRapportToFirebase` stripe les photos base64 avant d'envoyer en Firestore (trop lourd).  
+Quand un collaborateur recharge le chantier, `openChantier` prenait la version Firestore → photos disparaissent.
+
+**Fix dans `openChantier`** : après récupération du rapport Firestore, fusionner les données locales :
+```js
+if(rapport){
+  // Réseaux : Storage URLs (Firestore) + base64 (local IDB)
+  remote.networks = remote.networks.map(rn => {
+    const ln = rapport.networks.find(x => x.id === rn.id);
+    if(!ln) return rn;
+    const storageUrls = (rn.photos||[]).filter(p => p && !p.startsWith('data:'));
+    const localB64    = (ln.photos||[]).filter(p => p?.startsWith('data:'));
+    rn.photos = [...storageUrls, ...localB64];
+    if(ln._photosUrls?.length) rn._photosUrls = ln._photosUrls;
+    return rn;
+  });
+  // planSituation, conclusionPhotos, signatures — toujours depuis local si présent
+  if(!remote.planSituation && rapport.planSituation) remote.planSituation = rapport.planSituation;
+  // ... idem pour _planUrl, conclusionPhotos, _conclusionUrls, signature, signatureVeri
+}
+```
+
+---
+
+## Bouton refresh collaborateur (`refreshChantierNow`)
+
+Permet à un collaborateur de recharger manuellement le chantier depuis Firestore :
+```js
+async function refreshChantierNow(){
+  await saveRapportNow();   // sauvegarde locale d'abord
+  await openChantier(c.id); // recharge depuis Firestore (avec merge photos)
+}
+```
+Bouton `🔄` avec `id="btn-refresh-chantier"` dans l'en-tête du rapport.
+
+---
+
 ## Points d'attention critiques
 
 1. **Fichier unique** : tout est dans `index.html`. Pas de build, pas de bundler.
@@ -366,6 +451,9 @@ Toujours utiliser `db._idb.get()` pour vérifier l'existence locale avant de syn
 11. **Suppression chantier** : voir section dédiée ci-dessus. Ne JAMAIS simplifier `deleteChantier` — chaque étape a sa raison d'être.
 12. **Firebase offline persistence masque les erreurs serveur** : `delete()` / `set()` / `update()` résolvent TOUJOURS localement, même si le serveur refuse. Toujours vérifier via `ref.get({source:'server'})` après une opération critique.
 13. **Règles Firestore** : déployer via `node deploy-rules.js` (utilise `serviceAccount.json` + API REST). Ne pas passer par `firebase login` (non configuré sur cette machine).
+14. **Photos après refresh Firestore** : `openChantier` doit TOUJOURS merger les photos base64 locales avec les URLs Storage Firestore. Ne jamais remplacer directement le rapport local par la version Firestore brute.
+15. **Champ notifications** : le code utilise `toUid` (pas `toUserId`). Les règles Firestore doivent utiliser `resource.data.toUid`. Ne pas renommer ce champ.
+16. **Export Word ouvrages** : les couleurs sont dans `_generateOuvragesWord()` (constantes locales `C_YELLOW`, `C_BLUE`, `C_LBLUE`, `C_NAVY`). Ne pas confondre avec les constantes du rapport chantier (`NAVY`, `ORANGE`) qui sont dans `doWordDocx()`.
 
 ---
 
