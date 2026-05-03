@@ -1338,6 +1338,13 @@ html[data-terrain="1"] {
       </button>
       <div class="acc-body open">
         <div class="form-group">
+          <label class="form-label">Entité</label>
+          <select class="form-input" id="r-entite" onchange="rapportChanged()" style="appearance:auto;font-weight:700">
+            <option value="idf">🏙️ Neoconcept VRD (IDF)</option>
+            <option value="grand_est">🗺️ Neoconcept VRD Grand EST</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label class="form-label">Client</label>
           <input class="form-input" id="r-client" placeholder="Nom du client donneur d'ordre" oninput="rapportChanged()">
         </div>
@@ -4241,6 +4248,18 @@ function renderRapportScreen(){
   document.getElementById('topTitle').textContent='📋 '+c.name;
   const rref=document.getElementById('r-reference'); if(rref) rref.value=r.reference||c.name||'';
   const rcli=document.getElementById('r-client'); if(rcli) rcli.value=r.client||c.client||'';
+  // Entité : restaurer ou auto-détecter selon l'équipe de l'utilisateur
+  const _ent=document.getElementById('r-entite');
+  if(_ent){
+    if(r.entite){
+      _ent.value=r.entite;
+    } else {
+      // Auto-détection : si l'équipe contient "grand est" → grand_est, sinon idf
+      const _teamName = (currentUserProfile?.teamName||currentUserProfile?.agence||'').toLowerCase();
+      _ent.value = (_teamName.includes('grand est')||_teamName.includes('grandest')) ? 'grand_est' : 'idf';
+      r.entite = _ent.value; // pré-remplir pour la sauvegarde
+    }
+  }
   // Nature des opérations : pré-sélectionner dans le dropdown ou afficher texte libre
   const _natSel = document.getElementById('r-nature-select');
   const _natInp = document.getElementById('r-nature');
@@ -4338,6 +4357,7 @@ let saveTimer;
 function rapportChanged(){
   const r=S.currentRapport; if(!r) return;
   const _rref=document.getElementById('r-reference'); if(_rref) r.reference=_rref.value;
+  const _entite=document.getElementById('r-entite'); if(_entite) r.entite=_entite.value;
   r.client=document.getElementById('r-client').value;
   const _nSel=document.getElementById('r-nature-select');
   const _nInp=document.getElementById('r-nature');
@@ -6864,12 +6884,33 @@ async function doWordDocx(){
     // ════════════════════════════════════════
     const children=[];
 
+    // ─── Données de l'entité (IDF ou Grand EST) ───
+    const _ENTITES = {
+      'idf': {
+        nom:    'NEOCONCEPT VRD',
+        sous:   'Géodétection & Géoréférencement des Réseaux',
+        adresse:'84/88 Bd de la Mission Marchand — 92400 Courbevoie',
+        tel:    '01 46 67 75 58',
+        email:  'contact@neoconceptvrd.com',
+        footer: 'NEOCONCEPT VRD  –  contact@neoconceptvrd.com  –  01 46 67 75 58',
+      },
+      'grand_est': {
+        nom:    'NEOCONCEPT VRD GRAND EST',
+        sous:   'Géodétection & Géoréférencement des Réseaux',
+        adresse:'Strasbourg',
+        tel:    '06 47 37 66 86',
+        email:  'contact@neoconceptvrd.com',
+        footer: 'NEOCONCEPT VRD GRAND EST  –  contact@neoconceptvrd.com  –  06 47 37 66 86',
+      }
+    };
+    const _ent = _ENTITES[r.entite||'idf'] || _ENTITES['idf'];
+
     // ─── PAGE DE COUVERTURE ───
     // (Logo retiré : déjà présent dans l'en-tête Bannière.png)
     children.push(sp(600));
     children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:NAVY},children:[mkRun('  ',{size:48})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:NAVY},children:[mkRun('NEOCONCEPT VRD',{size:60,bold:true,color:WHITE})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:NAVY},children:[mkRun('Géodétection & Géoréférencement des Réseaux',{size:26,color:'A8C4E8',italics:true})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:NAVY},children:[mkRun(_ent.nom,{size:60,bold:true,color:WHITE})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:NAVY},children:[mkRun(_ent.sous,{size:26,color:'A8C4E8',italics:true})]}));
     children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:ORANGE},children:[mkRun('  ',{size:18})]}));
     children.push(sp(600));
     children.push(para('COMPTE RENDU DE DÉTECTION',{align:AlignmentType.CENTER,bold:true,size:44,color:NAVY,before:0,after:60}));
@@ -6877,7 +6918,7 @@ async function doWordDocx(){
     children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:LGRAY},border:{top:brd(MGRAY),left:brd(ORANGE,20),bottom:brd(MGRAY),right:brd(ORANGE,20)},children:[mkRun(((c.name||r.adresse||c.address||'Chantier').toUpperCase()),{size:26,color:NAVY,bold:true})]}));
     children.push(sp(500));
     children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:ORANGE},children:[mkRun('  ',{size:10})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:NAVY},children:[mkRun('84/88 Bd de la Mission Marchand — 92400 Courbevoie   |   Tél : 01 46 67 75 58   |   contact@neoconceptvrd.com',{size:18,color:'A8C4E8'})]}));
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:NAVY},children:[mkRun(_ent.adresse+'   |   Tél : '+_ent.tel+'   |   '+_ent.email,{size:18,color:'A8C4E8'})]}));
     children.push(new Paragraph({children:[new PageBreak()]}));
 
     // ─── §1 INFORMATIONS GÉNÉRALES ───
@@ -7107,7 +7148,7 @@ async function doWordDocx(){
       spacing:{before:80,after:0},
       border:{top:{style:BorderStyle.SINGLE,size:4,color:MGRAY}},
       tabStops:[{type:TabStopType.RIGHT,position:9638}],
-      children:[mkRun('NEOCONCEPT VRD  –  contact@neoconceptvrd.com  –  01 46 67 75 58',{size:16,color:'9CA3AF'}),new TextRun({text:'\t',size:16}),mkRun('Page ',{size:16,color:'9CA3AF'}),new TextRun({children:[PageNumber.CURRENT],size:16,color:NAVY})]
+      children:[mkRun(_ent.footer,{size:16,color:'9CA3AF'}),new TextRun({text:'\t',size:16}),mkRun('Page ',{size:16,color:'9CA3AF'}),new TextRun({children:[PageNumber.CURRENT],size:16,color:NAVY})]
     })]});
 
     // ─── DOCUMENT ───
