@@ -6973,13 +6973,46 @@ async function doWordDocx(){
     }));
     children.push(sp(200));
 
-    // ─── HEADER & FOOTER ───
-    const header=new Header({children:[new Paragraph({
-      spacing:{before:0,after:0},
-      border:{bottom:{style:BorderStyle.SINGLE,size:8,color:ORANGE}},
-      tabStops:[{type:TabStopType.RIGHT,position:9638}],
-      children:[mkRun('NEOCONCEPT VRD',{bold:true,size:20,color:NAVY}),mkRun('   |   Compte Rendu de Détection des Réseaux',{size:18,color:'6B7280'}),new TextRun({text:'\t',size:18}),mkRun(dateGen,{size:18,color:'9CA3AF'})]
-    })]});
+    // ─── HEADER : Bannière.png pleine largeur bord à bord ───
+    // Même approche que l'export ouvrage : indent négatif + image A4 full width
+    const _rapportFetchImg = async (relPath) => {
+      const bases = [
+        'https://neoconceptvrd.github.io/ncvrd-detect/',
+        location.origin + location.pathname.replace(/\/[^/]*$/, '/'),
+        './',
+      ];
+      for(const base of bases){
+        try { const r=await fetch(base+relPath); if(r.ok) return new Uint8Array(await r.arrayBuffer()); } catch(_){}
+      }
+      return null;
+    };
+    const bannerBytesR = await _rapportFetchImg('Banni%C3%A8re.png');
+
+    // Marges rapport : left/right = 1134 DXA ; A4 total = 11906 DXA
+    const R_MARGIN = 1134, R_OVER = 300;
+    const R_BANNER_W = Math.round((11906 + 2 * R_OVER) / 1440 * 96); // ~834px
+    const R_BANNER_H = 149; // 3,94 cm
+
+    let hdrParagraph;
+    if(bannerBytesR){
+      hdrParagraph = new Paragraph({
+        children:[new ImageRun({data:bannerBytesR, type:'png',
+                    transformation:{width:R_BANNER_W, height:R_BANNER_H}})],
+        spacing:{before:0, after:0},
+        indent:{left:-(R_MARGIN+R_OVER), right:-(R_MARGIN+R_OVER)},
+      });
+    } else {
+      hdrParagraph = new Paragraph({
+        spacing:{before:0,after:0},
+        border:{bottom:{style:BorderStyle.SINGLE,size:8,color:ORANGE}},
+        tabStops:[{type:TabStopType.RIGHT,position:9638}],
+        children:[mkRun('NEOCONCEPT VRD',{bold:true,size:20,color:NAVY}),
+                  mkRun('   |   Compte Rendu de Détection des Réseaux',{size:18,color:'6B7280'}),
+                  new TextRun({text:'\t',size:18}),mkRun(dateGen,{size:18,color:'9CA3AF'})]
+      });
+    }
+    const header = new Header({children:[hdrParagraph]});
+
     const footer=new Footer({children:[new Paragraph({
       spacing:{before:80,after:0},
       border:{top:{style:BorderStyle.SINGLE,size:4,color:MGRAY}},
@@ -6990,7 +7023,11 @@ async function doWordDocx(){
     // ─── DOCUMENT ───
     const doc=new Document({
       sections:[{
-        properties:{page:{size:{width:11906,height:16838},margin:{top:1700,right:1134,bottom:1134,left:1134,header:400,footer:600}}},
+        properties:{page:{size:{width:11906,height:16838},margin:{
+          header:0,    // bannière collée au bord haut
+          top:   2400, // corps commence après la bannière
+          right: 1134, bottom:1134, left:1134, footer:600
+        }}},
         headers:{default:header},footers:{default:footer},
         children
       }]
