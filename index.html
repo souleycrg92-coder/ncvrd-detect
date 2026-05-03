@@ -5846,19 +5846,25 @@ async function _generateOuvragesWord(ouvrages, filename){
   // Bannière.png = image complète (logo + visuel) créée par NeoConceptVRD
   const bannerBytes = await fetchImgBytes('Banni%C3%A8re.png');
 
-  // ── En-tête de page : Bannière.png pleine largeur (logo + visuel intégrés) ──
-  // Pixels docx.js à 96 dpi : TW DXA / 1440 * 96 ≈ 602px de large
-  const PX_HEADER_W = Math.round(TW / 1440 * 96); // ~602px
-  const PX_HEADER_H = 100; // hauteur de l'en-tête (proportionnelle à l'image)
+  // ── En-tête de page : Bannière.png pleine largeur bord à bord ──
+  // Word montre 21,17 cm × 3,94 cm — image étendue dans les marges via indent négatif
+  // A4 total = 11906 DXA = 794px ; marges = 1440 DXA chaque côté
+  const MARGIN_DXA  = 1440;
+  const PAGE_W_PX   = Math.round((TW + 2 * MARGIN_DXA) / 1440 * 96); // ~794px (A4 full)
+  const BANNER_H_PX = 149; // 3,94 cm → 3.94/2.54*96 ≈ 149px
 
   let hdrChildren;
   if(bannerBytes){
     hdrChildren = [
-      mkP([new ImageRun({
-        data: bannerBytes,
-        type: 'png',
-        transformation: { width: PX_HEADER_W, height: PX_HEADER_H }
-      })], { spacing:{ before:0, after:0 } })
+      new Paragraph({
+        children: [new ImageRun({
+          data: bannerBytes,
+          type: 'png',
+          transformation: { width: PAGE_W_PX, height: BANNER_H_PX }
+        })],
+        spacing: { before:0, after:0 },
+        indent:  { left: -MARGIN_DXA, right: -MARGIN_DXA }, // déborde dans les marges
+      })
     ];
   } else {
     hdrChildren = [mkP([new TextRun({text:'NeoConceptVRD — NCVRD Detect', bold:true, size:20, font:'Calibri'})])];
