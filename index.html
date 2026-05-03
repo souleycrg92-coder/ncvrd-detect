@@ -5726,6 +5726,7 @@ async function exportAllOuvrages(){
 }
 
 async function _generateOuvragesWord(ouvrages, filename){
+  // ── Chargement docx.js ──
   await new Promise((resolve, reject)=>{
     if(window.docx) return resolve();
     const s = document.createElement('script');
@@ -5735,120 +5736,264 @@ async function _generateOuvragesWord(ouvrages, filename){
     document.head.appendChild(s);
   });
   if(!window.docx){ toast('❌ docx.js non disponible'); return; }
-  const {Document,Packer,Paragraph,Table,TableRow,TableCell,TextRun,
-         HeadingLevel,AlignmentType,WidthType,ImageRun} = window.docx;
-  const BLUE='1E4DB7'; const GRAY='64748B'; const LT='EFF6FF';
 
-  function mkPara(runs, opts={}){
-    return new Paragraph({children: Array.isArray(runs)?runs:[runs], ...opts});
+  const {Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun,
+         Header, AlignmentType, WidthType, ImageRun, PageBreak,
+         BorderStyle, ShadingType} = window.docx;
+
+  // ── Couleurs ODT ──
+  const C_YELLOW = 'FFE599'; // Titre "CARACTERISTIQUE OUVRAGE"
+  const C_BLUE   = '9CC2E5'; // Sections REPRESENTATION / OBSERVATION / CANALISATION
+  const C_LBLUE  = 'BDD6EE'; // Labels / en-têtes colonnes
+  const C_WHITE  = 'FFFFFF';
+  const C_BLACK  = '000000';
+
+  // ── Largeurs colonnes (DXA, extraites de l'ODT) ──
+  const COLS = [1453, 1063, 1063, 930, 797, 1706, 820, 1195];
+  const TW   = COLS.reduce((a,b)=>a+b, 0); // 9031 DXA total
+
+  // ── Bordures fines blanches entre cellules ──
+  const BWHITE = { style:BorderStyle.SINGLE, size:4, color:'FFFFFF' };
+  const BNONE  = { style:BorderStyle.NONE,   size:0, color:'auto'   };
+  const cellBorders = { top:BWHITE, bottom:BWHITE, left:BWHITE, right:BWHITE };
+  const noBorders   = { top:BNONE,  bottom:BNONE,  left:BNONE,  right:BNONE,
+                         insideH:BNONE, insideV:BNONE };
+
+  // ── Helper : paragraphe ──
+  function mkP(runs, opts={}){
+    return new Paragraph({ children: Array.isArray(runs)?runs:[runs], ...opts });
   }
-  function mkCell(text, opts={}){
-    return new TableCell({
-      children:[mkPara([new TextRun({text:String(text||''), size:18, ...opts.run})])],
-      shading:{fill: opts.fill||'FFFFFF'},
-      margins:{top:70,bottom:70,left:100,right:100},
-      ...(opts.width?{width:{size:opts.width,type:WidthType.PERCENTAGE}}:{})
-    });
+
+  // ── Helper : cellule colorée ──
+  function mkC(fill, children_arr, w, span){
+    const cellOpts = {
+      children:   children_arr,
+      shading:    { fill, type:ShadingType.SOLID, color:fill },
+      margins:    { top:55, bottom:55, left:100, right:100 },
+      borders:    cellBorders,
+      width:      { size:w, type:WidthType.DXA },
+    };
+    if(span && span > 1) cellOpts.columnSpan = span;
+    return new TableCell(cellOpts);
   }
-  function mkHdrCell(text){ return mkCell(text,{run:{bold:true,color:'FFFFFF'},fill:'1E4DB7'}); }
-  function row2(label, val){
-    return new TableRow({children:[
-      mkCell(label,{run:{bold:true,color:GRAY},fill:LT,width:32}),
-      mkCell(val,{width:68})
+
+  // ── Helper : cellule texte simple ──
+  function txtC(text, fill, w, span, bold=false, size=18){
+    return mkC(fill, [
+      mkP([new TextRun({ text:String(text||''), bold, size, font:'Calibri', color:C_BLACK })])
+    ], w, span);
+  }
+
+  // ── Helper : cellule titre pleine largeur (8 colonnes) ──
+  function titleRow(text, fill){
+    return new TableRow({ children:[
+      mkC(fill, [
+        mkP([new TextRun({text, bold:true, size:20, font:'Calibri', color:C_BLACK})],
+            {alignment:AlignmentType.CENTER})
+      ], TW, 8)
     ]});
   }
+
+  // ── Helper : ligne de données 2 paires (4 cols chacune) ──
+  // cols 0+1 = label gauche, 2+3 = valeur gauche, 4+5 = label droit, 6+7 = valeur droit
+  const W_LLBL = COLS[0]+COLS[1];
+  const W_LVAL = COLS[2]+COLS[3];
+  const W_RLBL = COLS[4]+COLS[5];
+  const W_RVAL = COLS[6]+COLS[7];
+  function dataRow2(l1,v1,l2,v2){
+    return new TableRow({ children:[
+      txtC(l1, C_LBLUE, W_LLBL, 2, true),
+      txtC(v1, C_WHITE, W_LVAL, 2),
+      txtC(l2, C_LBLUE, W_RLBL, 2, true),
+      txtC(v2, C_WHITE, W_RVAL, 2),
+    ]});
+  }
+
+  // ── Helper : ligne observation avec cases à cocher ──
+  const OBS_OPTS  = ['Bon','Correcte','Mauvaise','Non visible'];
+  const OBS_COLS  = { 'Bon':'00B050', 'Correcte':'FFC000', 'Mauvaise':'FF0000', 'Non visible':'595959' };
   function obsRow(label, val){
-    const items = ['Bon','Correcte','Mauvaise','Non visible'];
-    const runs = items.flatMap(v => [
-      new TextRun({text: v===val?'☑ ':'☐ ', size:18, color: v===val?(v==='Bon'?'16A34A':v==='Mauvaise'?'DC2626':'CA8A04'):GRAY, bold:v===val}),
-      new TextRun({text: v+'   ', size:18, color: v===val?'000000':GRAY, bold:v===val})
-    ]);
-    return new TableRow({children:[
-      mkCell(label,{run:{bold:true,color:GRAY},fill:LT,width:30}),
-      new TableCell({children:[mkPara(runs)],margins:{top:70,bottom:70,left:100,right:100},width:{size:70,type:WidthType.PERCENTAGE}})
+    const runs = OBS_OPTS.flatMap(v => {
+      const active = v === val;
+      const col    = active ? (OBS_COLS[v]||'000000') : '808080';
+      return [
+        new TextRun({ text:active?'☑ ':'☐ ', size:18, font:'Calibri', color:col, bold:active }),
+        new TextRun({ text:v+'    ',          size:18, font:'Calibri', color:col, bold:active }),
+      ];
+    });
+    return new TableRow({ children:[
+      txtC(label, C_LBLUE, W_LLBL, 2, true),
+      mkC(C_WHITE, [mkP(runs)], W_LVAL+W_RLBL+W_RVAL, 6),
     ]});
   }
 
-  const children = [];
-  // En-tête du document
-  children.push(mkPara([new TextRun({text:'CARACTÉRISTIQUES D\'OUVRAGES VRD',bold:true,size:40,color:BLUE})],{alignment:AlignmentType.CENTER,spacing:{after:160}}));
-  children.push(mkPara([new TextRun({text:`Généré le ${new Date().toLocaleDateString('fr-FR')} — NCVRD Detect`,size:18,color:GRAY})],{alignment:AlignmentType.CENTER,spacing:{after:400}}));
+  // ── Fetch images depuis GitHub Pages (ou local) ──
+  async function fetchImgBytes(relPath){
+    const bases = [
+      'https://neoconceptvrd.github.io/ncvrd-detect/',
+      location.origin + location.pathname.replace(/\/[^/]*$/, '/'),
+      './',
+    ];
+    for(const base of bases){
+      try {
+        const r = await fetch(base + relPath);
+        if(r.ok) return new Uint8Array(await r.arrayBuffer());
+      } catch(_){}
+    }
+    return null;
+  }
 
-  for(const o of ouvrages){
-    // Titre ouvrage
-    children.push(mkPara([new TextRun({text:`${o.numeroOuvrage||'Ouvrage sans numéro'}  —  ${o.typeOuvrage||''}`,bold:true,size:30,color:BLUE})],{heading:HeadingLevel.HEADING_1,spacing:{before:300,after:120}}));
+  const [bannerBytes, logoBytes] = await Promise.all([
+    fetchImgBytes('BANNER.png'),
+    fetchImgBytes('LOGO_HD.png'),
+  ]);
 
-    // ── 1. Identification ──
-    children.push(mkPara([new TextRun({text:'1. Identification',bold:true,size:22,color:GRAY})],{spacing:{before:100,after:80}}));
-    children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:[
-      row2('Nature du réseau', o.natureReseau),
-      row2('Type d\'ouvrage',  o.typeOuvrage),
-      row2('Numéro d\'ouvrage',o.numeroOuvrage),
-      row2('Classe / Marque',  o.classeMarque),
-      row2('Dimensions',       o.dimensions),
-      row2('Aération',         o.aeration),
-      row2('Alarme',           o.alarme),
-      row2('Verrous',          o.verrous),
-    ]}));
-    children.push(mkPara([],{spacing:{after:180}}));
+  // ── En-tête de page : bannière gauche + logo droit ──
+  let hdrChildren;
+  if(bannerBytes && logoBytes){
+    const hdrTable = new Table({
+      width:   { size:100, type:WidthType.PERCENTAGE },
+      borders: noBorders,
+      rows:[ new TableRow({ children:[
+        new TableCell({
+          children:[ mkP([new ImageRun({data:bannerBytes, type:'png', transformation:{width:440,height:84}})]) ],
+          borders: noBorders,
+          margins: { top:0, bottom:0, left:0, right:0 },
+          width:   { size:TW-1200, type:WidthType.DXA },
+        }),
+        new TableCell({
+          children:[ mkP([new ImageRun({data:logoBytes, type:'png', transformation:{width:90,height:85}})],
+                         {alignment:AlignmentType.RIGHT}) ],
+          borders: noBorders,
+          margins: { top:0, bottom:0, left:0, right:0 },
+          width:   { size:1200, type:WidthType.DXA },
+        }),
+      ]})],
+    });
+    hdrChildren = [hdrTable];
+  } else {
+    hdrChildren = [mkP([new TextRun({text:'NeoConceptVRD — NCVRD Detect', bold:true, size:20, font:'Calibri'})])];
+  }
+  const pageHeader = new Header({ children: hdrChildren });
 
-    // ── 2. Photos ──
-    children.push(mkPara([new TextRun({text:'2. Représentation',bold:true,size:22,color:GRAY})],{spacing:{before:80,after:80}}));
-    const photoCells = [];
+  // ══════════════════════════════════════════════
+  //  CONTENU — une fiche par ouvrage
+  // ══════════════════════════════════════════════
+  const docChildren = [];
+
+  for(let idx=0; idx<ouvrages.length; idx++){
+    const o = ouvrages[idx];
+    const canals = (o.canalisations && o.canalisations.length)
+                   ? o.canalisations : _ouvrageEmptyCanalisations();
+
+    // Saut de page entre ouvrages
+    if(idx > 0) docChildren.push(new Paragraph({pageBreakBefore:true, children:[]}));
+
+    // ══ TABLEAU 1 : Identification + Représentation ══
+    const t1rows = [];
+
+    // Titre
+    t1rows.push(titleRow('CARACTERISTIQUE OUVRAGE', C_YELLOW));
+
+    // Champs identification : 2 paires par ligne
+    const fields = [
+      ['Chantier',          o.chantier||'',     'Commune',        o.commune||''],
+      ['Nature du réseau',  o.natureReseau||'', 'Type d\'ouvrage',o.typeOuvrage||''],
+      ['Numéro d\'ouvrage', o.numeroOuvrage||'','Classe / Marque',o.classeMarque||''],
+      ['Dimensions',        o.dimensions||'',   'Aération',       o.aeration||''],
+      ['Alarme',            o.alarme||'',        'Verrous',        o.verrous||''],
+    ];
+    for(const [l1,v1,l2,v2] of fields) t1rows.push(dataRow2(l1,v1,l2,v2));
+
+    // Titre REPRESENTATION
+    t1rows.push(titleRow('REPRESENTATION', C_BLUE));
+
+    // Photos : 2 cellules côte à côte, 4 colonnes chacune
+    const PHALF = COLS[0]+COLS[1]+COLS[2]+COLS[3];
+    const photoRowCells = [];
     for(const [label, dataUrl] of [['Vue extérieure',o.photoExt],['Vue intérieure',o.photoInt]]){
-      let imgPara = mkPara([new TextRun({text:'(Aucune photo)',size:16,italics:true,color:GRAY})]);
+      let imgRun = null;
       if(dataUrl){
         try {
-          const {type, data} = parseImg(dataUrl);
-          imgPara = mkPara([new ImageRun({data, transformation:{width:215,height:175}, type:type==='png'?'png':'jpg'})]);
+          const parsed = parseImg(dataUrl);
+          if(parsed){
+            imgRun = new ImageRun({
+              data:parsed.data,
+              type:parsed.type==='png'?'png':'jpg',
+              transformation:{width:200, height:160}
+            });
+          }
         } catch(_){}
       }
-      photoCells.push(new TableCell({
-        children:[
-          mkPara([new TextRun({text:label,bold:true,size:18,color:GRAY})],{spacing:{after:60}}),
-          imgPara
-        ],
-        margins:{top:100,bottom:100,left:100,right:100}
-      }));
+      photoRowCells.push(mkC(C_WHITE, [
+        mkP([new TextRun({text:label, bold:true, size:18, font:'Calibri'})], {spacing:{after:40}}),
+        mkP(imgRun ? [imgRun] : [new TextRun({text:'(Aucune photo)', size:16, italics:true, color:'808080'})]),
+      ], PHALF, 4));
     }
-    children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:[new TableRow({children:photoCells})]}));
-    children.push(mkPara([],{spacing:{after:180}}));
+    t1rows.push(new TableRow({children: photoRowCells}));
 
-    // ── 3. Observations ──
-    children.push(mkPara([new TextRun({text:'3. Observations',bold:true,size:22,color:GRAY})],{spacing:{before:80,after:80}}));
-    children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:[
-      obsRow('État de la structure', o.etatStructure),
-      obsRow('État physique',        o.etatPhysique),
-      obsRow('État d\'entretien',    o.etatEntretien),
-      obsRow('Niveau d\'encombrement', o.etatEncombrement),
+    docChildren.push(new Table({
+      width:{ size:TW, type:WidthType.DXA },
+      rows: t1rows,
+    }));
+
+    docChildren.push(mkP([], {spacing:{after:200}}));
+
+    // ══ TABLEAU 2 : Observations + Canalisations ══
+    const t2rows = [];
+
+    // OBSERVATION
+    t2rows.push(titleRow('OBSERVATION', C_BLUE));
+    t2rows.push(new TableRow({ children:[
+      txtC('Critère', C_LBLUE, W_LLBL, 2, true),
+      txtC('État',    C_LBLUE, W_LVAL+W_RLBL+W_RVAL, 6, true),
     ]}));
-    if(o.observation) children.push(mkPara([new TextRun({text:'Observations : '+o.observation,size:18,italics:true,color:GRAY})],{spacing:{before:100,after:180}}));
-    else children.push(mkPara([],{spacing:{after:180}}));
-
-    // ── 4. Canalisations ──
-    children.push(mkPara([new TextRun({text:'4. Caractéristiques canalisations / réseaux',bold:true,size:22,color:GRAY})],{spacing:{before:80,after:80}}));
-    const canalRows = [
-      new TableRow({children:[
-        mkHdrCell('#'), mkHdrCell('Regard amont/aval'), mkHdrCell('Réseau'),
-        mkHdrCell('DN (mm)'), mkHdrCell('Matériaux'), mkHdrCell('Prof. (m)'), mkHdrCell('Observation')
-      ]})
-    ];
-    (o.canalisations || _ouvrageEmptyCanalisations()).forEach((c, i) => {
-      const fill = i%2===0?'F8FAFC':'FFFFFF';
-      canalRows.push(new TableRow({children:[
-        mkCell(i+1,{fill}), mkCell(c.regard,{fill}), mkCell(c.reseau,{fill}),
-        mkCell(c.dn,{fill}), mkCell(c.materiaux,{fill}), mkCell(c.profondeur,{fill}), mkCell(c.observation,{fill})
+    t2rows.push(obsRow('État de la structure',    o.etatStructure));
+    t2rows.push(obsRow('État physique',           o.etatPhysique));
+    t2rows.push(obsRow('État d\'entretien',       o.etatEntretien));
+    t2rows.push(obsRow('Niveau d\'encombrement',  o.etatEncombrement));
+    if(o.observation){
+      t2rows.push(new TableRow({ children:[
+        txtC('Observations', C_LBLUE, W_LLBL, 2, true),
+        mkC(C_WHITE, [mkP([new TextRun({text:o.observation, size:18, font:'Calibri', italics:true})])],
+            W_LVAL+W_RLBL+W_RVAL, 6),
       ]}));
+    }
+
+    // CANALISATIONS
+    t2rows.push(titleRow('CARACTERISTIQUES DES CANALISATIONS', C_BLUE));
+    // En-tête colonnes
+    const cHdrs = ['N°','Regard AM/AV','Réseau','DN (mm)','Matériaux','Prof. (m)','Observation'];
+    const cWidths = [COLS[0],COLS[1],COLS[2],COLS[3],COLS[4],COLS[5],COLS[6]+COLS[7]];
+    const cSpans  = [1,1,1,1,1,1,2];
+    t2rows.push(new TableRow({ children: cHdrs.map((h,i)=>txtC(h, C_LBLUE, cWidths[i], cSpans[i], true, 16)) }));
+
+    canals.forEach((c,i)=>{
+      const fill = i%2===0 ? 'EEF4FB' : C_WHITE;
+      const vals = [String(i+1), c.regard||'', c.reseau||'', c.dn||'', c.materiaux||'', c.profondeur||'', c.observation||''];
+      t2rows.push(new TableRow({ children: vals.map((v,j)=>txtC(v, fill, cWidths[j], cSpans[j], false, 16)) }));
     });
-    children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:canalRows}));
-    children.push(mkPara([],{spacing:{after:500}}));
+
+    docChildren.push(new Table({
+      width:{ size:TW, type:WidthType.DXA },
+      rows: t2rows,
+    }));
   }
 
-  const doc = new Document({sections:[{children}]});
+  // ── Génération du fichier ──
+  const doc = new Document({
+    sections:[{
+      headers:    { default: pageHeader },
+      properties: { page:{ margin:{ top:720, bottom:720, left:720, right:720 } } },
+      children:   docChildren,
+    }]
+  });
+
   const blob = await Packer.toBlob(doc);
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href=url; a.download=`${filename}_${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.docx`;
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `${filename}_${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.docx`;
   a.click();
   setTimeout(()=>URL.revokeObjectURL(url), 5000);
   toast('✅ Document Word généré');
