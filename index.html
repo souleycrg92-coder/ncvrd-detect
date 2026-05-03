@@ -3985,7 +3985,11 @@ async function deleteChantier(id){
     } catch(e){ Logger.warn('Delete', 'Suppression rapport Firestore échouée', e?.message); }
   }
 
-  // 4. Retirer de la liste mémoire (comparaison string pour éviter bug type number/string)
+  // 4. Supprimer les backups localStorage (évite toute restauration parasite)
+  try { localStorage.removeItem(`ncvrd_backup_chantier_${id}`); } catch(e){}
+  try { localStorage.removeItem(`ncvrd_backup_rapport_${id}`); } catch(e){}
+
+  // 5. Retirer de la liste mémoire (comparaison string pour éviter bug type number/string)
   S.chantiers = S.chantiers.filter(c => String(c.id) !== String(id));
   renderChantiers(S.chantiers);
 
@@ -7355,6 +7359,13 @@ document.addEventListener('click', e => {
 });
 
 async function syncChantierToFirebase(c){
+  // Vérifier que le chantier existe encore en IDB avant de syncer
+  // (évite de recréer un chantier supprimé si flushSyncQueue était en cours)
+  const _existsChantier = await db._idb.get('chantiers', c.id).catch(()=>null);
+  if(!_existsChantier){
+    Logger.info('Sync', `syncChantier annulée — chantier ${c.id} supprimé localement`);
+    return;
+  }
   if(!FIREBASE_CONFIGURED || !currentUserProfile?.teamId) return;
   if(!navigator.onLine){ addToSyncQueue('chantier', c.id); return; }
   const teamId = c._teamId || currentUserProfile.teamId;
@@ -7492,6 +7503,12 @@ async function _writeRapportToFirestore(r, teamId){
 }
 
 async function syncRapportToFirebase(r){
+  // Vérifier que le rapport (chantier associé) existe encore en IDB avant de syncer
+  const _existsRapport = await db._idb.get('rapports', r.id).catch(()=>null);
+  if(!_existsRapport){
+    Logger.info('Sync', `syncRapport annulée — rapport ${r.id} supprimé localement`);
+    return;
+  }
   if(!FIREBASE_CONFIGURED || !currentUserProfile?.teamId) return;
   const teamId = (S.currentChantier?._teamId) || currentUserProfile.teamId;
 
@@ -8418,15 +8435,19 @@ async function flushSyncQueue(){
 
   for(const item of q){
     try {
-      // ── Backup avant chaque sync ──
-      await _backupBeforeSync(item.type, item.id);
-
+      // ── Vérifier l'existence en IDB d'abord (évite de re-créer un item supprimé) ──
+      // IMPORTANT : on utilise db._idb.get() et non db.get() car db.get() fait
+      // un fallback Firestore qui retournerait l'item même après suppression locale.
       if(item.type==='chantier'){
-        const c = await db.get('chantiers', item.id);
-        if(c) await syncChantierToFirebase(c);
+        const c = await db._idb.get('chantiers', item.id);
+        if(!c){ Logger.info('Sync', `flushSync ignoré — chantier ${item.id} supprimé localement`); synced++; continue; }
+        await _backupBeforeSync(item.type, item.id);
+        await syncChantierToFirebase(c);
       } else if(item.type==='rapport'){
-        const r = await db.get('rapports', item.id);
-        if(r) await syncRapportToFirebase(r);
+        const r = await db._idb.get('rapports', item.id);
+        if(!r){ Logger.info('Sync', `flushSync ignoré — rapport ${item.id} supprimé localement`); synced++; continue; }
+        await _backupBeforeSync(item.type, item.id);
+        await syncRapportToFirebase(r);
       }
       synced++;
     } catch(e){
