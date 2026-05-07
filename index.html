@@ -4666,19 +4666,65 @@ function prefillEquipeRegionale(){
   toast('✅ Équipe de la '+rd.label+' chargée');
 }
 
+// ── Base appareils NCVRD (N° de série) ──────────────────────────────────────
+const APPAREILS_DB = {
+  'Matériels de détection': {
+    'Détecteur VIVAX':                              ['21900117360','21901180216','21901172898','21901171596','21701130467','21901171595','21901201889','21901180247'],
+    'Générateur VIVAX':                             ['21902172284','21902171872','20004120183','21902171893','21902152182','21902182474','21702090032','21902172260','21902195681','21902152995'],
+    'Géoradar Utiliscan DF 655 (300-800 MHz)':      ['1076','0921','0978','0979','0459'],
+  },
+  'Matériels de géoréférencement': {
+    'Tablettes Panasonic Toughbook FZ-G1':          ['4ITTA38146','3JTCA41056','2JTCA85467','2ETCD46260','3BTCA55788','2DTCD44075','1DTCCO8381','2ATCDO7764','3GTCA16866'],
+    'Station totale LEICA':                         ['4035336','4100800','1617726','3873949','880124'],
+    'GPS LEICA GG04+':                              ['289196','288888','289676','1859399','288136','1857647'],
+    'Station trimble':                              ['93211529'],
+  }
+};
+
+function _serialsFor(type){
+  for(const cat of Object.values(APPAREILS_DB)){
+    if(cat[type]) return cat[type];
+  }
+  return [];
+}
+
 // Matériels
 function renderMateriels(){
   const el=document.getElementById('materiels-list');
   const mats=S.currentRapport.materiels||[];
-  el.innerHTML=mats.map((m,i)=>`
+
+  // Construction des optgroups (partagés entre toutes les lignes)
+  const typeOptHtml = Object.entries(APPAREILS_DB).map(([cat,devices])=>
+    `<optgroup label="${cat}">`+Object.keys(devices).map(d=>`<option value="${d}">${d}</option>`).join('')+'</optgroup>'
+  ).join('');
+
+  el.innerHTML=mats.map((m,i)=>{
+    const serials = _serialsFor(m.type||'');
+    // Marquer l'option sélectionnée dans le select type
+    const typeOpts = Object.entries(APPAREILS_DB).map(([cat,devices])=>
+      `<optgroup label="${cat}">`+Object.keys(devices).map(d=>`<option value="${d}"${m.type===d?' selected':''}>${d}</option>`).join('')+'</optgroup>'
+    ).join('');
+
+    const serieOpts = serials.length
+      ? `<option value="">— N° de série —</option>`+serials.map(s=>`<option value="${s}"${m.serie===s?' selected':''}>${s}</option>`).join('')
+      : `<option value="">— N° de série —</option>`;
+
+    return `
     <div class="net-row" style="margin-bottom:8px">
-      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center">
-        <input class="mini-inp" value="${m.type||''}" placeholder="Type de matériel"
-          oninput="S.currentRapport.materiels[${i}].type=this.value;rapportChanged()">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center">
+        <select class="mini-inp" style="appearance:auto;cursor:pointer"
+          onchange="S.currentRapport.materiels[${i}].type=this.value;S.currentRapport.materiels[${i}].serie='';renderMateriels();rapportChanged()">
+          <option value="">— Type d'appareil —</option>
+          ${typeOpts}
+        </select>
+        <select class="mini-inp" style="appearance:auto;cursor:pointer;${!serials.length?'opacity:.4;pointer-events:none':''}"
+          onchange="S.currentRapport.materiels[${i}].serie=this.value;rapportChanged()">
+          ${serieOpts}
+        </select>
         <button class="del-btn" onclick="removeMateriel(${i})">✕</button>
       </div>
-    </div>
-  `).join('')||'<div style="font-size:12px;color:var(--muted);padding:4px 0">Aucun matériel</div>';
+    </div>`;
+  }).join('')||'<div style="font-size:12px;color:var(--muted);padding:4px 0">Aucun matériel</div>';
 }
 
 function addMaterielRow(){
@@ -7028,7 +7074,7 @@ async function doWordDocx(){
     children.push(sp(100));
     const mats=r.materiels||[];
     children.push(subTitle('Matériels utilisés'));
-    if(mats.length)children.push(makeTable(['TYPE DE MATÉRIEL'],mats.map(m=>[m.type]),[CW]));
+    if(mats.length)children.push(makeTable(['TYPE DE MATÉRIEL','N° DE SÉRIE'],mats.map(m=>[m.type,m.serie||'—']),[Math.round(CW*0.62),Math.round(CW*0.38)]));
     else children.push(para('Aucun matériel renseigné.',{color:DGRAY,size:22}));
     children.push(sp(120));
     const logs=r.logiciels||[];
