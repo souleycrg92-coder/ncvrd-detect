@@ -6114,7 +6114,7 @@ async function _generateOuvragesWord(ouvrages, filename){
   // que l'image couvre bien bord gauche ET bord droit sans blanc résiduel.
   const MARGIN_DXA  = 1440;
   const OVER        = 300; // sur-débordement de sécurité
-  const PAGE_W_PX   = Math.round((TW + 2 * MARGIN_DXA + 2 * OVER) / 1440 * 96); // ~834px
+  const PAGE_W_PX   = 796; // 21,06 cm = 796px à 96 dpi
   const BANNER_H_PX = 213; // 5,63 cm = 213px à 96 dpi
 
   let hdrChildren;
@@ -7523,7 +7523,7 @@ async function doWordDocx(){
 
     // Marges rapport : left/right = 1134 DXA ; A4 total = 11906 DXA
     const R_MARGIN = 1134, R_OVER = 300;
-    const R_BANNER_W = Math.round((11906 + 2 * R_OVER) / 1440 * 96); // ~834px
+    const R_BANNER_W = 796; // 21,06 cm = 796px à 96 dpi
     const R_BANNER_H = 213; // 5,63 cm = 213px à 96 dpi
 
     let hdrParagraph;
