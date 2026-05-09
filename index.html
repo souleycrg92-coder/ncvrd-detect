@@ -6129,7 +6129,7 @@ async function _generateOuvragesWord(ouvrages, filename){
         // Supprimer tout espace avant/après (pas de blanc au-dessus de la bannière)
         spacing: { before:0, after:0, line:240, lineRule:'auto' },
         // Indent négatif = marge + sécurité : l'image part du bord gauche de la page
-        indent:  { left: -(MARGIN_DXA + OVER), right: -(MARGIN_DXA + OVER) },
+        indent:  { left: -1454, right: -1454 }, // centré : (page-img)/2 - marge
       })
     ];
   } else {
@@ -7532,7 +7532,7 @@ async function doWordDocx(){
         children:[new ImageRun({data:bannerBytesR, type:'jpeg',
                     transformation:{width:R_BANNER_W, height:R_BANNER_H}})],
         spacing:{before:0, after:0},
-        indent:{left:-(R_MARGIN+R_OVER), right:-(R_MARGIN+R_OVER)},
+        indent:{left:-1151, right:-1151}, // centré : (page-img)/2 - marge
       });
     } else {
       hdrParagraph = new Paragraph({
