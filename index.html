@@ -1245,12 +1245,12 @@ html[data-terrain="1"] {
           <div style="width:28px;height:28px;border-radius:6px;background:rgba(0,100,255,.15);border:1px solid rgba(0,140,255,.35);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;box-shadow:0 0 8px rgba(0,120,255,.25)">📡</div>
           <div>
             <div style="font-size:8px;font-weight:700;color:rgba(0,160,255,.7);text-transform:uppercase;letter-spacing:2px;line-height:1;margin-bottom:3px;font-family:'Rajdhani','Inter',sans-serif">Agence</div>
-            <div style="font-size:12px;font-weight:800;color:#d0eaff;letter-spacing:.3px" id="home-agency-name">—</div>
+            <div style="font-size:12px;font-weight:800;color:#d0eaff;letter-spacing:.3px" id="home-agency-name">-</div>
           </div>
           <div style="width:1px;height:24px;background:linear-gradient(180deg,transparent,rgba(0,120,255,.4),transparent);flex-shrink:0"></div>
           <div>
             <div style="font-size:8px;font-weight:700;color:rgba(0,160,255,.7);text-transform:uppercase;letter-spacing:2px;line-height:1;margin-bottom:3px;font-family:'Rajdhani','Inter',sans-serif" id="home-user-role">Rôle</div>
-            <div style="font-size:12px;font-weight:700;color:#d0eaff" id="home-user-name">—</div>
+            <div style="font-size:12px;font-weight:700;color:#d0eaff" id="home-user-name">-</div>
           </div>
         </div>
       </div>
@@ -1519,7 +1519,7 @@ html[data-terrain="1"] {
         <!-- Rédacteur -->
         <div style="margin-bottom:6px">
           <label class="form-label">Rédacteur</label>
-          <div style="padding:10px 14px;background:var(--card2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--text)" id="sig-redacteur-display">—</div>
+          <div style="padding:10px 14px;background:var(--card2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--text)" id="sig-redacteur-display">-</div>
         </div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5">Signez dans le cadre ci-dessous. La signature sera intégrée au rapport Word.</div>
         <canvas id="sig-canvas" style="border:1.5px solid var(--border);border-radius:10px;background:#fff;width:100%;display:block;height:130px;touch-action:none"></canvas>
@@ -1867,19 +1867,19 @@ html[data-terrain="1"] {
           <div class="form-group" style="margin:0">
             <label class="form-label">Aération</label>
             <select class="form-select" id="ouv-aeration">
-              <option value="">—</option><option>Oui</option><option>Non</option><option>N/A</option>
+              <option value="">-</option><option>Oui</option><option>Non</option><option>N/A</option>
             </select>
           </div>
           <div class="form-group" style="margin:0">
             <label class="form-label">Alarme</label>
             <select class="form-select" id="ouv-alarme">
-              <option value="">—</option><option>Oui</option><option>Non</option><option>N/A</option>
+              <option value="">-</option><option>Oui</option><option>Non</option><option>N/A</option>
             </select>
           </div>
           <div class="form-group" style="margin:0">
             <label class="form-label">Verrous</label>
             <select class="form-select" id="ouv-verrous">
-              <option value="">—</option><option>Oui</option><option>Non</option><option>N/A</option>
+              <option value="">-</option><option>Oui</option><option>Non</option><option>N/A</option>
             </select>
           </div>
         </div>
@@ -2009,8 +2009,8 @@ html[data-terrain="1"] {
         <div class="avatar-cam-overlay">📷</div>
       </div>
       <input type="file" id="prof-photo-input" accept="image/*" style="display:none" onchange="handleProfilePhotoChange(event)">
-      <div style="font-weight:800;font-size:18px" id="prof-name">—</div>
-      <div style="font-size:13px;color:var(--muted);margin-top:2px" id="prof-email">—</div>
+      <div style="font-weight:800;font-size:18px" id="prof-name">-</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:2px" id="prof-email">-</div>
       <!-- Badge rôle (lecture seule) -->
       <div style="margin-top:10px" id="prof-role-badge"><span class="badge badge-orange">Technicien</span></div>
     </div>
@@ -2020,18 +2020,18 @@ html[data-terrain="1"] {
       <div style="width:40px;height:40px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🏢</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.6)">Mon agence</div>
-        <div style="font-size:16px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="prof-company">—</div>
+        <div style="font-size:16px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="prof-company">-</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
         <button class="prof-edit-btn" onclick="openEditAgence()" style="background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.2);color:#fff">✏️ Changer</button>
-        <div style="font-family:monospace;font-size:13px;font-weight:800;color:rgba(255,255,255,.8);letter-spacing:2px;cursor:pointer" id="prof-invite-code" onclick="copyInviteCode()">—</div>
+        <div style="font-family:monospace;font-size:13px;font-weight:800;color:rgba(255,255,255,.8);letter-spacing:2px;cursor:pointer" id="prof-invite-code" onclick="copyInviteCode()">-</div>
       </div>
     </div>
 
     <div class="acc-section" style="margin-top:10px">
       <div class="profile-stat">
         <span class="ps-label">Code équipe</span>
-        <span class="ps-val" id="prof-invite-code-2" style="font-family:monospace;font-weight:700;color:var(--accent);cursor:pointer" onclick="copyInviteCode()">—</span>
+        <span class="ps-val" id="prof-invite-code-2" style="font-family:monospace;font-weight:700;color:var(--accent);cursor:pointer" onclick="copyInviteCode()">-</span>
       </div>
       <div class="profile-stat">
         <span class="ps-label">Chantiers</span>
@@ -2375,7 +2375,7 @@ html[data-terrain="1"] {
     <div style="margin-bottom:10px">
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">👷 Code Techniciens</div>
       <div style="display:flex;align-items:center;gap:8px">
-        <div style="flex:1;background:var(--input);border:1.5px solid var(--border);border-radius:10px;padding:11px;font-size:16px;font-weight:800;letter-spacing:3px;text-align:center;color:var(--blue)" id="collab-invite-code">—</div>
+        <div style="flex:1;background:var(--input);border:1.5px solid var(--border);border-radius:10px;padding:11px;font-size:16px;font-weight:800;letter-spacing:3px;text-align:center;color:var(--blue)" id="collab-invite-code">-</div>
         <button onclick="copyCollabCode('collab-invite-code')" style="background:var(--blue);border:none;color:#fff;border-radius:10px;padding:11px 13px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;white-space:nowrap">📋</button>
       </div>
     </div>
@@ -2384,7 +2384,7 @@ html[data-terrain="1"] {
     <div style="margin-bottom:14px">
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">🔑 Code Administrateurs</div>
       <div style="display:flex;align-items:center;gap:8px">
-        <div style="flex:1;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:10px;padding:11px;font-size:16px;font-weight:800;letter-spacing:3px;text-align:center;color:#92400e" id="collab-admin-code">—</div>
+        <div style="flex:1;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:10px;padding:11px;font-size:16px;font-weight:800;letter-spacing:3px;text-align:center;color:#92400e" id="collab-admin-code">-</div>
         <button onclick="copyCollabCode('collab-admin-code')" style="background:#f59e0b;border:none;color:#fff;border-radius:10px;padding:11px 13px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;white-space:nowrap">📋</button>
       </div>
       <div style="font-size:10.5px;color:#92400e;margin-top:4px;font-style:italic">Réservé aux Directeurs, Responsables et QHSE.</div>
@@ -3214,7 +3214,7 @@ function roleColor(role){
 }
 function roleBadgeHTML(role){
   const c=roleColor(role);
-  return `<span style="display:inline-block;background:${c.bg};color:${c.color};border:1px solid ${c.border};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700">${role||'—'}</span>`;
+  return `<span style="display:inline-block;background:${c.bg};color:${c.color};border:1px solid ${c.border};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700">${role||'-'}</span>`;
 }
 
 async function loginUser(){
@@ -3458,7 +3458,7 @@ function updateRoleOptions(type){
 
 function copyInviteCode(){
   const code = document.getElementById('prof-invite-code').textContent;
-  if(code === '—') return;
+  if(code === '-') return;
   navigator.clipboard.writeText(code).then(()=>toast('✅ Code copié : ' + code)).catch(()=>{
     prompt("Code d'invitation :", code);
   });
@@ -3468,10 +3468,10 @@ async function updateProfileScreen(){
   if(!currentUserProfile) return;
   const p = currentUserProfile;
   const teamSnap = p.teamId ? await fdb.collection('teams').doc(p.teamId).get().catch(()=>null) : null;
-  const inviteCode = teamSnap && teamSnap.exists ? teamSnap.data().inviteCode : '—';
-  document.getElementById('prof-name').textContent  = p.displayName || '—';
-  document.getElementById('prof-email').textContent = p.email || '—';
-  document.getElementById('prof-company').textContent = p.teamName || '—';
+  const inviteCode = teamSnap && teamSnap.exists ? teamSnap.data().inviteCode : '-';
+  document.getElementById('prof-name').textContent  = p.displayName || '-';
+  document.getElementById('prof-email').textContent = p.email || '-';
+  document.getElementById('prof-company').textContent = p.teamName || '-';
   // Photo de profil
   const av = document.getElementById('prof-avatar');
   if(av){
@@ -3495,7 +3495,7 @@ async function updateProfileScreen(){
   if(p.teamName && badge){
     badge.style.display='inline-flex';
     if(agName) agName.textContent=p.teamName;
-    if(usName) usName.textContent=p.displayName||'—';
+    if(usName) usName.textContent=p.displayName||'-';
     const roleLabel=document.getElementById('home-user-role');
     if(roleLabel && p.role) roleLabel.textContent=p.role;
   }
@@ -3914,7 +3914,7 @@ function chantierCardHTML(c){
       <div class="card-title">🏗️ ${Validator.sanitize(c.name)}</div>
       <div class="card-meta">
         ${c.adresse?`<span>📍 ${Validator.sanitize(c.adresse)}</span>`:''}
-        <span>👤 ${Validator.sanitize(c.client||'—')}</span>
+        <span>👤 ${Validator.sanitize(c.client||'-')}</span>
         ${c.createdAt?`<span>📅 ${c.createdAt}</span>`:''}
       </div>
       <div style="display:flex;gap:5px;flex-wrap:wrap;margin:6px 0 2px">${collabsBadge}${sharedBadge}</div>
@@ -4861,7 +4861,7 @@ function renderNetworks(){
           <span class="mini-lbl">Classe</span>
           <select class="mini-inp" style="padding:6px 8px;min-width:110px"
             onchange="updateNet('${n.id}','classe',this.value)">
-            <option value="" ${!n.classe?'selected':''}>—</option>
+            <option value="" ${!n.classe?'selected':''}>-</option>
             ${DynLists.precisionClasses.map(c=>`<option value="${c.value}" ${n.classe===c.value?'selected':''}>${c.label.replace(c.value+' ','')}</option>`).join('')}
           </select>
         </div>
@@ -5085,7 +5085,7 @@ function _initOnePad(canvasId, ctxRef, restoreSrc, previewId, imgId, onDraw){
 
 function initSignaturePad(){
   const redEl = document.getElementById('sig-redacteur-display');
-  if(redEl && currentUserProfile) redEl.textContent = currentUserProfile.displayName||currentUserProfile.email||'—';
+  if(redEl && currentUserProfile) redEl.textContent = currentUserProfile.displayName||currentUserProfile.email||'-';
   const r = S.currentRapport;
   sigCtx     = _initOnePad('sig-canvas',     sigCtx,     r?.signature,     'sig-preview',      'sig-img',      c=>{ sigCtx=c; });
   sigCtxVeri = _initOnePad('sig-canvas-veri',sigCtxVeri, r?.signatureVeri, 'sig-preview-veri', 'sig-img-veri', c=>{ sigCtxVeri=c; });
@@ -5471,9 +5471,9 @@ function viewPhoto(id){
   document.getElementById('photo-view-title').textContent=`Photo ${p.numero}`;
   document.getElementById('photo-view-img').src=p.dataUrl;
   document.getElementById('photo-view-info').innerHTML=`
-    <strong>Section :</strong> ${p.section||'—'}<br>
-    <strong>Légende :</strong> ${p.caption||'—'}<br>
-    <strong>Prise le :</strong> ${p.takenAt||'—'}<br>
+    <strong>Section :</strong> ${p.section||'-'}<br>
+    <strong>Légende :</strong> ${p.caption||'-'}<br>
+    <strong>Prise le :</strong> ${p.takenAt||'-'}<br>
     ${p.gpsLat?`<strong>GPS :</strong> ${p.gpsLat}° N, ${p.gpsLng}° E`:''}
     <br><span style="color:${p.synced?'var(--green)':'var(--red)'};font-weight:700">${p.synced?'✅ Synchronisée avec le cloud':'☁️ Upload en attente — visible uniquement par vous pour l\'instant'}</span>
   `;
@@ -6087,17 +6087,17 @@ async function _generateOuvragesWord(ouvrages, filename){
     return null;
   }
 
-  // Bannière.png = image complète (logo + visuel) créée par NeoConceptVRD
-  const bannerBytes = await fetchImgBytes('Banni%C3%A8re.png');
+  // Bannière v2.png = image complète (logo + visuel) créée par NeoConceptVRD
+  const bannerBytes = await fetchImgBytes('Banni%C3%A8re%20v2.png');
 
-  // ── En-tête de page : Bannière.png collée en haut à gauche, pleine largeur ──
-  // Word : 21,17 cm × 3,94 cm. On colle l'image au bord page via indent négatif.
+  // ── En-tête de page : Bannière v2.png collée en haut à gauche, pleine largeur ──
+  // Word : 21 cm × 5,5 cm. On colle l'image au bord page via indent négatif.
   // Marge page = 1440 DXA (1 po). On ajoute 300 DXA de sécurité pour garantir
   // que l'image couvre bien bord gauche ET bord droit sans blanc résiduel.
   const MARGIN_DXA  = 1440;
   const OVER        = 300; // sur-débordement de sécurité
   const PAGE_W_PX   = Math.round((TW + 2 * MARGIN_DXA + 2 * OVER) / 1440 * 96); // ~834px
-  const BANNER_H_PX = 149; // 3,94 cm = 149px à 96 dpi
+  const BANNER_H_PX = 208; // 5,5 cm = 208px à 96 dpi
 
   let hdrChildren;
   if(bannerBytes){
@@ -6279,7 +6279,7 @@ async function saveSharedLink(){
     id: docId, category: _addLinkCategory, name, url,
     fileType: 'lien',
     addedAt: new Date().toLocaleDateString('fr-FR'),
-    addedBy: currentUserProfile.displayName || currentUserProfile.email || '—'
+    addedBy: currentUserProfile.displayName || currentUserProfile.email || '-'
   };
   try {
     await fdb.collection('global_shared_docs').doc(docId).set(meta);
@@ -6337,7 +6337,7 @@ function renderSharedDocs(){
         <div style="font-size:28px;flex-shrink:0">🔗</div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${doc.name}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">${doc.addedAt||'—'} · par ${doc.addedBy||'—'}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${doc.addedAt||'-'} · par ${doc.addedBy||'-'}</div>
           <div style="font-size:10px;color:#00b4ff;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">☁️ ${doc.url}</div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
@@ -6370,10 +6370,10 @@ function exportDocsPDF(){
   const rows = S_docs.map(d => `
     <tr>
       <td style="padding:8px;border:1px solid #ddd;font-weight:600">${d.name}</td>
-      <td style="padding:8px;border:1px solid #ddd;text-align:center">${d.fileType ? d.fileType.toUpperCase() : '—'}</td>
+      <td style="padding:8px;border:1px solid #ddd;text-align:center">${d.fileType ? d.fileType.toUpperCase() : '-'}</td>
       <td style="padding:8px;border:1px solid #ddd;text-align:center">${formatDocSize(d.size)}</td>
       <td style="padding:8px;border:1px solid #ddd;text-align:center">${DOC_CATEGORIES[d.category]?.label || d.category}</td>
-      <td style="padding:8px;border:1px solid #ddd;text-align:center">${d.uploadedAt || '—'}</td>
+      <td style="padding:8px;border:1px solid #ddd;text-align:center">${d.uploadedAt || '-'}</td>
     </tr>`).join('');
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
     <title>Registre Documents – NCVRD Detect</title>
@@ -6400,7 +6400,7 @@ function exportDocsPDF(){
 function exportDocsWord(){
   if(!S_docs.length){ toast('⚠️ Aucun document à exporter'); return; }
   const rows = S_docs.map(d =>
-    `<tr><td>${d.name}</td><td>${d.fileType ? d.fileType.toUpperCase() : '—'}</td><td>${formatDocSize(d.size)}</td><td>${DOC_CATEGORIES[d.category]?.label || d.category}</td><td>${d.uploadedAt || '—'}</td></tr>`
+    `<tr><td>${d.name}</td><td>${d.fileType ? d.fileType.toUpperCase() : '-'}</td><td>${formatDocSize(d.size)}</td><td>${DOC_CATEGORIES[d.category]?.label || d.category}</td><td>${d.uploadedAt || '-'}</td></tr>`
   ).join('');
   const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
     xmlns:w="urn:schemas-microsoft-com:office:word"
@@ -6517,7 +6517,7 @@ function exportPDF(){
   document.head.appendChild(s);
 }
 
-// ══ Ancien code XML supprimé — remplacé par docx.js ══
+// ══ Ancien code XML supprimé - remplacé par docx.js ══
 function _xmlEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 // Paragraphe simple
 function _wp(text,bold,size,color,shading){
@@ -6613,7 +6613,7 @@ function _updateExportProgress(text, pct){
   if(b) b.style.width = pct + '%';
 }
 // ════════════════════════════════════════════
-//  EXPORT WORD — docx.js (rapport complet)
+//  EXPORT WORD - docx.js (rapport complet)
 // ════════════════════════════════════════════
 // ════════════════════════════════════════════
 //  CONSTANTES IMAGES (base64)
@@ -6622,10 +6622,10 @@ function _updateExportProgress(text, pct){
 // ════════════════════════════════════════════
 const _LOGO_NEOCONCEPT_B64 = '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';
 
-//  EXPORT WORD — Nouveau modèle Professionnel BTP
+//  EXPORT WORD - Nouveau modèle Professionnel BTP
 // ════════════════════════════════════════════
 // Convertit un dataURL base64 en {type, data:Uint8Array} pour docx.js ImageRun
-// Fonction globale — utilisée par doWordDocx ET _generateOuvragesWord
+// Fonction globale - utilisée par doWordDocx ET _generateOuvragesWord
 function parseImg(dataUrl){
   if(!dataUrl || typeof dataUrl !== 'string') return null;
   const m = dataUrl.trim().match(/^data:image\/([a-zA-Z0-9+]+);base64,([\s\S]+)$/);
@@ -6659,7 +6659,7 @@ async function doWordDocx(){
       document.head.appendChild(s);
     })
   ]).catch(e=>{toast('⚠️ '+(e?.message||'Erreur chargement librairie'));});
-  if(!window.docx){ toast('❌ Impossible de charger la librairie docx.js — vérifiez votre connexion'); return; }
+  if(!window.docx){ toast('❌ Impossible de charger la librairie docx.js - vérifiez votre connexion'); return; }
 
   _updateExportProgress('Chargement des librairies…', 15);
   try {
@@ -6849,7 +6849,7 @@ async function doWordDocx(){
       });
     }
 
-    // docx.js supporte uniquement jpeg, png, gif, bmp — conversion si autre format
+    // docx.js supporte uniquement jpeg, png, gif, bmp - conversion si autre format
     // En particulier WebP est rejeté par docx.js → on convertit en JPEG via canvas
     async function toJpegForDocx(dataUrl){
       if(!dataUrl) return null;
@@ -6905,7 +6905,7 @@ async function doWordDocx(){
       return new ImageRun({type:p.type,data:p.data,transformation:{width:w,height:h},altText:{title:'Photo',description:'Photo',name:'Photo'}});
     }
     async function makeImgRunHalf(dataUrl){
-      // Photo réseau 7cm × 4cm (199pt × 113pt) — 2 colonnes
+      // Photo réseau 7cm × 4cm (199pt × 113pt) - 2 colonnes
       const originalSrc = typeof dataUrl === 'string' ? dataUrl.substring(0,80) : '(null)';
       dataUrl = await ensureDataUrl(dataUrl);
       if(!dataUrl){ console.warn('[Word] ensureDataUrl (half) → null pour:', originalSrc); return null; }
@@ -7051,19 +7051,19 @@ async function doWordDocx(){
     children.push(new Paragraph({children:[new PageBreak()]}));
 
     // ─── §1 INFORMATIONS GÉNÉRALES ───
-    _updateExportProgress('Section 1 — Informations…', 25);
+    _updateExportProgress('Section 1 - Informations…', 25);
     await new Promise(r=>setTimeout(r,0)); // libérer le thread UI
     children.push(sectionTitle('01','Informations Générales'));
     children.push(sp(100));
     children.push(makeInfoTable([
-      ["Client / Donneur d'ordre",r.client||c.client||'—'],
-      ['Nature des opérations',r.natureOperations||'—'],
-      ['Adresse du chantier',r.adresse||c.address||'—'],
-      ["Date d'intervention",r.dateDebut||'—'],
-      ['Date déclaration DT',r.dtDate||'—'],
-      ['Numéro DT',r.dtNum||'—'],
+      ["Client / Donneur d'ordre",r.client||c.client||'-'],
+      ['Nature des opérations',r.natureOperations||'-'],
+      ['Adresse du chantier',r.adresse||c.address||'-'],
+      ["Date d'intervention",r.dateDebut||'-'],
+      ['Date déclaration DT',r.dtDate||'-'],
+      ['Numéro DT',r.dtNum||'-'],
       ['Date de rédaction',dateGen],
-      ['Rédacteur',currentUserProfile?(currentUserProfile.displayName||currentUserProfile.email):'—'],
+      ['Rédacteur',currentUserProfile?(currentUserProfile.displayName||currentUserProfile.email):'-'],
     ],[3800,5838]));
     children.push(sp(160));
 
@@ -7083,41 +7083,41 @@ async function doWordDocx(){
     }
 
     // ─── §2 MOYENS HUMAINS ───
-    _updateExportProgress('Section 2 — Moyens humains…', 35);
+    _updateExportProgress('Section 2 - Moyens humains…', 35);
     await new Promise(r=>setTimeout(r,0));
     children.push(sectionTitle('02','Moyens Humains'));
     children.push(sp(100));
     const opDet=r.opDetection||[],opGeo=r.opGeo||[];
     children.push(subTitle('Responsable de projet'));
-    children.push(makeTable(['NOM & PRÉNOM','POSTE','CONTACT'],[[r.respNom||'—',r.respPoste||'—',r.respContact||'—']],[3400,3200,3038]));
+    children.push(makeTable(['NOM & PRÉNOM','POSTE','CONTACT'],[[r.respNom||'-',r.respPoste||'-',r.respContact||'-']],[3400,3200,3038]));
     children.push(sp(120));
     children.push(subTitle('Opérateurs de détection'));
-    if(opDet.length)children.push(makeTable(['NOM & PRÉNOM','POSTE'],opDet.map(o=>[o.nom,o.poste||'—']),[4819,4819]));
-    else children.push(para('—',{color:DGRAY,size:22}));
+    if(opDet.length)children.push(makeTable(['NOM & PRÉNOM','POSTE'],opDet.map(o=>[o.nom,o.poste||'-']),[4819,4819]));
+    else children.push(para('-',{color:DGRAY,size:22}));
     children.push(sp(120));
     children.push(subTitle('Opérateurs de géoréférencement'));
-    if(opGeo.length)children.push(makeTable(['NOM & PRÉNOM','POSTE'],opGeo.map(o=>[o.nom,o.poste||'—']),[4819,4819]));
-    else children.push(para('—',{color:DGRAY,size:22}));
+    if(opGeo.length)children.push(makeTable(['NOM & PRÉNOM','POSTE'],opGeo.map(o=>[o.nom,o.poste||'-']),[4819,4819]));
+    else children.push(para('-',{color:DGRAY,size:22}));
     children.push(sp(200));
 
     // ─── §3 MOYENS MATÉRIELS ───
-    _updateExportProgress('Section 3 — Matériels…', 42);
+    _updateExportProgress('Section 3 - Matériels…', 42);
     await new Promise(r=>setTimeout(r,0));
     children.push(sectionTitle('03','Moyens Matériels'));
     children.push(sp(100));
     const mats=r.materiels||[];
     children.push(subTitle('Matériels utilisés'));
-    if(mats.length)children.push(makeTable(['TYPE DE MATÉRIEL','N° DE SÉRIE'],mats.map(m=>[m.type,m.serie||'—']),[Math.round(CW*0.62),Math.round(CW*0.38)]));
+    if(mats.length)children.push(makeTable(['TYPE DE MATÉRIEL','N° DE SÉRIE'],mats.map(m=>[m.type,m.serie||'-']),[Math.round(CW*0.62),Math.round(CW*0.38)]));
     else children.push(para('Aucun matériel renseigné.',{color:DGRAY,size:22}));
     children.push(sp(120));
     const logs=r.logiciels||[];
     children.push(subTitle('Logiciels utilisés'));
-    if(logs.length)children.push(makeTable(['TYPE DE LOGICIEL','ÉDITEUR'],logs.map(l=>[l.type,l.marque||'—']),[5819,3819]));
+    if(logs.length)children.push(makeTable(['TYPE DE LOGICIEL','ÉDITEUR'],logs.map(l=>[l.type,l.marque||'-']),[5819,3819]));
     else children.push(para('Aucun logiciel renseigné.',{color:DGRAY,size:22}));
     children.push(sp(200));
 
     // ─── §4 DOCUMENTATION PHOTOGRAPHIQUE ───
-    _updateExportProgress('Section 4 — Photos (peut prendre du temps)…', 50);
+    _updateExportProgress('Section 4 - Photos (peut prendre du temps)…', 50);
     await new Promise(r=>setTimeout(r,0));
     children.push(sectionTitle('04','Documentation Photographique'));
     children.push(sp(100));
@@ -7134,24 +7134,24 @@ async function doWordDocx(){
         children.push(sp(80));
       }
     }
-    // Photos réseaux — layout compact : 4 photos (2×2) + metadata par réseau
+    // Photos réseaux - layout compact : 4 photos (2×2) + metadata par réseau
     for(const n of activeNets){
       const np=n.photos&&n.photos.length?n.photos:(n.photo?[n.photo]:[]);
       if(!np.length) continue;
-      children.push(subTitle(n.nature||'—'));
+      children.push(subTitle(n.nature||'-'));
       const items=np.map((src,i)=>({url:src,caption:'Photo '+(i+1)}));
       const tbl=await photoTable(items);
       tbl.forEach(el=>children.push(el));
-      // Méthodologie + Classe + Observations — compact
+      // Méthodologie + Classe + Observations - compact
       children.push(new Paragraph({
         spacing:{before:20,after:10},
         alignment:AlignmentType.CENTER,
         children:[
           mkRun('Appareil : ',{bold:true,size:18,color:NAVY}),
-          mkRun(n.methode||'—',{size:18,color:DGRAY}),
+          mkRun(n.methode||'-',{size:18,color:DGRAY}),
           mkRun('   |   ',{size:18,color:MGRAY}),
           mkRun('Classe : ',{bold:true,size:18,color:NAVY}),
-          mkRun(n.classe||'—',{size:18,color:DGRAY}),
+          mkRun(n.classe||'-',{size:18,color:DGRAY}),
         ]
       }));
       if(n.remarques) children.push(para('Obs : '+n.remarques,{size:16,color:'6B7280',italics:true,before:0,after:10,align:AlignmentType.CENTER}));
@@ -7163,7 +7163,7 @@ async function doWordDocx(){
     children.push(sp(200));
 
     // ─── §5 CONCLUSIONS ───
-    _updateExportProgress('Section 5 — Conclusions…', 70);
+    _updateExportProgress('Section 5 - Conclusions…', 70);
     await new Promise(r=>setTimeout(r,0));
     children.push(sectionTitle('05','Conclusions / Écart'));
     children.push(sp(100));
@@ -7185,11 +7185,11 @@ async function doWordDocx(){
     children.push(sp(200));
 
     // ─── §6 SYNTHÈSE DES RÉSEAUX DÉTECTÉS ───
-    _updateExportProgress('Section 6 — Synthèse…', 78);
+    _updateExportProgress('Section 6 - Synthèse…', 78);
     await new Promise(r=>setTimeout(r,0));
     children.push(sectionTitle('06','Synthèse des Réseaux Détectés'));
     children.push(sp(100));
-    if(activeNets.length)children.push(makeTable(['NATURE DU RÉSEAU','APPAREIL DE DÉTECTION','CLASSE','OBSERVATIONS'],activeNets.map(n=>[n.nature,n.methode||'—',n.classe||'—',n.remarques||'—']),[1900,3000,1200,3538]));
+    if(activeNets.length)children.push(makeTable(['NATURE DU RÉSEAU','APPAREIL DE DÉTECTION','CLASSE','OBSERVATIONS'],activeNets.map(n=>[n.nature,n.methode||'-',n.classe||'-',n.remarques||'-']),[1900,3000,1200,3538]));
     else children.push(para('Aucun réseau actif renseigné.',{color:DGRAY,size:22}));
     children.push(sp(200));
 
@@ -7210,7 +7210,7 @@ async function doWordDocx(){
         cellChildren.push(new Paragraph({spacing:{before:60,after:60},border:{bottom:{style:BorderStyle.SINGLE,size:4,color:MGRAY}},children:[mkRun('',{size:32})]}));
       }
       // Nom
-      cellChildren.push(new Paragraph({spacing:{before:20,after:8},children:[mkRun(nom||'—',{bold:true,size:20,color:DGRAY})]}));
+      cellChildren.push(new Paragraph({spacing:{before:20,after:8},children:[mkRun(nom||'-',{bold:true,size:20,color:DGRAY})]}));
       // Date
       cellChildren.push(new Paragraph({spacing:{before:0,after:0},children:[mkRun(date,{italics:true,size:18,color:'9CA3AF'})]}));
       return new TableCell({
@@ -7221,7 +7221,7 @@ async function doWordDocx(){
       });
     }
 
-    const redacteur = currentUserProfile?(currentUserProfile.displayName||currentUserProfile.email):'—';
+    const redacteur = currentUserProfile?(currentUserProfile.displayName||currentUserProfile.email):'-';
     const veriNom = r.veriNom||'';
     children.push(new Table({
       width:{size:9200,type:WidthType.DXA},
@@ -7250,7 +7250,7 @@ async function doWordDocx(){
           ['Indice de protection','IP65 / NEMA 4'],
         ],
         limites: [
-          'Détection limitée aux conducteurs électriquement continus — réseaux non métalliques (PE, PVC, fibre nue) non détectables sans injection préalable.',
+          'Détection limitée aux conducteurs électriquement continus - réseaux non métalliques (PE, PVC, fibre nue) non détectables sans injection préalable.',
           'Profondeur effective réduite en présence de signaux distordus (réseaux parallèles, béton armé, HT, structures métalliques).',
           'Mode passif limité aux conducteurs sous tension réelle ou courant induit suffisant.',
           'Non adapté au-delà de 5 m de profondeur.',
@@ -7270,7 +7270,7 @@ async function doWordDocx(){
         limites: [
           'Mode induction (générateur posé au sol) : profondeur divisée par 2 ou 3 vs raccordement direct.',
           'Fréquences > 45 kHz : puissance limitée à 1 W (norme FCC/ETSI).',
-          'Mode pince limité à 8-131 kHz — pas de basses fréquences.',
+          'Mode pince limité à 8-131 kHz - pas de basses fréquences.',
           'IP54 uniquement : ne pas utiliser sous pluie battante ou en immersion.',
           'Courant injecté < 5 mA : mesure considérée comme dégradée.',
         ],
@@ -7290,7 +7290,7 @@ async function doWordDocx(){
         limites: [
           'Profondeur effective dépend fortement de la permittivité diélectrique du sol.',
           'Sol saturé en eau : profondeur réduite de 50 à 80 %.',
-          'Calibration de la vitesse de propagation (permittivité ε) obligatoire — sans calibration : incertitude verticale ±30 %.',
+          'Calibration de la vitesse de propagation (permittivité ε) obligatoire - sans calibration : incertitude verticale ±30 %.',
           'Détection des matériaux non conducteurs (PVC, PE, fibre nue) possible mais signal faible si Ø < 50 mm en sol défavorable.',
           'Armatures métalliques ou treillis soudés : échos parasites masquant les réseaux sous-jacents.',
           'Non adapté aux sols à très forte conductivité (argiles saturées, zones littorales).',
@@ -7301,12 +7301,12 @@ async function doWordDocx(){
         modele: 'Tablette Panasonic Toughbook FZ-G1 (outil de contrôle terrain)',
         specs: [
           ['Rôle','Unité de contrôle du géoradar UtilityScan DF'],
-          ['Écran','10,1 pouces — 800 cd/m² — autonomie 11 h'],
+          ['Écran','10,1 pouces - 800 cd/m² - autonomie 11 h'],
           ['Stockage','128 Go'],
           ['Indice de protection','IP65'],
         ],
         limites: [
-          'Outil de contrôle uniquement — ne constitue pas un appareil de mesure en soi.',
+          'Outil de contrôle uniquement - ne constitue pas un appareil de mesure en soi.',
           'Limites identiques à celles du géoradar UtilityScan DF qu\'elle pilote.',
         ],
         classe: 'Voir limites du géoradar UtilityScan DF.',
@@ -7324,7 +7324,7 @@ async function doWordDocx(){
           'Précision angulaire 5" insuffisante pour classe A à longue portée (> 100 m) : utiliser modèle 2" ou 3".',
           'Mesure sans prisme limitée par la réflectivité de la cible (surface sombre ou anguleuse).',
           'Précision sans prisme dégradée à 4 mm + 2 ppm au-delà de 500 m.',
-          'Mise en station soignée obligatoire — défaut de calage > 1,5" induit une erreur planimétrique notable sur longues visées.',
+          'Mise en station soignée obligatoire - défaut de calage > 1,5" induit une erreur planimétrique notable sur longues visées.',
           'IP54/55 : ne pas utiliser sous pluie battante prolongée.',
         ],
         classe: 'Classe A atteignable à < 200 m avec modèle 2" ou 3" sur prisme. Contrôle de fermeture de cheminement < 1 mm/100 m en planimétrie requis pour classe A.',
@@ -7332,19 +7332,19 @@ async function doWordDocx(){
       'GPS LEICA GG04+': {
         modele: 'Récepteur GNSS Leica Zeno GG04 plus (RTK multifréquence)',
         specs: [
-          ['RTK cinématique — Hz','1 cm + 1 ppm'],
-          ['RTK cinématique — V','2 cm + 1 ppm'],
+          ['RTK cinématique - Hz','1 cm + 1 ppm'],
+          ['RTK cinématique - V','2 cm + 1 ppm'],
           ['PPP Spot Prime','< 10 cm après ~30 min de convergence (sans réseau mobile)'],
           ['PPP Spot Lite','< 60 cm après ~7 min de convergence'],
           ['Constellations','GPS + GLONASS + BeiDou + Galileo + QZSS (555 canaux)'],
           ['Indice de protection','IP66 / IP68'],
         ],
         limites: [
-          'Précision verticale ≈ 2× la précision horizontale — intégrer dans le bilan d\'incertitude Z.',
-          'Canyon urbain ou couvert dense : multi-trajets limitants — préférer la station totale.',
+          'Précision verticale ≈ 2× la précision horizontale - intégrer dans le bilan d\'incertitude Z.',
+          'Canyon urbain ou couvert dense : multi-trajets limitants - préférer la station totale.',
           'PPP Spot Prime : convergence ~30 min requise avant tout relevé de classe A.',
           'PDOP > 6 ou < 6 satellites : refuser la solution et attendre.',
-          'Modes DGNSS (40 cm) et SBAS (90 cm) réservés au repérage grossier — jamais pour classe A ou B.',
+          'Modes DGNSS (40 cm) et SBAS (90 cm) réservés au repérage grossier - jamais pour classe A ou B.',
         ],
         classe: 'Classe A atteignable en RTK multifréquence : PDOP < 3, ≥ 8 satellites, fix RTK stable ≥ 30 s (≥ 60 s pour le Z). Rattachement à repère NGF-IGN69 systématique.',
       },
@@ -7358,7 +7358,7 @@ async function doWordDocx(){
           'Contrôle de mise en station par double retournement recommandé.',
           'Vérifier la précision angulaire du modèle avant de valider la classe de précision atteinte.',
         ],
-        classe: 'Classe A atteignable selon le modèle et les conditions de mesure — vérifier les spécifications constructeur du modèle utilisé.',
+        classe: 'Classe A atteignable selon le modèle et les conditions de mesure - vérifier les spécifications constructeur du modèle utilisé.',
       },
     };
 
@@ -7374,12 +7374,12 @@ async function doWordDocx(){
       });
     }
 
-    // ─── ANNEXE A — Récap DT ───
+    // ─── ANNEXE A - Récap DT ───
     children.push(new Paragraph({pageBreakBefore:true,spacing:{before:0,after:0},children:[]}));
     children.push(sectionTitle('ANNEXE','Annexes'));
     children.push(sp(140));
 
-    children.push(subTitle('Annexe A — Récapitulatif des DT reçues'));
+    children.push(subTitle('Annexe A - Récapitulatif des DT reçues'));
     children.push(sp(60));
     const recapDT = (r.recapDT||'').trim();
     if(recapDT){
@@ -7387,12 +7387,12 @@ async function doWordDocx(){
         children.push(new Paragraph({spacing:{before:40,after:0},indent:{left:200},children:[mkRun(line,{size:20,color:DGRAY})]}));
       });
     } else {
-      children.push(new Paragraph({spacing:{before:40,after:0},children:[mkRun('— Aucun récapitulatif DT renseigné —',{size:20,italics:true,color:'9CA3AF'})]}));
+      children.push(new Paragraph({spacing:{before:40,after:0},children:[mkRun('- Aucun récapitulatif DT renseigné -',{size:20,italics:true,color:'9CA3AF'})]}));
     }
     children.push(sp(180));
 
-    // ─── ANNEXE B — Récap linéaires ───
-    children.push(subTitle('Annexe B — Récapitulatif des linéaires de réseaux détectés'));
+    // ─── ANNEXE B - Récap linéaires ───
+    children.push(subTitle('Annexe B - Récapitulatif des linéaires de réseaux détectés'));
     children.push(sp(60));
     const recapLin = (r.recapLin||'').trim();
     if(recapLin){
@@ -7400,15 +7400,15 @@ async function doWordDocx(){
         children.push(new Paragraph({spacing:{before:40,after:0},indent:{left:200},children:[mkRun(line,{size:20,color:DGRAY})]}));
       });
     } else {
-      children.push(new Paragraph({spacing:{before:40,after:0},children:[mkRun('— Aucun récapitulatif linéaires renseigné —',{size:20,italics:true,color:'9CA3AF'})]}));
+      children.push(new Paragraph({spacing:{before:40,after:0},children:[mkRun('- Aucun récapitulatif linéaires renseigné -',{size:20,italics:true,color:'9CA3AF'})]}));
     }
     children.push(sp(180));
 
-    // ─── ANNEXE C — Limites de mesure des appareils ───
-    children.push(subTitle('Annexe C — Limites de mesure des appareils utilisés'));
+    // ─── ANNEXE C - Limites de mesure des appareils ───
+    children.push(subTitle('Annexe C - Limites de mesure des appareils utilisés'));
     children.push(sp(60));
     children.push(new Paragraph({spacing:{before:0,after:80},children:[
-      mkRun('Cette annexe présente les limites métrologiques et opérationnelles des appareils utilisés lors de cette opération, conformément à la norme NF S70-003 et à l\'arrêté du 15 février 2012 relatif à la prévention des dommages aux réseaux (DT-DICT). Source : Annexe-Limites-Mesures_V01 — NEOCONCEPT VRD.',{size:19,italics:true,color:DGRAY})
+      mkRun('Cette annexe présente les limites métrologiques et opérationnelles des appareils utilisés lors de cette opération, conformément à la norme NF S70-003 et à l\'arrêté du 15 février 2012 relatif à la prévention des dommages aux réseaux (DT-DICT). Source : Annexe-Limites-Mesures_V01 - NEOCONCEPT VRD.',{size:19,italics:true,color:DGRAY})
     ]}));
     children.push(sp(60));
 
@@ -7479,12 +7479,12 @@ async function doWordDocx(){
       }
       return null;
     };
-    const bannerBytesR = await _rapportFetchImg('Banni%C3%A8re.png');
+    const bannerBytesR = await _rapportFetchImg('Banni%C3%A8re%20v2.png');
 
     // Marges rapport : left/right = 1134 DXA ; A4 total = 11906 DXA
     const R_MARGIN = 1134, R_OVER = 300;
     const R_BANNER_W = Math.round((11906 + 2 * R_OVER) / 1440 * 96); // ~834px
-    const R_BANNER_H = 149; // 3,94 cm
+    const R_BANNER_H = 208; // 5,5 cm = 208px à 96 dpi
 
     let hdrParagraph;
     if(bannerBytesR){
@@ -7538,11 +7538,11 @@ async function doWordDocx(){
     a.href=url; a.download='CR_'+fname+'.docx';
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url),500);
-    const imgMsg = _imgTotal > 0 ? ` — ${_imgOk}/${_imgTotal} photo(s)` : '';
+    const imgMsg = _imgTotal > 0 ? ` - ${_imgOk}/${_imgTotal} photo(s)` : '';
     toast(`✅ Word (.docx) téléchargé !${imgMsg}`);
     if(_imgTotal > 0 && _imgOk < _imgTotal){
       const missing = _imgTotal - _imgOk;
-      setTimeout(()=>toast(`⚠️ ${missing} photo(s) non intégrée(s) — ces photos sont stockées en ligne et inaccessibles depuis cette page. Recréez le rapport avec de nouvelles photos.`), 1500);
+      setTimeout(()=>toast(`⚠️ ${missing} photo(s) non intégrée(s) - ces photos sont stockées en ligne et inaccessibles depuis cette page. Recréez le rapport avec de nouvelles photos.`), 1500);
     }
   } catch(e){
     Logger.error('Export','doWordDocx',e?.message);
@@ -7561,18 +7561,18 @@ function doWord(){
 
   // Données à injecter dans le template
   const data = {
-    client:            r.client       || c.client       || '—',
+    client:            r.client       || c.client       || '-',
     operation:         r.natureOperations || 'Détection et marquage - piquetage des réseaux enterrés',
     precision:         r.classePresicion || 'A',
-    adresse:           r.adresse      || r.address      || c.address || '—',
+    adresse:           r.adresse      || r.address      || c.address || '-',
     date_intervention: r.dateDebut    || dateGen,
-    date_declaration:  r.dtDate       || '—',
-    numero_dt:         r.dtNum        || '—',
+    date_declaration:  r.dtDate       || '-',
+    numero_dt:         r.dtNum        || '-',
     date_redaction:    dateGen,
-    redacteur:         currentUserProfile ? (currentUserProfile.displayName || currentUserProfile.email || '—') : '—',
-    nom_prenom:        r.respNom      || '—',
-    poste:             r.respPoste    || '—',
-    contact:           r.respContact  || '—',
+    redacteur:         currentUserProfile ? (currentUserProfile.displayName || currentUserProfile.email || '-') : '-',
+    nom_prenom:        r.respNom      || '-',
+    poste:             r.respPoste    || '-',
+    contact:           r.respContact  || '-',
   };
 
   function _doGenerate(){
@@ -7587,7 +7587,7 @@ function doWord(){
       const doc = new window.Docxtemplater(zip, {
         paragraphLoop: true,
         linebreaks:    true,
-        nullGetter() { return '—'; }
+        nullGetter() { return '-'; }
       });
 
       doc.setData(data);
@@ -7805,7 +7805,7 @@ async function openNotifChantier(notifId, chantierId){
         await loadChantiers(); // ← était loadChantiersFromFirebase() (inexistant)
         const ch2 = S.chantiers.find(c=>c.id===chantierId);
         if(ch2) openChantier(chantierId);
-        else toast('⚠️ Chantier introuvable — vérifiez votre connexion');
+        else toast('⚠️ Chantier introuvable - vérifiez votre connexion');
       }
     }
   } catch(e){
@@ -7826,7 +7826,7 @@ async function syncChantierToFirebase(c){
   // (évite de recréer un chantier supprimé si flushSyncQueue était en cours)
   const _existsChantier = await db._idb.get('chantiers', c.id).catch(()=>null);
   if(!_existsChantier){
-    Logger.info('Sync', `syncChantier annulée — chantier ${c.id} supprimé localement`);
+    Logger.info('Sync', `syncChantier annulée - chantier ${c.id} supprimé localement`);
     return;
   }
   if(!FIREBASE_CONFIGURED || !currentUserProfile?.teamId) return;
@@ -7953,7 +7953,7 @@ async function _writeRapportToFirestore(r, teamId){
     });
   }
   firestoreData.lastModifiedBy   = currentUserProfile.uid;
-  firestoreData.lastModifiedName = currentUserProfile.displayName || currentUserProfile.email || '—';
+  firestoreData.lastModifiedName = currentUserProfile.displayName || currentUserProfile.email || '-';
   firestoreData.lastModifiedAt   = Date.now();
   firestoreData.modifHistory     = r.modifHistory || [];
   try {
@@ -7969,7 +7969,7 @@ async function syncRapportToFirebase(r){
   // Vérifier que le rapport (chantier associé) existe encore en IDB avant de syncer
   const _existsRapport = await db._idb.get('rapports', r.id).catch(()=>null);
   if(!_existsRapport){
-    Logger.info('Sync', `syncRapport annulée — rapport ${r.id} supprimé localement`);
+    Logger.info('Sync', `syncRapport annulée - rapport ${r.id} supprimé localement`);
     return;
   }
   if(!FIREBASE_CONFIGURED || !currentUserProfile?.teamId) return;
@@ -7985,7 +7985,7 @@ async function syncRapportToFirebase(r){
   if(!lastEntry || lastEntry.uid !== currentUserProfile.uid || (now - lastEntry.at) > 60000){
     r.modifHistory.push({
       uid:  currentUserProfile.uid,
-      name: currentUserProfile.displayName || currentUserProfile.email || '—',
+      name: currentUserProfile.displayName || currentUserProfile.email || '-',
       at:   now
     });
     if(r.modifHistory.length > 30) r.modifHistory = r.modifHistory.slice(-30);
@@ -8110,7 +8110,7 @@ async function refreshInviteChantierList(){
       const btnRm   = `<button onclick="removeCollaborateurChantier('${chantierId}','${u.uid}')" style="background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.3);color:#dc2626;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✕ Retirer</button>`;
       return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--card2);border-radius:10px;margin-bottom:6px;border:1px solid var(--border)">
         <div>
-          <div style="font-weight:700;font-size:13px">👤 ${escHtml(u.displayName||u.email||'—')}</div>
+          <div style="font-weight:700;font-size:13px">👤 ${escHtml(u.displayName||u.email||'-')}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:2px">${escHtml(u.role||'Technicien')}${isCollab?' · <span style="color:#4ade80;font-weight:700">✅ Invité</span>':''}</div>
         </div>
         ${isCollab ? btnRm : btnAdd}
@@ -8219,7 +8219,7 @@ async function openCollabModal(){
       const admEl = document.getElementById('collab-admin-code');
       if(admEl) admEl.textContent = admCode;
     } else {
-      codeEl.textContent = '—';
+      codeEl.textContent = '-';
     }
   } catch(e){
     listEl.innerHTML = '<div style="color:var(--muted);font-size:12px">Erreur de chargement.</div>';
@@ -8230,7 +8230,7 @@ function copyCollabInviteCode(){ copyCollabCode('collab-invite-code'); }
 function copyCollabCode(elId){
   const el = document.getElementById(elId);
   const code = el ? el.textContent.trim() : '';
-  if(!code||code==='—'){ toast('⚠️ Code non disponible'); return; }
+  if(!code||code==='-'){ toast('⚠️ Code non disponible'); return; }
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(code)
       .then(()=>toast('✅ Code copié : '+code))
@@ -8272,7 +8272,7 @@ async function openAdmin(){
   const sub = document.getElementById('admin-subtitle');
   if(sub) sub.textContent = isGlobalAdmin(currentUserProfile.role)
     ? 'Toutes les régions · Tous les utilisateurs'
-    : `Région : ${currentUserProfile.teamName||'—'}`;
+    : `Région : ${currentUserProfile.teamName||'-'}`;
   adminTab('agencies');
   await loadAdminData();
   renderAdminAgencies();
@@ -8553,13 +8553,13 @@ function renderAdminParams(){
 
   const regionRows = _adminData.users.map(u=>{
     const rd = getRegionData(u.teamName);
-    const regionLabel = rd ? rd.label : (u.teamName||'—');
+    const regionLabel = rd ? rd.label : (u.teamName||'-');
     const c = roleColor(u.role);
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--card2);border-radius:10px;margin-bottom:6px;border:1px solid var(--border)">
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(u.displayName||u.email||'—')}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(u.displayName||u.email||'-')}</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap">
-          <span style="display:inline-block;background:${c.bg};color:${c.color};border:1px solid ${c.border};border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">${u.role||'—'}</span>
+          <span style="display:inline-block;background:${c.bg};color:${c.color};border:1px solid ${c.border};border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">${u.role||'-'}</span>
           <span style="font-size:11px;color:var(--muted)">🗺️ ${regionLabel}</span>
         </div>
       </div>
@@ -8657,8 +8657,8 @@ function renderAdminParams(){
       snap.forEach(doc=>{
         const td = doc.data();
         const name = td.name || td.teamName || doc.id;
-        const code = td.inviteCode || '—';
-        const admCode = td.adminInviteCode || '—';
+        const code = td.inviteCode || '-';
+        const admCode = td.adminInviteCode || '-';
         html += `<div style="background:var(--card2);border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border)">
           <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:8px">🗺️ ${name}</div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -8693,8 +8693,8 @@ function renderAdminAgencies(filter=''){
           <div style="font-size:11px;color:var(--muted);margin-top:2px">${members.length} membre${members.length>1?'s':''} · ${admins.length} admin${admins.length>1?'s':''} · ${techs.length} tech${techs.length>1?'s':''}</div>
         </div>
         <div style="text-align:right;font-size:10px;color:var(--muted)">
-          <div>👷 <span style="font-family:monospace;font-weight:700">${t.inviteCode||'—'}</span></div>
-          <div>🔑 <span style="font-family:monospace;font-weight:700;color:#92400e">${t.adminInviteCode||'—'}</span></div>
+          <div>👷 <span style="font-family:monospace;font-weight:700">${t.inviteCode||'-'}</span></div>
+          <div>🔑 <span style="font-family:monospace;font-weight:700;color:#92400e">${t.adminInviteCode||'-'}</span></div>
         </div>
       </div>
       <div>${members.length?members.map(u=>`
@@ -8724,11 +8724,11 @@ function renderAdminUsers(filter=''){
     <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <div style="min-width:0">
-          <div style="font-size:14px;font-weight:800">👤 ${u.displayName||'—'}</div>
-          <div style="font-size:11px;color:var(--muted)">${u.email||'—'}</div>
+          <div style="font-size:14px;font-weight:800">👤 ${u.displayName||'-'}</div>
+          <div style="font-size:11px;color:var(--muted)">${u.email||'-'}</div>
           <div style="margin-top:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             ${roleBadgeHTML(u.role)}
-            <span style="font-size:11px;color:var(--muted)">🏢 ${u.teamName||'—'}</span>
+            <span style="font-size:11px;color:var(--muted)">🏢 ${u.teamName||'-'}</span>
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
@@ -9245,9 +9245,9 @@ async function searchRapports(q){
 
   resultsEl.innerHTML = filtered.slice(0,5).map(r => `
     <div onclick="openRapportFromSearch('${r.id}')" style="padding:8px;background:var(--input);border-radius:6px;margin-bottom:6px;cursor:pointer;border:1px solid transparent;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='transparent'">
-      <div style="font-weight:700;color:var(--accent);font-size:12px">${Validator.sanitize(r.reference || '—')}</div>
-      <div style="font-size:11px;color:var(--text2);margin-top:2px">${Validator.sanitize(r.client || '—')}</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:1px">${Validator.sanitize(r.adresse || '—')}</div>
+      <div style="font-weight:700;color:var(--accent);font-size:12px">${Validator.sanitize(r.reference || '-')}</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:2px">${Validator.sanitize(r.client || '-')}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:1px">${Validator.sanitize(r.adresse || '-')}</div>
     </div>
   `).join('');
   resultsEl.style.display = 'block';
@@ -9373,23 +9373,23 @@ function openRapportPreview(chantierId){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 12px;font-size:13px">
       <div>
         <div style="color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:4px;letter-spacing:.5px">Référence</div>
-        <div style="font-weight:700;color:var(--text)">${Validator.sanitize(r.reference || '—')}</div>
+        <div style="font-weight:700;color:var(--text)">${Validator.sanitize(r.reference || '-')}</div>
       </div>
       <div>
         <div style="color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:4px;letter-spacing:.5px">Client</div>
-        <div style="font-weight:700;color:var(--text)">${Validator.sanitize(r.client || '—')}</div>
+        <div style="font-weight:700;color:var(--text)">${Validator.sanitize(r.client || '-')}</div>
       </div>
       <div style="grid-column:1/-1">
         <div style="color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:4px;letter-spacing:.5px">Adresse</div>
-        <div style="color:var(--text)">${Validator.sanitize(r.adresse || '—')}</div>
+        <div style="color:var(--text)">${Validator.sanitize(r.adresse || '-')}</div>
       </div>
       <div>
         <div style="color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:4px;letter-spacing:.5px">Date début</div>
-        <div style="color:var(--text)">${r.dateDebut || '—'}</div>
+        <div style="color:var(--text)">${r.dateDebut || '-'}</div>
       </div>
       <div>
         <div style="color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:4px;letter-spacing:.5px">Date fin</div>
-        <div style="color:var(--text)">${r.dateFin || '—'}</div>
+        <div style="color:var(--text)">${r.dateFin || '-'}</div>
       </div>
       <div>
         <div style="color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:4px;letter-spacing:.5px">Réseaux détectés</div>
