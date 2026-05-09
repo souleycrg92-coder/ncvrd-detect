@@ -4361,6 +4361,8 @@ function renderRapportScreen(){
   document.getElementById('r-adresse').value=r.adresse||c.address||'';
   document.getElementById('r-date-debut').value=r.dateDebut||c.dateDebut||today();
   const rdatefin=document.getElementById('r-date-fin'); if(rdatefin) rdatefin.value=r.dateFin||c.dateFin||'';
+  const _rdtdate=document.getElementById('r-dt-date'); if(_rdtdate) _rdtdate.value=r.dtDate||'';
+  const _rdtnum=document.getElementById('r-dt-num'); if(_rdtnum) _rdtnum.value=r.dtNum||'';
   const rclasse=document.getElementById('r-classe'); if(rclasse) rclasse.value=r.classePresicion||'';
   document.getElementById('r-conclusions').value=stripLimitesText(r.conclusions||'');
   document.getElementById('r-observations').value=r.observations||'';
@@ -4980,6 +4982,7 @@ async function handlePhotoSrcInput(input){
       wrap.innerHTML = '<img src="'+compressed+'" style="width:100%;border-radius:8px;max-height:200px;object-fit:contain">';
       wrap.style.display = 'block';
       rapportChanged();
+      clearTimeout(saveTimer); S.currentRapport.updatedAt=Date.now(); db.put('rapports',S.currentRapport).catch(()=>{});
       toast('📍 Plan de situation ajouté');
     } else if(ctx === 'netModal'){
       netModalPhotos.push(compressed);
@@ -4988,6 +4991,7 @@ async function handlePhotoSrcInput(input){
       if(!S.currentRapport.conclusionPhotos) S.currentRapport.conclusionPhotos=[];
       S.currentRapport.conclusionPhotos.push(compressed);
       rapportChanged();
+      clearTimeout(saveTimer); S.currentRapport.updatedAt=Date.now(); db.put('rapports',S.currentRapport).catch(()=>{});
       renderConclusionPhotos();
       toast('📷 Photo de conclusion ajoutée');
     } else if(ctx && ctx.startsWith('net:')){
@@ -4996,7 +5000,9 @@ async function handlePhotoSrcInput(input){
       if(n){
         if(!n.photos){ n.photos = n.photo ? [n.photo] : []; delete n.photo; }
         n.photos.push(compressed);
-        rapportChanged(); renderNetworks();
+        rapportChanged();
+        clearTimeout(saveTimer); S.currentRapport.updatedAt=Date.now(); db.put('rapports',S.currentRapport).catch(()=>{});
+        renderNetworks();
         toast('📷 Photo ajoutée — 📍 GPS en cours…');
         captureGPSForNetwork(n.nature);
       }
@@ -6247,7 +6253,7 @@ async function _generateOuvragesWord(ouvrages, filename){
       headers:    { default: pageHeader },
       properties: { page:{ margin:{
         header: 0,    // bannière collée au bord haut de la page (0 espace avant)
-        top:    2400, // corps commence après la bannière (149px ≈ 2235 DXA + marge)
+        top:    3592, // corps commence après la bannière (149px ≈ 2235 DXA + marge)
         bottom: 1440,
         left:   1440,
         right:  1440,
@@ -7558,7 +7564,7 @@ async function doWordDocx(){
       sections:[{
         properties:{page:{size:{width:11906,height:16838},margin:{
           header:0,    // bannière collée au bord haut
-          top:   2400, // corps commence après la bannière
+          top:   3592, // corps commence après la bannière
           right: 1134, bottom:1134, left:1134, footer:600
         }}},
         headers:{default:header},footers:{default:footer},
@@ -9146,6 +9152,10 @@ async function handlePlanInput(input){
   wrap.innerHTML=`<img src="${compressed}" style="width:100%;border-radius:8px;max-height:200px;object-fit:contain">`;
   wrap.style.display='block';
   rapportChanged();
+  // Sauvegarde immédiate en IDB (évite la perte si on quitte dans les 400ms)
+  clearTimeout(saveTimer);
+  S.currentRapport.updatedAt=Date.now();
+  await db.put('rapports',S.currentRapport).catch(()=>{});
   input.value='';
   toast('📍 Plan de situation ajouté');
 }
