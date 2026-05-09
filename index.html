@@ -1481,6 +1481,35 @@ html[data-terrain="1"] {
       </div>
     </div>
 
+    <!-- § Annexes -->
+    <div class="acc-section">
+      <button class="acc-toggle" onclick="toggleAcc(this)">
+        <span><span class="acc-svg-icon"><svg viewBox="0 0 24 24" stroke="#f59e0b"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>Annexes</span><span class="acc-chevron">▼</span>
+      </button>
+      <div class="acc-body">
+        <!-- Rappel -->
+        <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start">
+          <span style="font-size:18px;line-height:1.2">⚠️</span>
+          <div style="font-size:12px;color:#fbbf24;line-height:1.55">
+            <strong>À compléter avant l'export Word</strong><br>
+            Renseignez le récapitulatif des DT reçues et le récapitulatif des linéaires de réseaux détectés. Les limites de mesure des appareils sont générées automatiquement selon les appareils sélectionnés dans la section "Moyens matériels".
+          </div>
+        </div>
+        <!-- Récap DT -->
+        <div class="form-group">
+          <label class="form-label">Annexe A — Récapitulatif des DT reçues</label>
+          <textarea class="form-textarea" id="r-recap-dt" style="min-height:90px" oninput="rapportChanged()"
+            placeholder="Ex : DT n°2026-00001 — ENEDIS — reçue le 01/04/2026&#10;DT n°2026-00002 — GRDF — reçue le 01/04/2026&#10;…"></textarea>
+        </div>
+        <!-- Récap linéaires -->
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Annexe B — Récapitulatif des linéaires de réseaux détectés</label>
+          <textarea class="form-textarea" id="r-recap-lin" style="min-height:90px" oninput="rapportChanged()"
+            placeholder="Ex : ENEDIS — 85 ml&#10;France Télécom — 120 ml&#10;Assainissement — 45 ml&#10;Total détecté : 250 ml"></textarea>
+        </div>
+      </div>
+    </div>
+
     <!-- § Signature -->
     <div class="acc-section">
       <button class="acc-toggle" onclick="toggleAcc(this);setTimeout(initSignaturePad,120)">
@@ -4335,6 +4364,8 @@ function renderRapportScreen(){
   const rclasse=document.getElementById('r-classe'); if(rclasse) rclasse.value=r.classePresicion||'';
   document.getElementById('r-conclusions').value=stripLimitesText(r.conclusions||'');
   document.getElementById('r-observations').value=r.observations||'';
+  document.getElementById('r-recap-dt').value=r.recapDT||'';
+  document.getElementById('r-recap-lin').value=r.recapLin||'';
   if(!r.conclusionPhotos) r.conclusionPhotos=[];
   renderConclusionPhotos();
   renderOperateurs();
@@ -4426,6 +4457,8 @@ function rapportChanged(){
   r.respContact=document.getElementById('r-resp-contact').value;
   r.conclusions=document.getElementById('r-conclusions').value;
   r.observations=document.getElementById('r-observations').value;
+  r.recapDT=document.getElementById('r-recap-dt').value;
+  r.recapLin=document.getElementById('r-recap-lin').value;
   const _veriNom=document.getElementById('sig-verificateur-nom'); if(_veriNom) r.veriNom=_veriNom.value;
   r.updatedAt=Date.now();
   clearTimeout(saveTimer);
@@ -7198,6 +7231,239 @@ async function doWordDocx(){
         makeSigCell('Vérificateur', r.signatureVeri||null, veriNom, dateGen)
       ]})]
     }));
+    children.push(sp(200));
+
+    // ─── ANNEXES ───
+    _updateExportProgress('Annexes…', 85);
+    await new Promise(resolve=>setTimeout(resolve,0));
+
+    // Définition des limites par type d'appareil (source : Annexe-Limites-Mesures_V01)
+    const LIMITES_APPAREILS = {
+      'Détecteur VIVAX': {
+        modele: 'Récepteur EM Vivax-Metrotech vLoc3-Pro',
+        specs: [
+          ['Précision planimétrie','±5 % de la profondeur (constructeur)'],
+          ['Précision profondeur','±5 % de la valeur mesurée (sans distorsion)'],
+          ['Profondeur max effective','3 à 5 m en mode actif BF avec raccordement direct'],
+          ['Plage de fréquences','16 Hz à 200 kHz'],
+          ['Fréquences passives','50 Hz, 60 Hz, Radio 22,7 kHz'],
+          ['Indice de protection','IP65 / NEMA 4'],
+        ],
+        limites: [
+          'Détection limitée aux conducteurs électriquement continus — réseaux non métalliques (PE, PVC, fibre nue) non détectables sans injection préalable.',
+          'Profondeur effective réduite en présence de signaux distordus (réseaux parallèles, béton armé, HT, structures métalliques).',
+          'Mode passif limité aux conducteurs sous tension réelle ou courant induit suffisant.',
+          'Non adapté au-delà de 5 m de profondeur.',
+          'Sols saturés en eau salée : atténuation forte du signal EM.',
+        ],
+        classe: 'Classe A atteignable en mode actif avec raccordement direct, signal stable sur ≥ 5 m, contrôle croisé en deux modes. Classe B par défaut en mode actif standard sans confirmation visuelle. Classe C en mode passif seul ou signal distordu.',
+      },
+      'Générateur VIVAX': {
+        modele: 'Générateur Vivax-Metrotech Loc3-5Tx (5 Watts)',
+        specs: [
+          ['Puissance de sortie','5 W max (réglable 1 W ou 5 W)'],
+          ['Plage fréq. - induction','8 Hz à 200 kHz'],
+          ['Plage fréq. - connexion directe','98 Hz à 200 kHz'],
+          ['Plage fréq. - pince','8 kHz à 131 kHz'],
+          ['Indice de protection','IP54 / NEMA 4'],
+        ],
+        limites: [
+          'Mode induction (générateur posé au sol) : profondeur divisée par 2 ou 3 vs raccordement direct.',
+          'Fréquences > 45 kHz : puissance limitée à 1 W (norme FCC/ETSI).',
+          'Mode pince limité à 8-131 kHz — pas de basses fréquences.',
+          'IP54 uniquement : ne pas utiliser sous pluie battante ou en immersion.',
+          'Courant injecté < 5 mA : mesure considérée comme dégradée.',
+        ],
+        classe: 'Toujours préférer le raccordement direct (regard, affleurant). Choisir la fréquence la plus basse possible (512 Hz à 8 kHz). Courant > 30 mA = bonne stabilité de mesure.',
+      },
+      'Géoradar Utiliscan DF 655 (300-800 MHz)': {
+        modele: 'Géoradar GSSI UtilityScan DF (300 / 800 MHz)',
+        specs: [
+          ['Fréquences centrales','300 MHz et 800 MHz (modes 300, 800, Dual ou Fondu)'],
+          ['Précision horizontale','8 mm (résolution position)'],
+          ['Précision verticale','4 mm (dépend de la permittivité du sol)'],
+          ['Profondeur 300 MHz','0,5 à 4 m selon nature du sol'],
+          ['Profondeur 800 MHz','0,3 à 2 m selon nature du sol'],
+          ['Vitesse de mesure max','10 km/h'],
+          ['Indice de protection','IP65 (antenne et tablette)'],
+        ],
+        limites: [
+          'Profondeur effective dépend fortement de la permittivité diélectrique du sol.',
+          'Sol saturé en eau : profondeur réduite de 50 à 80 %.',
+          'Calibration de la vitesse de propagation (permittivité ε) obligatoire — sans calibration : incertitude verticale ±30 %.',
+          'Détection des matériaux non conducteurs (PVC, PE, fibre nue) possible mais signal faible si Ø < 50 mm en sol défavorable.',
+          'Armatures métalliques ou treillis soudés : échos parasites masquant les réseaux sous-jacents.',
+          'Non adapté aux sols à très forte conductivité (argiles saturées, zones littorales).',
+        ],
+        classe: 'Classe A uniquement avec calibration ε préalable sur point connu et confirmation par passage perpendiculaire. Couplage indispensable avec GPS ou station totale pour géoréférencement classe A.',
+      },
+      'Tablettes Panasonic Toughbook FZ-G1': {
+        modele: 'Tablette Panasonic Toughbook FZ-G1 (outil de contrôle terrain)',
+        specs: [
+          ['Rôle','Unité de contrôle du géoradar UtilityScan DF'],
+          ['Écran','10,1 pouces — 800 cd/m² — autonomie 11 h'],
+          ['Stockage','128 Go'],
+          ['Indice de protection','IP65'],
+        ],
+        limites: [
+          'Outil de contrôle uniquement — ne constitue pas un appareil de mesure en soi.',
+          'Limites identiques à celles du géoradar UtilityScan DF qu\'elle pilote.',
+        ],
+        classe: 'Voir limites du géoradar UtilityScan DF.',
+      },
+      'Station totale LEICA': {
+        modele: 'Station totale Leica (FlexLine TS06 / Viva TS12 Robotic / TS13)',
+        specs: [
+          ['Précision angulaire','1" à 3" selon modèle (ISO 17123-3)'],
+          ['Précision sur prisme - standard','1 à 1,5 mm + 1,5 à 2 ppm (ISO 17123-4)'],
+          ['Précision sans prisme','2 mm + 2 ppm (4 mm + 2 ppm au-delà de 500 m)'],
+          ['Portée sur prisme','Jusqu\'à 3 500 m'],
+          ['Indice de protection','IP54 à IP55 selon modèle'],
+        ],
+        limites: [
+          'Précision angulaire 5" insuffisante pour classe A à longue portée (> 100 m) : utiliser modèle 2" ou 3".',
+          'Mesure sans prisme limitée par la réflectivité de la cible (surface sombre ou anguleuse).',
+          'Précision sans prisme dégradée à 4 mm + 2 ppm au-delà de 500 m.',
+          'Mise en station soignée obligatoire — défaut de calage > 1,5" induit une erreur planimétrique notable sur longues visées.',
+          'IP54/55 : ne pas utiliser sous pluie battante prolongée.',
+        ],
+        classe: 'Classe A atteignable à < 200 m avec modèle 2" ou 3" sur prisme. Contrôle de fermeture de cheminement < 1 mm/100 m en planimétrie requis pour classe A.',
+      },
+      'GPS LEICA GG04+': {
+        modele: 'Récepteur GNSS Leica Zeno GG04 plus (RTK multifréquence)',
+        specs: [
+          ['RTK cinématique — Hz','1 cm + 1 ppm'],
+          ['RTK cinématique — V','2 cm + 1 ppm'],
+          ['PPP Spot Prime','< 10 cm après ~30 min de convergence (sans réseau mobile)'],
+          ['PPP Spot Lite','< 60 cm après ~7 min de convergence'],
+          ['Constellations','GPS + GLONASS + BeiDou + Galileo + QZSS (555 canaux)'],
+          ['Indice de protection','IP66 / IP68'],
+        ],
+        limites: [
+          'Précision verticale ≈ 2× la précision horizontale — intégrer dans le bilan d\'incertitude Z.',
+          'Canyon urbain ou couvert dense : multi-trajets limitants — préférer la station totale.',
+          'PPP Spot Prime : convergence ~30 min requise avant tout relevé de classe A.',
+          'PDOP > 6 ou < 6 satellites : refuser la solution et attendre.',
+          'Modes DGNSS (40 cm) et SBAS (90 cm) réservés au repérage grossier — jamais pour classe A ou B.',
+        ],
+        classe: 'Classe A atteignable en RTK multifréquence : PDOP < 3, ≥ 8 satellites, fix RTK stable ≥ 30 s (≥ 60 s pour le Z). Rattachement à repère NGF-IGN69 systématique.',
+      },
+      'Station trimble': {
+        modele: 'Station totale Trimble',
+        specs: [
+          ['Type','Station totale de géoréférencement'],
+          ['Usage','Topographie et implantation'],
+        ],
+        limites: [
+          'Contrôle de mise en station par double retournement recommandé.',
+          'Vérifier la précision angulaire du modèle avant de valider la classe de précision atteinte.',
+        ],
+        classe: 'Classe A atteignable selon le modèle et les conditions de mesure — vérifier les spécifications constructeur du modèle utilisé.',
+      },
+    };
+
+    // Helper : paragraphe bullet pour les limites
+    function mkBullet(text){
+      return new Paragraph({
+        spacing:{before:40,after:0},
+        indent:{left:360,hanging:200},
+        children:[
+          mkRun('• ',{size:20,bold:true,color:NAVY}),
+          mkRun(text,{size:20,color:DGRAY}),
+        ]
+      });
+    }
+
+    // ─── ANNEXE A — Récap DT ───
+    children.push(new Paragraph({pageBreakBefore:true,spacing:{before:0,after:0},children:[]}));
+    children.push(sectionTitle('ANNEXE','Annexes'));
+    children.push(sp(140));
+
+    children.push(subTitle('Annexe A — Récapitulatif des DT reçues'));
+    children.push(sp(60));
+    const recapDT = (r.recapDT||'').trim();
+    if(recapDT){
+      recapDT.split('\n').filter(Boolean).forEach(line=>{
+        children.push(new Paragraph({spacing:{before:40,after:0},indent:{left:200},children:[mkRun(line,{size:20,color:DGRAY})]}));
+      });
+    } else {
+      children.push(new Paragraph({spacing:{before:40,after:0},children:[mkRun('— Aucun récapitulatif DT renseigné —',{size:20,italics:true,color:'9CA3AF'})]}));
+    }
+    children.push(sp(180));
+
+    // ─── ANNEXE B — Récap linéaires ───
+    children.push(subTitle('Annexe B — Récapitulatif des linéaires de réseaux détectés'));
+    children.push(sp(60));
+    const recapLin = (r.recapLin||'').trim();
+    if(recapLin){
+      recapLin.split('\n').filter(Boolean).forEach(line=>{
+        children.push(new Paragraph({spacing:{before:40,after:0},indent:{left:200},children:[mkRun(line,{size:20,color:DGRAY})]}));
+      });
+    } else {
+      children.push(new Paragraph({spacing:{before:40,after:0},children:[mkRun('— Aucun récapitulatif linéaires renseigné —',{size:20,italics:true,color:'9CA3AF'})]}));
+    }
+    children.push(sp(180));
+
+    // ─── ANNEXE C — Limites de mesure des appareils ───
+    children.push(subTitle('Annexe C — Limites de mesure des appareils utilisés'));
+    children.push(sp(60));
+    children.push(new Paragraph({spacing:{before:0,after:80},children:[
+      mkRun('Cette annexe présente les limites métrologiques et opérationnelles des appareils utilisés lors de cette opération, conformément à la norme NF S70-003 et à l\'arrêté du 15 février 2012 relatif à la prévention des dommages aux réseaux (DT-DICT). Source : Annexe-Limites-Mesures_V01 — NEOCONCEPT VRD.',{size:19,italics:true,color:DGRAY})
+    ]}));
+    children.push(sp(60));
+
+    // Rappel classes de précision
+    children.push(new Paragraph({spacing:{before:0,after:60},children:[mkRun('Rappel des classes de précision (arrêté du 15/02/2012)',{size:21,bold:true,color:NAVY})]}));
+    children.push(makeTable(
+      ['CLASSE','TOLÉRANCE PLANIMÉTRIQUE ET ALTIMÉTRIQUE'],
+      [
+        ['Classe A','Incertitude maximale de localisation ≤ 40 cm (réseaux rigides) / ≤ 50 cm (réseaux flexibles)'],
+        ['Classe B','Incertitude maximale de localisation ≤ 1,50 m'],
+        ['Classe C','Incertitude > 1,50 m, ou réseau localisé sans précision suffisante'],
+      ],
+      [1200, Math.round(CW-1200)]
+    ));
+    children.push(sp(180));
+
+    // Une section par appareil utilisé (types uniques)
+    const typesUtilises=[...new Set((r.materiels||[]).map(m=>m.type).filter(Boolean))];
+    if(typesUtilises.length){
+      typesUtilises.forEach(type=>{
+        const info = LIMITES_APPAREILS[type];
+        if(!info) return;
+        // Titre appareil
+        children.push(new Paragraph({
+          spacing:{before:160,after:60},
+          shading:{type:ShadingType.CLEAR,fill:'EFF6FF'},
+          border:{left:{style:BorderStyle.SINGLE,size:16,color:NAVY,space:8}},
+          indent:{left:160},
+          children:[mkRun(info.modele,{size:22,bold:true,color:NAVY})]
+        }));
+        // N° de série utilisés
+        const seriesUtilisees=(r.materiels||[]).filter(m=>m.type===type&&m.serie).map(m=>m.serie);
+        if(seriesUtilisees.length){
+          children.push(new Paragraph({spacing:{before:20,after:60},indent:{left:200},children:[
+            mkRun('N° de série utilisé(s) : ',{size:19,bold:true,color:DGRAY}),
+            mkRun(seriesUtilisees.join(', '),{size:19,color:DGRAY}),
+          ]}));
+        }
+        // Tableau des caractéristiques
+        children.push(makeTable(
+          ['PARAMÈTRE','VALEUR CONSTRUCTEUR'],
+          info.specs,
+          [Math.round(CW*0.38), Math.round(CW*0.62)]
+        ));
+        children.push(sp(80));
+        // Limites
+        children.push(new Paragraph({spacing:{before:60,after:30},children:[mkRun('Limites d\'utilisation :',{size:20,bold:true,color:NAVY})]}));
+        info.limites.forEach(l=>children.push(mkBullet(l)));
+        // Impact classe
+        children.push(new Paragraph({spacing:{before:80,after:0},children:[mkRun('Impact sur la classe : ',{size:19,bold:true,color:DGRAY}),mkRun(info.classe,{size:19,italics:true,color:DGRAY})]}));
+        children.push(sp(120));
+      });
+    } else {
+      children.push(new Paragraph({spacing:{before:40,after:0},children:[mkRun('Aucun appareil renseigné dans les moyens matériels.',{size:20,italics:true,color:'9CA3AF'})]}));
+    }
     children.push(sp(200));
 
     // ─── HEADER : Bannière.png pleine largeur bord à bord ───
