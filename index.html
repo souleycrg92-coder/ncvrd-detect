@@ -4366,6 +4366,18 @@ function renderRapportScreen(){
   document.getElementById('r-observations').value=r.observations||'';
   document.getElementById('r-recap-dt').value=r.recapDT||'';
   document.getElementById('r-recap-lin').value=r.recapLin||'';
+  // Restaurer le plan de situation
+  const _planWrap = document.getElementById('plan-situation-img-wrap');
+  const _planSrc  = r.planSituation || r._planUrl || '';
+  if(_planWrap){
+    if(_planSrc){
+      _planWrap.innerHTML = `<img src="${_planSrc}" style="width:100%;border-radius:8px;max-height:200px;object-fit:contain">`;
+      _planWrap.style.display = 'block';
+    } else {
+      _planWrap.innerHTML = '';
+      _planWrap.style.display = 'none';
+    }
+  }
   if(!r.conclusionPhotos) r.conclusionPhotos=[];
   renderConclusionPhotos();
   renderOperateurs();
