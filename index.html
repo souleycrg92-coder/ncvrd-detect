@@ -2458,25 +2458,104 @@ html[data-terrain="1"] {
             <span>§6 — Causes immédiates supposées (5M)</span><span class="acc-chevron">▼</span>
           </button>
           <div class="acc-body">
-            <div class="form-group">
-              <label class="form-label">Milieu (environnement)</label>
-              <input class="form-input" id="sr-cause-milieu" type="text" placeholder="Conditions d'environnement…">
+            <!-- MILIEU -->
+            <div style="margin-bottom:18px">
+              <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);background:rgba(59,130,246,.08);border-radius:8px;padding:7px 12px;margin-bottom:8px">🌍 MILIEU (environnement, lieu)</div>
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-milieu-item" value="Voirie ouverte au trafic routier" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Voirie ouverte au trafic routier</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-milieu-item" value="Tranchée / fouille ouverte (risque ensevelissement)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Tranchée / fouille ouverte (risque ensevelissement)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-milieu-item" value="Présence de réseau enterré (gaz, électricité, eau, télécom)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Présence de réseau enterré (gaz, électricité, eau, télécom)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-milieu-item" value="Présence de ligne aérienne (HT/BT)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Présence de ligne aérienne (HT/BT)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-milieu-item" value="Co-activité avec autre entreprise sur site" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Co-activité avec autre entreprise sur site</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-milieu-item" value="Espace confiné (regard, chambre, fosse)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Espace confiné (regard, chambre, fosse)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-milieu-item" value="Atmosphère à risque (ATEX, H2S, poussière)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Atmosphère à risque (ATEX, H2S, poussière)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-milieu-item" value="Météo défavorable (pluie, gel, vent, canicule)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Météo défavorable (pluie, gel, vent, canicule)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-milieu-item" value="Visibilité réduite (nuit, brouillard, contre-jour)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Visibilité réduite (nuit, brouillard, contre-jour)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-milieu-item" value="Sol instable, talus, dénivelé" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Sol instable, talus, dénivelé</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-milieu-item" value="Bruit ambiant élevé (chantier, circulation)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Bruit ambiant élevé (chantier, circulation)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-milieu-item" value="Travail isolé (intervention seul sur site)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Travail isolé (intervention seul sur site)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-milieu-item" value="Présence du public / riverains / piétons" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Présence du public / riverains / piétons</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-milieu-item" value="Accès difficile au poste de travail" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Accès difficile au poste de travail</span></label>
+                <input class="form-input" id="sr-cause-milieu-autre" type="text" placeholder="Autre : préciser…" style="margin-top:4px">
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Matériel (équipements)</label>
-              <input class="form-input" id="sr-cause-materiel" type="text" placeholder="État des équipements…">
+            <!-- MATÉRIEL -->
+            <div style="margin-bottom:18px">
+              <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);background:rgba(59,130,246,.08);border-radius:8px;padding:7px 12px;margin-bottom:8px">🔧 MATÉRIEL (équipement, outil)</div>
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-materiel-item" value="EPI manquant ou inadapté (casque, gants, chaussures, gilet HV, masque)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">EPI manquant ou inadapté (casque, gants, chaussures, gilet HV, masque)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-materiel-item" value="EPI dégradé ou non conforme" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">EPI dégradé ou non conforme</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-materiel-item" value="Détecteur de réseaux défaillant (calibration manquée)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Détecteur de réseaux défaillant (calibration manquée)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-materiel-item" value="Station GPS / topo en panne ou imprécise" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Station GPS / topo en panne ou imprécise</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-materiel-item" value="Engin de chantier défectueux ou mal entretenu" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Engin de chantier défectueux ou mal entretenu</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-materiel-item" value="Outil portatif défectueux (carter manquant, lame émoussée)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Outil portatif défectueux (carter manquant, lame émoussée)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-materiel-item" value="Véhicule de service en mauvais état" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Véhicule de service en mauvais état</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-materiel-item" value="Signalisation temporaire absente ou inadaptée (cônes, panneaux, balises)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Signalisation temporaire absente ou inadaptée (cônes, panneaux, balises)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-materiel-item" value="Échelle ou échafaudage non conforme" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Échelle ou échafaudage non conforme</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-materiel-item" value="Liaisons radio / téléphone HS" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Liaisons radio / téléphone HS</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-materiel-item" value="Trousse de premiers secours / extincteur manquant" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Trousse de premiers secours / extincteur manquant</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-materiel-item" value="Matériel inadapté à la tâche" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Matériel inadapté à la tâche</span></label>
+                <input class="form-input" id="sr-cause-materiel-autre" type="text" placeholder="Autre : préciser…" style="margin-top:4px">
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Méthode (procédure)</label>
-              <input class="form-input" id="sr-cause-methode" type="text" placeholder="Procédure appliquée…">
+            <!-- MÉTHODE -->
+            <div style="margin-bottom:18px">
+              <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);background:rgba(59,130,246,.08);border-radius:8px;padding:7px 12px;margin-bottom:8px">📋 MÉTHODE (procédure, mode opératoire)</div>
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-methode-item" value="Absence de procédure formalisée pour la tâche" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Absence de procédure formalisée pour la tâche</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-methode-item" value="Procédure existante non appliquée" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Procédure existante non appliquée</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-methode-item" value="Procédure obsolète ou inadaptée au contexte" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Procédure obsolète ou inadaptée au contexte</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-methode-item" value="DICT non réalisée ou incomplète" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">DICT non réalisée ou incomplète</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-methode-item" value="Plan de prévention manquant (co-activité)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Plan de prévention manquant (co-activité)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-methode-item" value="Pas d'analyse de risque préalable (mini PPSPS)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Pas d'analyse de risque préalable (mini PPSPS)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-methode-item" value="Permis de feu / autorisation de travail manquant" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Permis de feu / autorisation de travail manquant</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-methode-item" value="Mode opératoire peu clair, étapes ambiguës" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Mode opératoire peu clair, étapes ambiguës</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-methode-item" value="Briefing de prise de poste non réalisé" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Briefing de prise de poste non réalisé</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-methode-item" value="Bypass volontaire des consignes (raccourci, gain de temps)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Bypass volontaire des consignes (raccourci, gain de temps)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-methode-item" value="Pas de check-list / point d'arrêt" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Pas de check-list / point d'arrêt</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-methode-item" value="Communication insuffisante entre équipiers" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Communication insuffisante entre équipiers</span></label>
+                <input class="form-input" id="sr-cause-methode-autre" type="text" placeholder="Autre : préciser…" style="margin-top:4px">
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Main-d'œuvre (formation)</label>
-              <input class="form-input" id="sr-cause-mo" type="text" placeholder="Formation, compétence…">
+            <!-- MAIN-D'OEUVRE -->
+            <div style="margin-bottom:18px">
+              <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);background:rgba(59,130,246,.08);border-radius:8px;padding:7px 12px;margin-bottom:8px">👷 MAIN-D'ŒUVRE (formation, compétence)</div>
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mo-item" value="AIPR absente ou périmée" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">AIPR absente ou périmée</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mo-item" value="Habilitation électrique manquante (B0, H0V, B1V…)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Habilitation électrique manquante (B0, H0V, B1V…)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mo-item" value="CACES / autorisation de conduite engin non valide" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">CACES / autorisation de conduite engin non valide</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mo-item" value="Formation initiale au poste insuffisante" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Formation initiale au poste insuffisante</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mo-item" value="Salarié récemment embauché (effet « nouveau »)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Salarié récemment embauché (effet « nouveau »)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mo-item" value="Recyclage formation expiré" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Recyclage formation expiré</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mo-item" value="Sous-effectif sur le chantier (surcharge)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Sous-effectif sur le chantier (surcharge)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mo-item" value="Fatigue (heure tardive, fin de journée, semaine intense)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Fatigue (heure tardive, fin de journée, semaine intense)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mo-item" value="Stress / pression temporelle" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Stress / pression temporelle</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mo-item" value="État de santé (fatigue, médication, mal-être)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">État de santé (fatigue, médication, mal-être)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mo-item" value="Non-respect des règles par habitude" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Non-respect des règles par habitude («&#8201;on a toujours fait comme ça&#8201;»)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mo-item" value="Compétence d'expert manquante (un seul sachant absent)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Compétence d'expert manquante (un seul sachant absent)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mo-item" value="Barrière de langue / problème de communication" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Barrière de langue / problème de communication</span></label>
+                <input class="form-input" id="sr-cause-mo-autre" type="text" placeholder="Autre : préciser…" style="margin-top:4px">
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Management (organisation)</label>
-              <input class="form-input" id="sr-cause-mgmt" type="text" placeholder="Organisation du travail…">
+            <!-- MANAGEMENT -->
+            <div style="margin-bottom:4px">
+              <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);background:rgba(59,130,246,.08);border-radius:8px;padding:7px 12px;margin-bottom:8px">🏢 MANAGEMENT (organisation, consignes)</div>
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mgmt-item" value="Consignes orales floues ou contradictoires" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Consignes orales floues ou contradictoires</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mgmt-item" value="Pression de délai (client, planning, fin de chantier)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Pression de délai (client, planning, fin de chantier)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mgmt-item" value="Pression économique (réduction de moyens, sous-effectif assumé)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Pression économique (réduction de moyens, sous-effectif assumé)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mgmt-item" value="Absence d'encadrement sur site (intervention isolée non encadrée)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Absence d'encadrement sur site (intervention isolée non encadrée)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mgmt-item" value="Encadrement insuffisamment formé QHSE" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Encadrement insuffisamment formé QHSE</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mgmt-item" value="Pas de retour d'expérience (REX) diffusé après événement" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Pas de retour d'expérience (REX) diffusé après événement</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mgmt-item" value="Tolérance aux comportements à risque (pas de recadrage)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Tolérance aux comportements à risque (pas de recadrage)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mgmt-item" value="Pas de reconnaissance des comportements sûrs" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Pas de reconnaissance des comportements sûrs</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mgmt-item" value="Délais imposés par le client / maître d'ouvrage non discutés" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Délais imposés par le client / maître d'ouvrage non discutés</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mgmt-item" value="Évaluation des risques avant intervention non réalisée" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Évaluation des risques avant intervention non réalisée</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mgmt-item" value="Coordination SPS insuffisante (chantier soumis)" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Coordination SPS insuffisante (chantier soumis)</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mgmt-item" value="Réunion sécurité périodique inexistante ou irrégulière" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Réunion sécurité périodique inexistante ou irrégulière</span></label>
+                <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"><input type="checkbox" name="sr-cause-mgmt-item" value="Délai de réaction long après une alerte" style="margin-top:2px;accent-color:var(--accent);flex-shrink:0"><span style="font-size:13px;color:var(--text);line-height:1.4">Délai de réaction long après une alerte</span></label>
+                <input class="form-input" id="sr-cause-mgmt-autre" type="text" placeholder="Autre : préciser…" style="margin-top:4px">
+              </div>
             </div>
           </div>
         </div>
@@ -10399,11 +10478,17 @@ function fillSRESSTForm(ev){
   set('sr-commune', ev.communeDept);
   set('sr-activite-autre', ev.activiteAutre||'');
   set('sr-description', ev.descriptionFaits);
-  set('sr-cause-milieu', ev.causeMilieu);
-  set('sr-cause-materiel', ev.causeMateriel);
-  set('sr-cause-methode', ev.causeMethode);
-  set('sr-cause-mo', ev.causeMainOeuvre);
-  set('sr-cause-mgmt', ev.causeManagement);
+  // §6 — Causes 5M (cases à cocher + Autre)
+  (ev.causeMilieuItems||[]).forEach(v=>{const c=document.querySelector(`input[name="sr-cause-milieu-item"][value="${v}"]`);if(c)c.checked=true;});
+  set('sr-cause-milieu-autre', ev.causeMilieuAutre||'');
+  (ev.causeMaterielItems||[]).forEach(v=>{const c=document.querySelector(`input[name="sr-cause-materiel-item"][value="${v}"]`);if(c)c.checked=true;});
+  set('sr-cause-materiel-autre', ev.causeMaterielAutre||'');
+  (ev.causeMethodeItems||[]).forEach(v=>{const c=document.querySelector(`input[name="sr-cause-methode-item"][value="${v}"]`);if(c)c.checked=true;});
+  set('sr-cause-methode-autre', ev.causeMethodeAutre||'');
+  (ev.causeMoItems||[]).forEach(v=>{const c=document.querySelector(`input[name="sr-cause-mo-item"][value="${v}"]`);if(c)c.checked=true;});
+  set('sr-cause-mo-autre', ev.causeMoAutre||'');
+  (ev.causeMgmtItems||[]).forEach(v=>{const c=document.querySelector(`input[name="sr-cause-mgmt-item"][value="${v}"]`);if(c)c.checked=true;});
+  set('sr-cause-mgmt-autre', ev.causeMgmtAutre||'');
   set('sr-mesures', ev.mesuresImmediates);
   set('sr-proposition', ev.propositionDeclarant);
   if(ev.agence){ const r=document.querySelector(`input[name="sr-agence"][value="${ev.agence}"]`); if(r) r.checked=true; }
@@ -10432,9 +10517,12 @@ function getSRESSTFormData(){
     activites: checks('sr-activite'), activiteAutre: g('sr-activite-autre'),
     conditions: checks('sr-condition'), descriptionFaits: g('sr-description'),
     dangers: checks('sr-danger'),
-    causeMilieu: g('sr-cause-milieu'), causeMateriel: g('sr-cause-materiel'),
-    causeMethode: g('sr-cause-methode'), causeMainOeuvre: g('sr-cause-mo'),
-    causeManagement: g('sr-cause-mgmt'), mesuresImmediates: g('sr-mesures'),
+    causeMilieuItems: checks('sr-cause-milieu-item'), causeMilieuAutre: g('sr-cause-milieu-autre'),
+    causeMaterielItems: checks('sr-cause-materiel-item'), causeMaterielAutre: g('sr-cause-materiel-autre'),
+    causeMethodeItems: checks('sr-cause-methode-item'), causeMethodeAutre: g('sr-cause-methode-autre'),
+    causeMoItems: checks('sr-cause-mo-item'), causeMoAutre: g('sr-cause-mo-autre'),
+    causeMgmtItems: checks('sr-cause-mgmt-item'), causeMgmtAutre: g('sr-cause-mgmt-autre'),
+    mesuresImmediates: g('sr-mesures'),
     propositionDeclarant: g('sr-proposition'),
   };
 }
@@ -10515,11 +10603,12 @@ async function doSRESSTWordDocx(){
     ]});
     const sp=()=>new Paragraph({children:[new TextRun({text:'',size:18})]});
 
-    // Bannière
+    // Bannière — mêmes dimensions que le rapport chantier (21,06 cm × 5,63 cm)
     const bannerBytes = _dataUrlToBytes(_BANNER_V2_B64);
     const bannerEl = bannerBytes ? new Paragraph({
-      alignment:AlignmentType.CENTER,
-      children:[new ImageRun({data:bannerBytes,transformation:{width:595,height:120},type:'jpg'})]
+      spacing:{before:0,after:0},
+      indent:{left:-1151,right:-1151},
+      children:[new ImageRun({data:bannerBytes,transformation:{width:796,height:213},type:'jpeg'})]
     }) : new Paragraph({children:[new TextRun({text:'NEOCONCEPT VRD',font:FONT,size:32,bold:true,color:NAVY})]});
 
     // Type événement
@@ -10537,7 +10626,9 @@ async function doSRESSTWordDocx(){
 
     const doc = new Document({
       sections:[{
-        properties:{page:{margin:{top:720,right:720,bottom:720,left:720}}},
+        properties:{page:{size:{width:11906,height:16838},margin:{
+          header:0, top:3592, right:1134, bottom:1134, left:1134, footer:600
+        }}},
         headers:{default:new Header({children:[bannerEl]})},
         footers:{default:new Footer({children:[new Paragraph({
           alignment:AlignmentType.CENTER,
@@ -10612,13 +10703,29 @@ async function doSRESSTWordDocx(){
 
           // §6
           sectionHdr(6,'Causes immédiates supposées (méthode 5M)'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
-            row2('Milieu (environnement)',ev.causeMilieu),
-            row2('Matériel (équipements)',ev.causeMateriel),
-            row2('Méthode (procédure)',ev.causeMethode),
-            row2("Main-d'œuvre (formation)",ev.causeMainOeuvre),
-            row2('Management (organisation)',ev.causeManagement),
-          ]}),
+          ...(()=>{
+            const mRow=(label,items,autre)=>{
+              const all=[...(items||[])];
+              if(autre) all.push('Autre : '+autre);
+              const paras = all.length
+                ? all.map(t=>new Paragraph({children:[new TextRun({text:'• '+t,font:FONT,size:18})]}))
+                : [new Paragraph({children:[new TextRun({text:'—',font:FONT,size:18,color:'AAAAAA'})]})];
+              return new TableRow({children:[
+                cell(label,{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.28)}),
+                new TableCell({borders,width:{size:Math.round(CW*0.72),type:WidthType.DXA},
+                  children:paras,
+                  margins:{top:80,bottom:80,left:120,right:120}
+                })
+              ]});
+            };
+            return [new Table({width:{size:CW,type:WidthType.DXA},rows:[
+              mRow('MILIEU\n(env., lieu)',ev.causeMilieuItems,ev.causeMilieuAutre),
+              mRow('MATÉRIEL\n(équipements)',ev.causeMaterielItems,ev.causeMaterielAutre),
+              mRow('MÉTHODE\n(procédure)',ev.causeMethodeItems,ev.causeMethodeAutre),
+              mRow("MAIN-D'ŒUVRE\n(formation)",ev.causeMoItems,ev.causeMoAutre),
+              mRow('MANAGEMENT\n(organisation)',ev.causeMgmtItems,ev.causeMgmtAutre),
+            ]})];
+          })(),
           sp(),
 
           // §7
