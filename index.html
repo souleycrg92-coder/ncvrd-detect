@@ -10551,7 +10551,7 @@ async function doSRESSTWordDocx(){
           sp(),
           // Intro
           new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
-            cell('⚠ Pourquoi remonter ? Chaque presqu'accident ou situation dangereuse signalé permet de prévenir un accident futur. Votre vigilance protège vos collègues.',{shade:'FFF9C4',sz:18,w:CW})
+            cell('⚠ Pourquoi remonter ? Chaque presqu\'accident ou situation dangereuse signalé permet de prévenir un accident futur. Votre vigilance protège vos collègues.',{shade:'FFF9C4',sz:18,w:CW})
           ]})]}),
           sp(),
 
@@ -10642,7 +10642,7 @@ async function doSRESSTWordDocx(){
           sp(),
 
           // Séparateur QHSE
-          new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'═══ PARTIE RÉSERVÉE À LA FONCTION QHSE / À L'ENCADREMENT — À NE PAS REMPLIR PAR L'AGENT ═══',font:FONT,size:20,bold:true,color:ORANGE})]}),
+          new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'═══ PARTIE RÉSERVÉE À LA FONCTION QHSE / À L\'ENCADREMENT — À NE PAS REMPLIR PAR L\'AGENT ═══',font:FONT,size:20,bold:true,color:ORANGE})]}),
           sp(),
 
           // §9
@@ -10677,9 +10677,7 @@ async function doSRESSTWordDocx(){
               cell('',{w:Math.round(CW*0.45)}),
               cell('',{w:Math.round(CW*0.2)}),
               cell('',{w:Math.round(CW*0.15)}),
-              cell('☐ À faire
-☐ En cours
-☐ Soldée',{sz:16,w:Math.round(CW*0.1)}),
+              cell('☐ À faire\n☐ En cours\n☐ Soldée',{sz:16,w:Math.round(CW*0.1)}),
             ]}))
           ]}),
           sp(),
@@ -10702,21 +10700,9 @@ async function doSRESSTWordDocx(){
               cell('Responsable QHSE',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
             ]}),
             new TableRow({children:[
-              cell('Nom :
-Date :
-
-
-(Signature)',{sz:18,w:Math.round(CW/3)}),
-              cell('Nom :
-Date :
-
-
-(Signature)',{sz:18,w:Math.round(CW/3)}),
-              cell('Nom :
-Date :
-
-
-(Signature)',{sz:18,w:Math.round(CW/3)}),
+              cell('Nom :\nDate :\n\n\n(Signature)',{sz:18,w:Math.round(CW/3)}),
+              cell('Nom :\nDate :\n\n\n(Signature)',{sz:18,w:Math.round(CW/3)}),
+              cell('Nom :\nDate :\n\n\n(Signature)',{sz:18,w:Math.round(CW/3)}),
             ]}),
           ]}),
         ]
