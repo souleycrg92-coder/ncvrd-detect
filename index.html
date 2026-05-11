@@ -1147,6 +1147,240 @@ html[data-terrain="1"] {
 /* Barre de progression sections */
 .sr-progress-bar{height:3px;border-radius:2px;background:rgba(255,255,255,.08);margin:0 14px 6px;overflow:hidden}
 .sr-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),#8b5cf6);transition:width .4s var(--ease)}
+
+/* ═══════════════════════════════════════════════════
+   DESIGN v4 — Industrial Futurism Enhancement Layer
+   Glassmorphism affiné, profondeur, micro-animations
+   ═══════════════════════════════════════════════════ */
+
+/* ── Background — blobs plus vifs et dynamiques ── */
+body::before{
+  background:
+    radial-gradient(ellipse 90% 70% at 10% 90%, rgba(59,130,246,.20) 0%, transparent 55%),
+    radial-gradient(ellipse 75% 95% at 90% 10%, rgba(139,92,246,.16) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 50% 50%, rgba(56,189,248,.09) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 65% at 75% 75%, rgba(45,212,191,.07) 0%, transparent 45%);
+  animation:meshFloat 32s ease-in-out infinite alternate;
+}
+
+/* ── Topbar title — shimmer plus vivid ── */
+.tb-title{
+  background:linear-gradient(90deg,var(--accent) 0%,var(--purple) 35%,var(--teal) 65%,var(--accent) 100%);
+  background-size:300% auto;
+  animation:textShimmer 5s linear infinite;
+  letter-spacing:1.5px;font-size:15px;
+}
+
+/* ── Back button — hover accent glow ── */
+.back-btn:hover{
+  background:rgba(59,130,246,.12) !important;
+  border-color:rgba(59,130,246,.35) !important;
+  box-shadow:0 0 14px rgba(59,130,246,.25) !important;
+  color:var(--accent);
+}
+
+/* ── Sync pill — subtle online pulse ── */
+.sync-pill.online{animation:onlinePulse 3s ease-in-out infinite}
+@keyframes onlinePulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.0)}
+  50%{box-shadow:0 0 0 5px rgba(34,197,94,.08)}
+}
+
+/* ── Cards — accent bar plus épaisse + shine hover ── */
+.card::before{
+  width:4px;
+  background:linear-gradient(180deg,var(--accent) 0%,var(--purple) 55%,var(--teal) 100%);
+  box-shadow:0 0 14px rgba(59,130,246,.6);
+  top:0;bottom:0;left:0;border-radius:4px 0 0 4px;
+}
+.card::after{
+  content:'';position:absolute;inset:0;border-radius:20px;
+  background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.045) 50%,transparent 65%);
+  background-size:300% 100%;background-position:-200% 0;
+  transition:background-position .7s ease;pointer-events:none;
+}
+.card:hover::after{background-position:200% 0}
+.card:hover{
+  transform:translateY(-3px) scale(1.006);
+  box-shadow:0 14px 40px rgba(0,0,0,.55),0 4px 16px rgba(59,130,246,.14),0 0 30px rgba(59,130,246,.07);
+  border-color:rgba(59,130,246,.28);
+}
+.card:active{transform:scale(.98);opacity:.95}
+
+/* ── Nav buttons — icon glow on active ── */
+.nav-btn .nav-icon{transition:all .25s cubic-bezier(.4,0,.2,1)}
+.nav-btn:hover .nav-icon{transform:scale(1.1);filter:drop-shadow(0 0 6px rgba(255,255,255,.2))}
+.nav-btn.active{background:rgba(59,130,246,.13);box-shadow:inset 0 0 24px rgba(59,130,246,.06)}
+.nav-btn.active .nav-icon{
+  filter:drop-shadow(0 0 10px rgba(59,130,246,.7));
+  transform:scale(1.12);
+}
+.nav-btn.active::before{box-shadow:0 0 10px rgba(59,130,246,.5)}
+
+/* ── Inputs — halo focus triple-couche ── */
+.form-input:focus,.form-textarea:focus,.form-select:focus{
+  border-color:rgba(59,130,246,.75);
+  background:rgba(255,255,255,.07);
+  box-shadow:
+    0 0 0 1px rgba(59,130,246,.45),
+    0 0 0 4px rgba(59,130,246,.12),
+    0 0 24px rgba(59,130,246,.1);
+}
+
+/* ── Boutons — lift + glow renforcé ── */
+.btn-accent{
+  background:linear-gradient(135deg,#2563eb 0%,#6366f1 50%,#3b82f6 100%);
+  background-size:200% auto;
+  box-shadow:0 4px 24px rgba(59,130,246,.38),0 1px 4px rgba(0,0,0,.35);
+}
+.btn-accent:hover{
+  background-position:right center;
+  box-shadow:0 8px 36px rgba(59,130,246,.55),0 0 24px rgba(99,102,241,.2);
+  transform:translateY(-2px);
+}
+.btn-accent:active{transform:translateY(0) scale(.97)}
+.btn-card:hover{
+  background:rgba(255,255,255,.10);
+  border-color:rgba(255,255,255,.2);
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
+  transform:translateY(-1px);
+}
+.btn-green:hover{
+  box-shadow:0 8px 36px rgba(34,197,94,.42),0 0 24px rgba(34,197,94,.15);
+  transform:translateY(-2px);
+}
+.btn-red:hover{
+  box-shadow:0 8px 36px rgba(239,68,68,.42),0 0 24px rgba(239,68,68,.15);
+  transform:translateY(-2px);
+}
+.btn-icon-big:hover{
+  border-color:rgba(255,255,255,.18);
+  transform:translateY(-3px);
+  box-shadow:0 10px 28px rgba(0,0,0,.35);
+}
+.btn-icon-big.cam:hover{border-color:rgba(59,130,246,.4);box-shadow:0 8px 24px rgba(59,130,246,.15)}
+.btn-icon-big.gps:hover{border-color:rgba(34,197,94,.4);box-shadow:0 8px 24px rgba(34,197,94,.15)}
+.btn-icon-big.pdf:hover{border-color:rgba(239,68,68,.4);box-shadow:0 8px 24px rgba(239,68,68,.15)}
+
+/* ── Modal — entrée slide-up animée ── */
+@keyframes modalSlideUp{
+  from{opacity:0;transform:translateY(36px) scale(.98)}
+  to  {opacity:1;transform:translateY(0) scale(1)}
+}
+.modal.show .modal-box{animation:modalSlideUp .32s cubic-bezier(.34,1.5,.64,1) both}
+.modal-close{transition:all .25s cubic-bezier(.4,0,.2,1)}
+.modal-close:hover{
+  background:rgba(239,68,68,.14);
+  border-color:rgba(239,68,68,.25);
+  color:var(--red);
+  transform:rotate(90deg) scale(1.1);
+}
+
+/* ── Toast — pill glass + shadow renforcé ── */
+#toast{
+  background:rgba(5,10,21,.94);
+  border-color:rgba(59,130,246,.28);
+  box-shadow:0 8px 36px rgba(0,0,0,.45),0 0 24px rgba(59,130,246,.12);
+  padding:12px 26px;
+}
+
+/* ── Accordéon — barre accent supérieure au hover ── */
+.acc-section{position:relative;overflow:hidden}
+.acc-section::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--purple),var(--teal));
+  opacity:0;transition:opacity .3s ease;
+  border-radius:16px 16px 0 0;
+}
+.acc-section:hover::before,.acc-section:focus-within::before{opacity:1}
+.acc-toggle{transition:background .2s var(--ease)}
+.acc-chevron{
+  background:linear-gradient(135deg,var(--accent),var(--purple));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;opacity:1 !important;font-size:14px;
+}
+
+/* ── Profil — anneau gradient rotatif ── */
+@keyframes ringRotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.profile-avatar-wrap{position:relative;display:inline-block;margin-bottom:10px;cursor:pointer}
+.profile-avatar-wrap::before{
+  content:'';position:absolute;inset:-3px;border-radius:50%;
+  background:conic-gradient(var(--accent),var(--purple),var(--teal),var(--accent));
+  animation:ringRotate 5s linear infinite;z-index:0;
+}
+.profile-avatar-wrap::after{
+  content:'';position:absolute;inset:-1px;border-radius:50%;
+  background:var(--bg);z-index:0;
+}
+.profile-avatar{position:relative;z-index:1}
+.avatar-cam-overlay{z-index:2}
+
+/* ── Badges — glow subtil ── */
+.badge-green{box-shadow:0 0 10px rgba(34,197,94,.18)}
+.badge-orange{box-shadow:0 0 10px rgba(249,115,22,.18)}
+.badge-blue{box-shadow:0 0 10px rgba(59,130,246,.18)}
+
+/* ── Info/Warn boxes — bordure gauche accent ── */
+.info-box{
+  border-left:3px solid var(--accent);
+  background:rgba(59,130,246,.05);
+}
+.warn-box{
+  border-left:3px solid var(--orange);
+  background:rgba(249,115,22,.05);
+}
+
+/* ── Search input — glow focus ── */
+.search-inp:focus{
+  border-color:rgba(59,130,246,.6);
+  background:rgba(255,255,255,.07);
+  box-shadow:0 0 0 3px rgba(59,130,246,.12),0 0 24px rgba(59,130,246,.09);
+}
+
+/* ── Photo add btn — lift + border ── */
+.photo-add-btn:hover{
+  border-color:rgba(59,130,246,.5);
+  background:rgba(59,130,246,.07);
+  box-shadow:0 0 20px rgba(59,130,246,.12);
+  transform:scale(1.03);
+}
+.photo-cell:hover{
+  border-color:rgba(59,130,246,.4);
+  box-shadow:0 0 14px rgba(59,130,246,.18);
+}
+
+/* ── Person picker — refined ── */
+.picker-item:hover,.picker-item:active{
+  background:rgba(59,130,246,.06);
+}
+
+/* ── GPS item — accent border ── */
+.gps-item{
+  border-color:rgba(34,197,94,.15);
+  transition:border-color .2s ease,box-shadow .2s ease;
+}
+.gps-item:hover{
+  border-color:rgba(34,197,94,.3);
+  box-shadow:0 4px 16px rgba(34,197,94,.08);
+}
+
+/* ── Notif items — refined ── */
+.notif-item{
+  transition:all .2s ease;
+}
+.notif-item:hover{
+  background:rgba(59,130,246,.06);
+  border-color:rgba(59,130,246,.15);
+  transform:translateX(2px);
+}
+
+/* ── SRESST card — hover accent ── */
+.sresst-card:hover{
+  background:rgba(255,255,255,.08);
+  border-color:rgba(255,255,255,.16);
+  transform:translateX(3px);
+  box-shadow:0 4px 20px rgba(0,0,0,.3);
+}
 </style>
 </head>
 <body>
@@ -3116,25 +3350,47 @@ html[data-terrain="1"] {
 <!-- ══════════════════════════════════════════════════════════════════
      SPLASH SCREEN — Feature 5
      ══════════════════════════════════════════════════════════════════ -->
-<div id="splash-screen" style="position:fixed;inset:0;background:linear-gradient(180deg,#010810 0%,#050b18 50%,#010810 100%);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(2px)">
-  <div style="text-align:center;position:relative">
-    <!-- Radar sweep animation -->
-    <svg width="160" height="160" viewBox="0 0 160 160" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);margin-top:-20px;opacity:.25;pointer-events:none">
-      <circle cx="80" cy="80" r="70" fill="none" stroke="#00aaff" stroke-width=".5" opacity=".3"/>
-      <circle cx="80" cy="80" r="50" fill="none" stroke="#00aaff" stroke-width=".5" opacity=".4"/>
-      <circle cx="80" cy="80" r="30" fill="none" stroke="#00aaff" stroke-width=".5" opacity=".5"/>
-      <circle cx="80" cy="80" r="10" fill="none" stroke="#00aaff" stroke-width=".5" opacity=".6"/>
-      <line x1="80" y1="80" x2="80" y2="10" stroke="#00aaff" stroke-width="1" opacity=".7" style="transform-origin:80px 80px;animation:radarSweep 3s linear infinite"/>
-      <circle cx="80" cy="80" r="2" fill="#00aaff" opacity=".8"/>
+<div id="splash-screen" style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:#050a15">
+  <!-- Mesh gradient blobs -->
+  <div style="position:absolute;inset:0;pointer-events:none;overflow:hidden">
+    <div style="position:absolute;width:70%;height:70%;top:60%;left:-20%;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,.22) 0%,transparent 70%);animation:splashBlob1 8s ease-in-out infinite alternate"></div>
+    <div style="position:absolute;width:60%;height:60%;top:-20%;right:-10%;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%);animation:splashBlob2 10s ease-in-out infinite alternate"></div>
+    <div style="position:absolute;width:40%;height:40%;bottom:10%;right:10%;border-radius:50%;background:radial-gradient(circle,rgba(45,212,191,.10) 0%,transparent 70%);animation:splashBlob3 7s ease-in-out infinite alternate"></div>
+  </div>
+  <div style="text-align:center;position:relative;z-index:1">
+    <!-- Radar sweep -->
+    <svg width="180" height="180" viewBox="0 0 160 160" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);margin-top:-24px;pointer-events:none">
+      <circle cx="80" cy="80" r="72" fill="none" stroke="rgba(59,130,246,.15)" stroke-width=".8"/>
+      <circle cx="80" cy="80" r="52" fill="none" stroke="rgba(59,130,246,.2)" stroke-width=".8"/>
+      <circle cx="80" cy="80" r="32" fill="none" stroke="rgba(59,130,246,.25)" stroke-width=".8"/>
+      <circle cx="80" cy="80" r="12" fill="none" stroke="rgba(59,130,246,.3)" stroke-width=".8"/>
+      <!-- Radar sweep sector -->
+      <defs>
+        <radialGradient id="sweepGrad" cx="80" cy="80" r="72" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="rgba(59,130,246,.5)"/>
+          <stop offset="100%" stop-color="rgba(59,130,246,0)"/>
+        </radialGradient>
+      </defs>
+      <path id="sweepPath" d="M80 80 L80 8 A72 72 0 0 1 120 20 Z" fill="url(#sweepGrad)" style="transform-origin:80px 80px;animation:radarSweep 3s linear infinite;opacity:.4"/>
+      <line x1="80" y1="80" x2="80" y2="8" stroke="rgba(59,130,246,.7)" stroke-width="1.2" style="transform-origin:80px 80px;animation:radarSweep 3s linear infinite"/>
+      <circle cx="80" cy="80" r="3" fill="#3b82f6" opacity=".9"/>
     </svg>
-    <div style="font-size:48px;font-weight:900;color:#00aaff;font-family:'Rajdhani','Inter',sans-serif;letter-spacing:2px;margin-bottom:16px;text-shadow:0 0 20px rgba(0,170,255,.4);position:relative">NCVRD DETECT</div>
-    <div style="width:200px;height:4px;background:rgba(0,170,255,.3);border-radius:20px;margin-bottom:12px;overflow:hidden">
-      <div style="height:100%;background:linear-gradient(90deg,#00aaff,#60d0ff,#00aaff);background-size:200% 100%;animation:slideLoader 1.5s ease-in-out forwards;border-radius:20px"></div>
+    <!-- Title with gradient -->
+    <div style="font-size:46px;font-weight:900;font-family:'Orbitron','Rajdhani','Inter',sans-serif;letter-spacing:3px;margin-bottom:18px;position:relative;background:linear-gradient(90deg,#3b82f6,#8b5cf6,#2dd4bf,#3b82f6);background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:textShimmer 4s linear infinite;filter:drop-shadow(0 0 16px rgba(59,130,246,.4))">NCVRD DETECT</div>
+    <!-- Progress bar -->
+    <div style="width:220px;height:3px;background:rgba(255,255,255,.08);border-radius:20px;margin:0 auto 14px;overflow:hidden;border:none">
+      <div style="height:100%;background:linear-gradient(90deg,#3b82f6,#8b5cf6,#2dd4bf);background-size:300% 100%;animation:splashLoader 2s ease-in-out forwards,shimmerProg 1.5s linear infinite;border-radius:20px"></div>
     </div>
-    <div style="font-size:12px;color:rgba(0,170,255,.6);font-family:'Rajdhani','Inter',sans-serif;letter-spacing:1px;text-transform:uppercase">Démarrage en cours…</div>
+    <div style="font-size:11px;color:rgba(148,163,184,.7);font-family:'Rajdhani','Inter',sans-serif;letter-spacing:2px;text-transform:uppercase;animation:splashFade 1.5s ease-in-out infinite">Initialisation…</div>
   </div>
   <style>
-    @keyframes slideLoader { 0% { transform:translateX(-100%); } 100% { transform:translateX(100%); } }
+    @keyframes splashLoader{0%{width:0%}100%{width:100%}}
+    @keyframes shimmerProg{0%{background-position:0% 0}100%{background-position:300% 0}}
+    @keyframes splashFade{0%,100%{opacity:.5}50%{opacity:1}}
+    @keyframes splashBlob1{0%{transform:translate(0,0) scale(1)}100%{transform:translate(10%,-8%) scale(1.15)}}
+    @keyframes splashBlob2{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-8%,10%) scale(1.2)}}
+    @keyframes splashBlob3{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-6%,-6%) scale(1.1)}}
+    @keyframes radarSweep{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
   </style>
 </div>
 
