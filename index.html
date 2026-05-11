@@ -10713,29 +10713,53 @@ async function doSRESSTWordDocx(){
     const brd=(color,size=4)=>({style:BorderStyle.SINGLE,size,color:color||MGRAY});
     const noBorder={top:brd(WHITE,1),left:brd(WHITE,1),bottom:brd(WHITE,1),right:brd(WHITE,1)};
     const borders={top:brd(MGRAY),left:brd(MGRAY),bottom:brd(MGRAY),right:brd(MGRAY)};
+    const bordersOrange={top:brd(ORANGE),left:brd(ORANGE,8),bottom:brd(ORANGE),right:brd(ORANGE)};
 
+    // Cellule standard
     const cell=(text,opts={})=>new TableCell({
       borders: opts.borders||borders,
       shading: opts.shade?{type:ShadingType.CLEAR,fill:opts.shade}:undefined,
-      verticalAlign: VerticalAlign.CENTER,
+      verticalAlign: opts.valign||VerticalAlign.CENTER,
       width:{size:opts.w||CW,type:WidthType.DXA},
       columnSpan: opts.span||1,
+      margins:{top:80,bottom:80,left:140,right:140},
       children:[new Paragraph({
         alignment: opts.align||AlignmentType.LEFT,
-        children:[new TextRun({text:String(text||''),font:FONT,size:opts.sz||20,bold:!!opts.bold,color:opts.color||'000000'})]
+        children:[new TextRun({text:String(text||''),font:FONT,size:opts.sz||20,bold:!!opts.bold,color:opts.color||'000000',italics:!!opts.italic})]
       })]
     });
 
+    // Cellule multi-paragraphes (pour signatures, listes…)
+    const cellP=(paragraphs,opts={})=>new TableCell({
+      borders: opts.borders||borders,
+      shading: opts.shade?{type:ShadingType.CLEAR,fill:opts.shade}:undefined,
+      verticalAlign: opts.valign||VerticalAlign.TOP,
+      width:{size:opts.w||CW,type:WidthType.DXA},
+      columnSpan: opts.span||1,
+      margins:{top:80,bottom:80,left:140,right:140},
+      children: paragraphs
+    });
+
+    // En-tête de section navy + barre orange gauche
     const sectionHdr=(num,title)=>new Table({width:{size:CW,type:WidthType.DXA},rows:[
-      new TableRow({children:[cell(`§${num} — ${title}`,{shade:NAVY,bold:true,color:WHITE,sz:22,w:CW})]})
+      new TableRow({children:[
+        new TableCell({borders:{top:brd(ORANGE),left:brd(ORANGE,12),bottom:brd(ORANGE),right:brd(ORANGE)},
+          shading:{type:ShadingType.CLEAR,fill:NAVY},
+          width:{size:CW,type:WidthType.DXA},margins:{top:100,bottom:100,left:180,right:140},
+          children:[new Paragraph({children:[
+            new TextRun({text:`§${num}`,font:FONT,size:24,bold:true,color:ORANGE}),
+            new TextRun({text:`  ${title}`,font:FONT,size:22,bold:true,color:WHITE}),
+          ]})]
+        })
+      ]})
     ]});
 
-    const chk=(val,checked)=>(checked?'☑':'☐')+' '+val;
+    const chk=(val,checked)=>(checked?'☑ ':'☐ ')+val;
     const row2=(label,value)=>new TableRow({children:[
       cell(label,{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.35)}),
-      cell(value||'',{sz:20,w:Math.round(CW*0.65)})
+      cell(value||'—',{sz:20,w:Math.round(CW*0.65)})
     ]});
-    const sp=()=>new Paragraph({children:[new TextRun({text:'',size:18})]});
+    const sp=(h=1)=>new Paragraph({spacing:{after:0},children:[new TextRun({text:'',size:h===2?24:18})]});
 
     // Bannière — mêmes dimensions que le rapport chantier (21,06 cm × 5,63 cm)
     const bannerBytes = _dataUrlToBytes(_BANNER_V2_B64);
@@ -10746,16 +10770,33 @@ async function doSRESSTWordDocx(){
     }) : new Paragraph({children:[new TextRun({text:'NEOCONCEPT VRD',font:FONT,size:32,bold:true,color:NAVY})]});
 
     // Type événement
-    const TYPES=['AT','ATSA','PA','SD','CR','DYS','AGR'];
     const TYPE_LABELS={AT:'Accident du travail avec arrêt (AT)',ATSA:'Accident du travail sans arrêt (ATSA)',PA:"Presqu'accident (PA)",SD:'Situation dangereuse (SD)',CR:'Comportement à risque (CR)',DYS:'Dysfonctionnement (DYS)',AGR:'Agression / incivilité (AGR)'};
-
     const gravLabels={1:'1 – Mineure',2:'2 – Modérée',3:'3 – Sérieuse',4:'4 – Grave',5:'5 – Très grave'};
 
-    const makeCheckRow=(label,values,selected)=>new TableRow({children:[
-      cell(label,{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.3)}),
-      new TableCell({borders,width:{size:Math.round(CW*0.7),type:WidthType.DXA},children:[
-        new Paragraph({children:values.map(v=>new TextRun({text:(selected.includes?selected.includes(v):selected===v?'☑':'☐')+' '+v+'   ',font:FONT,size:18}))})
-      ]})
+    // Ligne de cases à cocher — chaque option sur sa propre ligne dans la cellule
+    const makeCheckRow=(label,values,selected,cols=1)=>new TableRow({children:[
+      cell(label,{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.3),valign:VerticalAlign.TOP}),
+      cellP(
+        cols===2
+          ? (()=>{
+              const paras=[];
+              for(let i=0;i<values.length;i+=2){
+                const a=values[i], b=values[i+1];
+                const isA=selected.includes?selected.includes(a):selected===a;
+                const isB=b&&(selected.includes?selected.includes(b):selected===b);
+                paras.push(new Paragraph({children:[
+                  new TextRun({text:(isA?'☑ ':'☐ ')+a,font:FONT,size:18}),
+                  ...(b?[new TextRun({text:'        '+(isB?'☑ ':'☐ ')+b,font:FONT,size:18})]:[])
+                ]}));
+              }
+              return paras;
+            })()
+          : values.map(v=>{
+              const checked=selected.includes?selected.includes(v):selected===v;
+              return new Paragraph({children:[new TextRun({text:(checked?'☑ ':'☐ ')+v,font:FONT,size:18})]});
+            }),
+        {w:Math.round(CW*0.7)}
+      )
     ]});
 
     const doc = new Document({
@@ -10770,14 +10811,39 @@ async function doSRESSTWordDocx(){
                    new TextRun({children:[PageNumber.CURRENT],font:FONT,size:16,color:DGRAY})]
         })]})},
         children:[
-          // Titre
-          new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'FICHE DE REMONTÉE DES ÉVÉNEMENTS',font:FONT,size:32,bold:true,color:NAVY})]}),
-          new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Réf. FORM-QHSE-001 v02  |  Date de génération : '+new Date().toLocaleDateString('fr-FR'),font:FONT,size:18,color:DGRAY})]}),
+          // ── Titre principal
+          new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:80},children:[new TextRun({text:'FICHE DE REMONTÉE DES ÉVÉNEMENTS SST',font:FONT,size:36,bold:true,color:NAVY})]}),
+          new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:160},children:[new TextRun({text:'Système de Remontée des Événements SST  ·  FORM-QHSE-001 v02',font:FONT,size:18,color:DGRAY,italics:true})]}),
+
+          // ── Bandeau de synthèse (type + gravité + date + agence)
+          new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[Math.round(CW*0.28),Math.round(CW*0.24),Math.round(CW*0.24),Math.round(CW*0.24)],rows:[
+            new TableRow({children:[
+              cell('Type d\'événement',{shade:NAVY,bold:true,color:WHITE,sz:17,w:Math.round(CW*0.28)}),
+              cell('Gravité estimée',{shade:NAVY,bold:true,color:WHITE,sz:17,w:Math.round(CW*0.24)}),
+              cell('Date de l\'événement',{shade:NAVY,bold:true,color:WHITE,sz:17,w:Math.round(CW*0.24)}),
+              cell('Agence',{shade:NAVY,bold:true,color:WHITE,sz:17,w:Math.round(CW*0.24)}),
+            ]}),
+            new TableRow({children:[
+              cell((TYPE_LABELS[ev.typeEvenement]||ev.typeEvenement||'—'),{sz:20,bold:true,color:ORANGE,w:Math.round(CW*0.28)}),
+              cell((gravLabels[ev.gravite]||'—'),{sz:20,w:Math.round(CW*0.24)}),
+              cell(ev.dateEvenement||'—',{sz:20,w:Math.round(CW*0.24)}),
+              cell(ev.agence||'—',{sz:20,w:Math.round(CW*0.24)}),
+            ]}),
+          ]}),
           sp(),
-          // Intro
+
+          // ── Encadré d'avertissement
           new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
-            cell('⚠ Pourquoi remonter ? Chaque presqu\'accident ou situation dangereuse signalé permet de prévenir un accident futur. Votre vigilance protège vos collègues.',{shade:'FFF9C4',sz:18,w:CW})
+            cellP([new Paragraph({children:[
+              new TextRun({text:'⚠  ',font:FONT,size:18,bold:true,color:ORANGE}),
+              new TextRun({text:'Pourquoi remonter ?  ',font:FONT,size:18,bold:true,color:NAVY}),
+              new TextRun({text:'Chaque presqu\'accident ou situation dangereuse signalé permet de prévenir un accident futur. Votre vigilance protège vos collègues.',font:FONT,size:18,color:'555555'}),
+            ]})],{shade:'FFF8E6',w:CW,borders:{top:brd(ORANGE),left:brd(ORANGE,8),bottom:brd(ORANGE),right:brd(ORANGE)}})
           ]})]}),
+          sp(),
+
+          // ── Date génération
+          new Paragraph({alignment:AlignmentType.RIGHT,spacing:{after:80},children:[new TextRun({text:'Généré le '+new Date().toLocaleDateString('fr-FR')+' à '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),font:FONT,size:16,color:MGRAY,italics:true})]}),
           sp(),
 
           // §1
@@ -10799,22 +10865,26 @@ async function doSRESSTWordDocx(){
           sectionHdr(2,"Nature de l'événement"),
           new Table({width:{size:CW,type:WidthType.DXA},rows:[
             makeCheckRow("Type d'événement",Object.values(TYPE_LABELS),[TYPE_LABELS[ev.typeEvenement]||'']),
-            row2('Salarié(s) concerné(s)',ev.salariesConcernes),
+            row2('Salarié(s) concerné(s)',ev.salariesConcernes||'—'),
             makeCheckRow('Gravité potentielle estimée',Object.values(gravLabels),[gravLabels[ev.gravite]||'']),
           ]}),
           sp(),
 
           // §3
           sectionHdr(3,'Lieu, date et contexte'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
-            row2('Date événement',ev.dateEvenement),
-            row2('Heure',ev.heureEvenement),
-            row2('Lieu / Chantier',ev.lieuChantier),
-            row2('Commune – Département',ev.communeDept),
-            makeCheckRow('Activité en cours',['Détection réseaux','Topographie','Études / MOE','SIG / Cartographie','Chantier (terrain)','Déplacement','Bureau','Autre'],[ev.activite||'']),
-            row2('Activité – précisions',ev.activiteAutre),
-            makeCheckRow('Conditions particulières',['Voirie ouverte','Travail isolé','Co-activité','Météo défavorable','Nuit / faible visibilité','Espace confiné','Hauteur'],ev.conditions||[]),
-            row2('Autre condition',ev.conditionAutre||''),
+          new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[Math.round(CW*0.5),Math.round(CW*0.5)],rows:[
+            new TableRow({children:[
+              cell('Date de l\'événement',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.25)}),
+              cell(ev.dateEvenement||'—',{sz:20,w:Math.round(CW*0.25)}),
+              cell('Heure',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.2)}),
+              cell(ev.heureEvenement||'—',{sz:20,w:Math.round(CW*0.3)}),
+            ]}),
+            row2('Lieu / Chantier',ev.lieuChantier||'—'),
+            row2('Commune – Département',ev.communeDept||'—'),
+            makeCheckRow('Activité en cours',['Détection réseaux','Topographie','Études / MOE','SIG / Cartographie','Chantier (terrain)','Déplacement','Bureau','Autre'],[ev.activite||''],2),
+            ...(ev.activiteAutre?[row2('Activité – précisions',ev.activiteAutre)]:[]),
+            makeCheckRow('Conditions particulières',['Voirie ouverte','Travail isolé','Co-activité','Météo défavorable','Nuit / faible visibilité','Espace confiné','Hauteur'],ev.conditions||[],2),
+            ...(ev.conditionAutre?[row2('Autre condition',ev.conditionAutre)]:[]),
           ]}),
           sp(),
 
@@ -10833,9 +10903,15 @@ async function doSRESSTWordDocx(){
           sectionHdr(5,'Dangers / Risques identifiés'),
           new Table({width:{size:CW,type:WidthType.DXA},rows:[
             new TableRow({children:[
-              new TableCell({borders,width:{size:CW,type:WidthType.DXA},children:[
-                new Paragraph({children:['Chute de plain-pied','Chute de hauteur','Heurt / collision véhicule','Risque routier','Manutention manuelle','Manutention mécanique','Électrique','Risque chimique','Bruit','Vibrations','Effondrement / éboulement','Ensevelissement (tranchée)','Réseau enterré','Ligne aérienne','Espace confiné','Atmosphère ATEX / H2S','Outil portatif / coupant','Engin de chantier','Incendie / explosion','Postural / TMS','Agression / incivilité','Psychosocial / stress','Biologique','Autre'].map(d=>new TextRun({text:((ev.dangers||[]).includes(d)?'☑':'☐')+' '+d+'   ',font:FONT,size:18}))})
-              ]})
+              cellP((()=>{
+                const dangers=['Chute de plain-pied','Chute de hauteur','Heurt / collision véhicule','Risque routier','Manutention manuelle','Manutention mécanique','Électrique','Risque chimique','Bruit','Vibrations','Effondrement / éboulement','Ensevelissement (tranchée)','Réseau enterré','Ligne aérienne','Espace confiné','Atmosphère ATEX / H2S','Outil portatif / coupant','Engin de chantier','Incendie / explosion','Postural / TMS','Agression / incivilité','Psychosocial / stress','Biologique','Autre'];
+                const paras=[];
+                for(let i=0;i<dangers.length;i+=3){
+                  const row=dangers.slice(i,i+3);
+                  paras.push(new Paragraph({children:row.map(d=>new TextRun({text:((ev.dangers||[]).includes(d)?'☑ ':'☐ ')+d+'          ',font:FONT,size:17}))}));
+                }
+                return paras;
+              })(),{w:CW})
             ]}),
             row2('Autre danger',ev.dangerAutre||''),
           ]}),
@@ -10913,18 +10989,22 @@ async function doSRESSTWordDocx(){
           sectionHdr(10,"Plan d'action"),
           new Table({width:{size:CW,type:WidthType.DXA},rows:[
             new TableRow({children:[
-              cell('N°',{shade:LGRAY,bold:true,sz:18,w:400}),
-              cell('Action corrective / préventive',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.45)}),
-              cell('Responsable',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.2)}),
-              cell('Échéance',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.15)}),
-              cell('Statut',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.1)}),
+              cell('N°',{shade:NAVY,bold:true,color:WHITE,sz:18,w:400}),
+              cell('Action corrective / préventive',{shade:NAVY,bold:true,color:WHITE,sz:18,w:Math.round(CW*0.42)}),
+              cell('Responsable',{shade:NAVY,bold:true,color:WHITE,sz:18,w:Math.round(CW*0.2)}),
+              cell('Échéance',{shade:NAVY,bold:true,color:WHITE,sz:18,w:Math.round(CW*0.16)}),
+              cell('Statut',{shade:NAVY,bold:true,color:WHITE,sz:18,w:Math.round(CW*0.14)}),
             ]}),
             ...[1,2,3].map(n=>new TableRow({children:[
-              cell(String(n),{sz:18,w:400}),
-              cell('',{w:Math.round(CW*0.45)}),
-              cell('',{w:Math.round(CW*0.2)}),
-              cell('',{w:Math.round(CW*0.15)}),
-              cell('☐ À faire\n☐ En cours\n☐ Soldée',{sz:16,w:Math.round(CW*0.1)}),
+              cell(String(n),{sz:20,bold:true,color:ORANGE,w:400}),
+              cellP([new Paragraph({children:[new TextRun({text:'',size:20})]}),new Paragraph({children:[new TextRun({text:'',size:20})]}),new Paragraph({children:[new TextRun({text:'',size:20})]})],{w:Math.round(CW*0.42)}),
+              cellP([new Paragraph({children:[new TextRun({text:'',size:20})]})],{w:Math.round(CW*0.2)}),
+              cellP([new Paragraph({children:[new TextRun({text:'',size:20})]})],{w:Math.round(CW*0.16)}),
+              cellP([
+                new Paragraph({children:[new TextRun({text:'☐ À faire',font:FONT,size:17})]}),
+                new Paragraph({children:[new TextRun({text:'☐ En cours',font:FONT,size:17})]}),
+                new Paragraph({children:[new TextRun({text:'☐ Soldée',font:FONT,size:17})]}),
+              ],{w:Math.round(CW*0.14)}),
             ]}))
           ]}),
           sp(),
@@ -10939,17 +11019,32 @@ async function doSRESSTWordDocx(){
           sp(),
 
           // §12
-          sectionHdr(12,'Validations'),
+          sectionHdr(12,'Validations et signatures'),
           new Table({width:{size:CW,type:WidthType.DXA},rows:[
             new TableRow({children:[
-              cell('Déclarant',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
-              cell('Responsable hiérarchique',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
-              cell('Responsable QHSE',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
+              cell('Déclarant',{shade:NAVY,bold:true,color:WHITE,sz:18,w:Math.round(CW/3)}),
+              cell('Responsable hiérarchique',{shade:NAVY,bold:true,color:WHITE,sz:18,w:Math.round(CW/3)}),
+              cell('Responsable QHSE',{shade:NAVY,bold:true,color:WHITE,sz:18,w:Math.round(CW/3)}),
             ]}),
             new TableRow({children:[
-              cell('Nom :\nDate :\n\n\n(Signature)',{sz:18,w:Math.round(CW/3)}),
-              cell('Nom :\nDate :\n\n\n(Signature)',{sz:18,w:Math.round(CW/3)}),
-              cell('Nom :\nDate :\n\n\n(Signature)',{sz:18,w:Math.round(CW/3)}),
+              cellP([
+                new Paragraph({children:[new TextRun({text:'Nom : ',font:FONT,size:18,bold:true}),new TextRun({text:'________________________',font:FONT,size:18})]}),
+                new Paragraph({children:[new TextRun({text:'Date : ',font:FONT,size:18,bold:true}),new TextRun({text:'________________________',font:FONT,size:18})]}),
+                new Paragraph({spacing:{before:400},children:[new TextRun({text:'Signature :',font:FONT,size:17,color:'888888'})]}),
+                new Paragraph({children:[new TextRun({text:' ',size:36})]}),
+              ],{w:Math.round(CW/3)}),
+              cellP([
+                new Paragraph({children:[new TextRun({text:'Nom : ',font:FONT,size:18,bold:true}),new TextRun({text:'________________________',font:FONT,size:18})]}),
+                new Paragraph({children:[new TextRun({text:'Date : ',font:FONT,size:18,bold:true}),new TextRun({text:'________________________',font:FONT,size:18})]}),
+                new Paragraph({spacing:{before:400},children:[new TextRun({text:'Signature :',font:FONT,size:17,color:'888888'})]}),
+                new Paragraph({children:[new TextRun({text:' ',size:36})]}),
+              ],{w:Math.round(CW/3)}),
+              cellP([
+                new Paragraph({children:[new TextRun({text:'Nom : ',font:FONT,size:18,bold:true}),new TextRun({text:'________________________',font:FONT,size:18})]}),
+                new Paragraph({children:[new TextRun({text:'Date : ',font:FONT,size:18,bold:true}),new TextRun({text:'________________________',font:FONT,size:18})]}),
+                new Paragraph({spacing:{before:400},children:[new TextRun({text:'Signature :',font:FONT,size:17,color:'888888'})]}),
+                new Paragraph({children:[new TextRun({text:' ',size:36})]}),
+              ],{w:Math.round(CW/3)}),
             ]}),
           ]}),
         ]
