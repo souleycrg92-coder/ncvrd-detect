@@ -15,430 +15,6 @@
 <title>NCVRD Detect – Détection Réseaux VRD</title>
 <!-- ─── FIREBASE SDK ─── -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
-// ════════════════════════════════════════════
-//  SRESST — Remontée des événements SST
-// ════════════════════════════════════════════
-
-// État SRESST
-let S_SRESST = { events: [], currentId: null };
-
-function loadSRESSTScreen(){
-  db.getAll('sresst').then(events=>{
-    S_SRESST.events = events || [];
-    renderSRESSTList();
-  });
-  showSRESSTView('list');
-}
-
-function showSRESSTView(view){
-  document.getElementById('sresst-list-view').style.display = view==='list' ? 'block' : 'none';
-  document.getElementById('sresst-form-view').style.display = view==='form' ? 'block' : 'none';
-}
-
-function renderSRESSTList(){
-  const el = document.getElementById('sresst-list');
-  const events = S_SRESST.events.sort((a,b)=>b.createdAt-a.createdAt);
-  if(!events.length){
-    el.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">Aucune fiche enregistrée.<br>Appuyez sur ➕ pour créer une fiche.</div>';
-    return;
-  }
-  el.innerHTML = events.map(e=>`
-    <div onclick="openSRESSTEvent('${e.id}')" style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div style="font-weight:700;font-size:14px;color:#fff">${e.typeEvenement||'Type non défini'} — ${e.dateEvenement||'Date ?'}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:3px">${e.nomPrenom||'Anonyme'} · ${e.lieuChantier||'Lieu ?'}</div>
-          <div style="font-size:11px;margin-top:4px"><span style="background:rgba(0,180,255,.12);color:var(--accent);border-radius:6px;padding:2px 8px">${_srLabel(e.typeEvenement)}</span></div>
-        </div>
-        <button onclick="event.stopPropagation();deleteSRESSTEvent('${e.id}')" style="background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.3);color:#ef4444;border-radius:8px;padding:6px 10px;font-size:12px">✕</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-function _srLabel(type){
-  const m = {AT:"Accident avec arrêt",ATSA:"Accident sans arrêt",PA:"Presqu'accident",SD:"Situation dangereuse",CR:"Comportement à risque",DYS:"Dysfonctionnement",AGR:"Agression / incivilité"};
-  return m[type]||type||'-';
-}
-
-function openSRESSTNew(){
-  S_SRESST.currentId = null;
-  resetSRESSTForm();
-  document.getElementById('sr-date-declaration').value = new Date().toISOString().slice(0,10);
-  document.getElementById('sresst-form-title').textContent = 'Nouvelle fiche SRESST';
-  showSRESSTView('form');
-}
-
-function openSRESSTEvent(id){
-  const ev = S_SRESST.events.find(e=>e.id===id);
-  if(!ev) return;
-  S_SRESST.currentId = id;
-  fillSRESSTForm(ev);
-  document.getElementById('sresst-form-title').textContent = 'Fiche SRESST — '+(ev.dateEvenement||ev.createdAt);
-  showSRESSTView('form');
-}
-
-function resetSRESSTForm(){
-  document.querySelectorAll('#sresst-form-view input:not([disabled]), #sresst-form-view textarea:not([disabled]), #sresst-form-view select:not([disabled])').forEach(el=>{
-    if(el.type==='checkbox'||el.type==='radio') el.checked=false;
-    else el.value='';
-  });
-}
-
-function fillSRESSTForm(ev){
-  resetSRESSTForm();
-  const set = (id,val) => { const el=document.getElementById(id); if(el) el.value=val||''; };
-  set('sr-nom-prenom', ev.nomPrenom);
-  set('sr-fonction', ev.fonction);
-  set('sr-date-declaration', ev.dateDeclaration);
-  set('sr-temoins', ev.temoins);
-  set('sr-salaries', ev.salariesConcernes);
-  set('sr-num-qhse', ev.numEvenementQHSE);
-  set('sr-date-evenement', ev.dateEvenement);
-  set('sr-heure', ev.heureEvenement);
-  set('sr-lieu', ev.lieuChantier);
-  set('sr-commune', ev.communeDept);
-  set('sr-activite-autre', ev.activiteAutre||'');
-  set('sr-description', ev.descriptionFaits);
-  set('sr-cause-milieu', ev.causeMilieu);
-  set('sr-cause-materiel', ev.causeMateriel);
-  set('sr-cause-methode', ev.causeMethode);
-  set('sr-cause-mo', ev.causeMainOeuvre);
-  set('sr-cause-mgmt', ev.causeManagement);
-  set('sr-mesures', ev.mesuresImmediates);
-  set('sr-proposition', ev.propositionDeclarant);
-  if(ev.agence){ const r=document.querySelector(`input[name="sr-agence"][value="${ev.agence}"]`); if(r) r.checked=true; }
-  if(ev.anonyme){ const r=document.querySelector(`input[name="sr-anonyme"][value="${ev.anonyme}"]`); if(r) r.checked=true; }
-  if(ev.typeEvenement){ const r=document.querySelector(`input[name="sr-type"][value="${ev.typeEvenement}"]`); if(r) r.checked=true; }
-  if(ev.gravite){ const r=document.querySelector(`input[name="sr-gravite"][value="${ev.gravite}"]`); if(r) r.checked=true; }
-  (ev.activites||[]).forEach(v=>{ const c=document.querySelector(`input[name="sr-activite"][value="${v}"]`); if(c) c.checked=true; });
-  (ev.conditions||[]).forEach(v=>{ const c=document.querySelector(`input[name="sr-condition"][value="${v}"]`); if(c) c.checked=true; });
-  (ev.dangers||[]).forEach(v=>{ const c=document.querySelector(`input[name="sr-danger"][value="${v}"]`); if(c) c.checked=true; });
-}
-
-function getSRESSTFormData(){
-  const g = id => { const el=document.getElementById(id); return el?el.value:''; };
-  const radVal = name => { const r=document.querySelector(`input[name="${name}"]:checked`); return r?r.value:''; };
-  const checks = name => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(c=>c.value);
-  return {
-    id: S_SRESST.currentId || Date.now().toString(),
-    createdAt: S_SRESST.currentId ? (S_SRESST.events.find(e=>e.id===S_SRESST.currentId)?.createdAt||Date.now()) : Date.now(),
-    nomPrenom: g('sr-nom-prenom'), fonction: g('sr-fonction'),
-    agence: radVal('sr-agence'), dateDeclaration: g('sr-date-declaration'),
-    anonyme: radVal('sr-anonyme'), temoins: g('sr-temoins'),
-    salariesConcernes: g('sr-salaries'), numEvenementQHSE: g('sr-num-qhse'),
-    typeEvenement: radVal('sr-type'), gravite: radVal('sr-gravite'),
-    dateEvenement: g('sr-date-evenement'), heureEvenement: g('sr-heure'),
-    lieuChantier: g('sr-lieu'), communeDept: g('sr-commune'),
-    activites: checks('sr-activite'), activiteAutre: g('sr-activite-autre'),
-    conditions: checks('sr-condition'), descriptionFaits: g('sr-description'),
-    dangers: checks('sr-danger'),
-    causeMilieu: g('sr-cause-milieu'), causeMateriel: g('sr-cause-materiel'),
-    causeMethode: g('sr-cause-methode'), causeMainOeuvre: g('sr-cause-mo'),
-    causeManagement: g('sr-cause-mgmt'), mesuresImmediates: g('sr-mesures'),
-    propositionDeclarant: g('sr-proposition'),
-  };
-}
-
-async function saveSRESSTEvent(){
-  const ev = getSRESSTFormData();
-  await db.put('sresst', ev);
-  const idx = S_SRESST.events.findIndex(e=>e.id===ev.id);
-  if(idx>=0) S_SRESST.events[idx]=ev; else S_SRESST.events.push(ev);
-  S_SRESST.currentId = ev.id;
-  toast('✅ Fiche SRESST enregistrée');
-}
-
-async function deleteSRESSTEvent(id){
-  if(!confirm('Supprimer cette fiche ?')) return;
-  await db.del('sresst', id);
-  S_SRESST.events = S_SRESST.events.filter(e=>e.id!==id);
-  renderSRESSTList();
-}
-
-// ── Export Word SRESST ──
-async function doSRESSTWordDocx(){
-  await saveSRESSTEvent();
-  const ev = getSRESSTFormData();
-
-  // Charger docx.js
-  await Promise.all([
-    new Promise((resolve,reject)=>{
-      if(window.docx) return resolve();
-      const s=document.createElement('script');
-      s.src='https://unpkg.com/docx@8.5.0/build/index.umd.js';
-      s.onload=resolve; s.onerror=()=>reject(new Error('Impossible de charger docx.js'));
-      document.head.appendChild(s);
-    }),
-    new Promise((resolve)=>{
-      if(window.JSZip) return resolve();
-      const s=document.createElement('script');
-      s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-      s.onload=resolve; s.onerror=resolve;
-      document.head.appendChild(s);
-    })
-  ]).catch(e=>{toast('⚠️ '+(e?.message||'Erreur chargement librairie'));});
-  if(!window.docx){ toast('❌ Impossible de charger la librairie docx.js'); return; }
-
-  try {
-    const {
-      Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-      ImageRun, Header, Footer, WidthType, AlignmentType, BorderStyle,
-      ShadingType, PageNumber, VerticalAlign, HeadingLevel
-    } = window.docx;
-
-    const NAVY='0E2841', ORANGE='E8620A', LGRAY='F4F6F9', MGRAY='D1D5DB', DGRAY='374151', WHITE='FFFFFF', FONT='Calibri';
-    const CW=9638;
-    const brd=(color,size=4)=>({style:BorderStyle.SINGLE,size,color:color||MGRAY});
-    const noBorder={top:brd(WHITE,1),left:brd(WHITE,1),bottom:brd(WHITE,1),right:brd(WHITE,1)};
-    const borders={top:brd(MGRAY),left:brd(MGRAY),bottom:brd(MGRAY),right:brd(MGRAY)};
-
-    const cell=(text,opts={})=>new TableCell({
-      borders: opts.borders||borders,
-      shading: opts.shade?{type:ShadingType.CLEAR,fill:opts.shade}:undefined,
-      verticalAlign: VerticalAlign.CENTER,
-      width:{size:opts.w||CW,type:WidthType.DXA},
-      columnSpan: opts.span||1,
-      children:[new Paragraph({
-        alignment: opts.align||AlignmentType.LEFT,
-        children:[new TextRun({text:String(text||''),font:FONT,size:opts.sz||20,bold:!!opts.bold,color:opts.color||'000000'})]
-      })]
-    });
-
-    const sectionHdr=(num,title)=>new Table({width:{size:CW,type:WidthType.DXA},rows:[
-      new TableRow({children:[cell(`§${num} — ${title}`,{shade:NAVY,bold:true,color:WHITE,sz:22,w:CW})]})
-    ]});
-
-    const chk=(val,checked)=>(checked?'☑':'☐')+' '+val;
-    const row2=(label,value)=>new TableRow({children:[
-      cell(label,{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.35)}),
-      cell(value||'',{sz:20,w:Math.round(CW*0.65)})
-    ]});
-    const sp=()=>new Paragraph({children:[new TextRun({text:'',size:18})]});
-
-    // Bannière
-    const bannerBytes = _dataUrlToBytes(_BANNER_V2_B64);
-    const bannerEl = bannerBytes ? new Paragraph({
-      alignment:AlignmentType.CENTER,
-      children:[new ImageRun({data:bannerBytes,transformation:{width:595,height:120},type:'jpg'})]
-    }) : new Paragraph({children:[new TextRun({text:'NEOCONCEPT VRD',font:FONT,size:32,bold:true,color:NAVY})]});
-
-    // Type événement
-    const TYPES=['AT','ATSA','PA','SD','CR','DYS','AGR'];
-    const TYPE_LABELS={AT:'Accident du travail avec arrêt (AT)',ATSA:'Accident du travail sans arrêt (ATSA)',PA:"Presqu'accident (PA)",SD:'Situation dangereuse (SD)',CR:'Comportement à risque (CR)',DYS:'Dysfonctionnement (DYS)',AGR:'Agression / incivilité (AGR)'};
-
-    const gravLabels={1:'1 – Mineure',2:'2 – Modérée',3:'3 – Sérieuse',4:'4 – Grave',5:'5 – Très grave'};
-
-    const makeCheckRow=(label,values,selected)=>new TableRow({children:[
-      cell(label,{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.3)}),
-      new TableCell({borders,width:{size:Math.round(CW*0.7),type:WidthType.DXA},children:[
-        new Paragraph({children:values.map(v=>new TextRun({text:(selected.includes?selected.includes(v):selected===v?'☑':'☐')+' '+v+'   ',font:FONT,size:18}))})
-      ]})
-    ]});
-
-    const doc = new Document({
-      sections:[{
-        properties:{page:{margin:{top:720,right:720,bottom:720,left:720}}},
-        headers:{default:new Header({children:[bannerEl]})},
-        footers:{default:new Footer({children:[new Paragraph({
-          alignment:AlignmentType.CENTER,
-          children:[new TextRun({text:'FORM-QHSE-001 | Version 02 | Neoconcept VRD | Page ',font:FONT,size:16,color:DGRAY}),
-                   new TextRun({children:[PageNumber.CURRENT],font:FONT,size:16,color:DGRAY})]
-        })]})},
-        children:[
-          // Titre
-          new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'FICHE DE REMONTÉE DES ÉVÉNEMENTS',font:FONT,size:32,bold:true,color:NAVY})]}),
-          new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Réf. FORM-QHSE-001 v02  |  Date de génération : '+new Date().toLocaleDateString('fr-FR'),font:FONT,size:18,color:DGRAY})]}),
-          sp(),
-          // Intro
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
-            cell('⚠ Pourquoi remonter ? Chaque presqu'accident ou situation dangereuse signalé permet de prévenir un accident futur. Votre vigilance protège vos collègues.',{shade:'FFF9C4',sz:18,w:CW})
-          ]})]}),
-          sp(),
-
-          // §1
-          sectionHdr(1,'Identification du déclarant'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
-            row2('Nom – Prénom',ev.nomPrenom),
-            row2('Fonction / Poste',ev.fonction),
-            row2('Agence',['Paris OUEST','Paris EST','Grand EST','NORD'].map(a=>chk(a,ev.agence===a)).join('   ')),
-            row2('Date de déclaration',ev.dateDeclaration),
-            row2('Déclaration anonyme ?',chk('Oui',ev.anonyme==='Oui')+'   '+chk('Non',ev.anonyme==='Non')),
-            row2('Témoin(s)',ev.temoins),
-            row2('Salarié(s) concerné(s)',ev.salariesConcernes),
-            row2('N° événement (QHSE)',ev.numEvenementQHSE),
-          ]}),
-          sp(),
-
-          // §2
-          sectionHdr(2,"Nature de l'événement"),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
-            makeCheckRow("Type d'événement",Object.values(TYPE_LABELS),[TYPE_LABELS[ev.typeEvenement]||'']),
-            makeCheckRow('Gravité potentielle',Object.values(gravLabels),[gravLabels[ev.gravite]||'']),
-          ]}),
-          sp(),
-
-          // §3
-          sectionHdr(3,'Lieu, date et contexte'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
-            row2('Date événement',ev.dateEvenement),
-            row2('Heure',ev.heureEvenement),
-            row2('Lieu / Chantier',ev.lieuChantier),
-            row2('Commune – Département',ev.communeDept),
-            makeCheckRow('Activité en cours',['Détection réseaux','Topographie','Études / MOE','SIG / Traitement données','Déplacement','Bureau'],ev.activites||[]),
-            row2('Activité autre',ev.activiteAutre),
-            makeCheckRow('Conditions particulières',['Voirie ouverte','Travail isolé','Co-activité','Météo défavorable','Nuit / faible visibilité','Espace confiné'],ev.conditions||[]),
-          ]}),
-          sp(),
-
-          // §4
-          sectionHdr(4,'Description des faits'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
-            new TableCell({borders,width:{size:CW,type:WidthType.DXA},children:[
-              new Paragraph({children:[new TextRun({text:ev.descriptionFaits||'',font:FONT,size:20})]}),
-              new Paragraph({children:[new TextRun({text:' ',size:20})]}),
-              new Paragraph({children:[new TextRun({text:' ',size:20})]}),
-            ]})
-          ]})]}),
-          sp(),
-
-          // §5
-          sectionHdr(5,'Dangers / Risques identifiés'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
-            new TableCell({borders,width:{size:CW,type:WidthType.DXA},children:[
-              new Paragraph({children:['Chute de plain-pied','Chute de hauteur','Heurt / collision véhicule','Risque routier','Manutention manuelle','Manutention mécanique','Électrique','Risque chimique','Bruit','Vibrations','Effondrement / éboulement','Ensevelissement (tranchée)','Réseau enterré','Ligne aérienne','Espace confiné','Atmosphère ATEX / H2S','Outil portatif / coupant','Engin de chantier','Incendie / explosion','Postural / TMS','Agression / incivilité','Psychosocial / stress','Biologique','Autre'].map(d=>new TextRun({text:((ev.dangers||[]).includes(d)?'☑':'☐')+' '+d+'   ',font:FONT,size:18}))})
-            ]})
-          ]})]}),
-          sp(),
-
-          // §6
-          sectionHdr(6,'Causes immédiates supposées (méthode 5M)'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
-            row2('Milieu (environnement)',ev.causeMilieu),
-            row2('Matériel (équipements)',ev.causeMateriel),
-            row2('Méthode (procédure)',ev.causeMethode),
-            row2("Main-d'œuvre (formation)",ev.causeMainOeuvre),
-            row2('Management (organisation)',ev.causeManagement),
-          ]}),
-          sp(),
-
-          // §7
-          sectionHdr(7,'Mesures immédiates prises'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
-            new TableCell({borders,width:{size:CW,type:WidthType.DXA},children:[
-              new Paragraph({children:[new TextRun({text:ev.mesuresImmediates||'',font:FONT,size:20})]}),
-              new Paragraph({children:[new TextRun({text:' ',size:20})]}),
-            ]})
-          ]})]}),
-          sp(),
-
-          // §8
-          sectionHdr(8,'Proposition du déclarant (facultatif)'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
-            new TableCell({borders,width:{size:CW,type:WidthType.DXA},children:[
-              new Paragraph({children:[new TextRun({text:ev.propositionDeclarant||'',font:FONT,size:20})]}),
-              new Paragraph({children:[new TextRun({text:' ',size:20})]}),
-            ]})
-          ]})]}),
-          sp(),
-
-          // Séparateur QHSE
-          new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'═══ PARTIE RÉSERVÉE À LA FONCTION QHSE / À L'ENCADREMENT — À NE PAS REMPLIR PAR L'AGENT ═══',font:FONT,size:20,bold:true,color:ORANGE})]}),
-          sp(),
-
-          // §9
-          sectionHdr(9,'Évaluation du risque (matrice criticité)'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
-            row2('Barème','1-4 Faible · 5-9 Modéré · 10-15 Élevé · 16-25 Critique'),
-            new TableRow({children:[
-              cell('Gravité G',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
-              cell('Probabilité P',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
-              cell('Criticité C = G×P',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
-            ]}),
-            new TableRow({children:[
-              cell('',{w:Math.round(CW/3)}),
-              cell('',{w:Math.round(CW/3)}),
-              cell('',{w:Math.round(CW/3)}),
-            ]}),
-          ]}),
-          sp(),
-
-          // §10
-          sectionHdr(10,"Plan d'action"),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
-            new TableRow({children:[
-              cell('N°',{shade:LGRAY,bold:true,sz:18,w:400}),
-              cell('Action corrective / préventive',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.45)}),
-              cell('Responsable',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.2)}),
-              cell('Échéance',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.15)}),
-              cell('Statut',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.1)}),
-            ]}),
-            ...[1,2,3].map(n=>new TableRow({children:[
-              cell(String(n),{sz:18,w:400}),
-              cell('',{w:Math.round(CW*0.45)}),
-              cell('',{w:Math.round(CW*0.2)}),
-              cell('',{w:Math.round(CW*0.15)}),
-              cell('☐ À faire
-☐ En cours
-☐ Soldée',{sz:16,w:Math.round(CW*0.1)}),
-            ]}))
-          ]}),
-          sp(),
-
-          // §11
-          sectionHdr(11,'Décisions de traitement'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
-            row2('Mise à jour DUERP ?','☐ Oui  ☐ Non   Unité de travail : '),
-            row2('Diffusion REX ?','☐ Oui  ☐ Non   ☐ ¼h sécurité  ☐ Note interne  ☐ Affichage'),
-            row2('Analyse approfondie ?','☐ Non requise  ☐ 5 Pourquoi  ☐ Arbre des causes  ☐ Ishikawa'),
-          ]}),
-          sp(),
-
-          // §12
-          sectionHdr(12,'Validations'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
-            new TableRow({children:[
-              cell('Déclarant',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
-              cell('Responsable hiérarchique',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
-              cell('Responsable QHSE',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
-            ]}),
-            new TableRow({children:[
-              cell('Nom :
-Date :
-
-
-(Signature)',{sz:18,w:Math.round(CW/3)}),
-              cell('Nom :
-Date :
-
-
-(Signature)',{sz:18,w:Math.round(CW/3)}),
-              cell('Nom :
-Date :
-
-
-(Signature)',{sz:18,w:Math.round(CW/3)}),
-            ]}),
-          ]}),
-        ]
-      }]
-    });
-
-    const blob = await Packer.toBlob(doc);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const fname = 'SRESST_'+(ev.typeEvenement||'fiche')+'_'+(ev.dateEvenement||new Date().toISOString().slice(0,10))+'.docx';
-    a.download = fname;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast('📄 Export Word SRESST terminé');
-  } catch(e){
-    console.error(e);
-    toast('❌ Erreur export Word : '+(e?.message||e));
-  }
-}
-
 </script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -10735,6 +10311,434 @@ init().catch(e=>{
   hideSplashScreen();
   showScreen('s-login');
 });
+
+
+
+// ════════════════════════════════════════════
+//  SRESST — Remontée des événements SST
+// ════════════════════════════════════════════
+
+// État SRESST
+let S_SRESST = { events: [], currentId: null };
+
+function loadSRESSTScreen(){
+  db.getAll('sresst').then(events=>{
+    S_SRESST.events = events || [];
+    renderSRESSTList();
+  });
+  showSRESSTView('list');
+}
+
+function showSRESSTView(view){
+  document.getElementById('sresst-list-view').style.display = view==='list' ? 'block' : 'none';
+  document.getElementById('sresst-form-view').style.display = view==='form' ? 'block' : 'none';
+}
+
+function renderSRESSTList(){
+  const el = document.getElementById('sresst-list');
+  const events = S_SRESST.events.sort((a,b)=>b.createdAt-a.createdAt);
+  if(!events.length){
+    el.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">Aucune fiche enregistrée.<br>Appuyez sur ➕ pour créer une fiche.</div>';
+    return;
+  }
+  el.innerHTML = events.map(e=>`
+    <div onclick="openSRESSTEvent('${e.id}')" style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-weight:700;font-size:14px;color:#fff">${e.typeEvenement||'Type non défini'} — ${e.dateEvenement||'Date ?'}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">${e.nomPrenom||'Anonyme'} · ${e.lieuChantier||'Lieu ?'}</div>
+          <div style="font-size:11px;margin-top:4px"><span style="background:rgba(0,180,255,.12);color:var(--accent);border-radius:6px;padding:2px 8px">${_srLabel(e.typeEvenement)}</span></div>
+        </div>
+        <button onclick="event.stopPropagation();deleteSRESSTEvent('${e.id}')" style="background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.3);color:#ef4444;border-radius:8px;padding:6px 10px;font-size:12px">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function _srLabel(type){
+  const m = {AT:"Accident avec arrêt",ATSA:"Accident sans arrêt",PA:"Presqu'accident",SD:"Situation dangereuse",CR:"Comportement à risque",DYS:"Dysfonctionnement",AGR:"Agression / incivilité"};
+  return m[type]||type||'-';
+}
+
+function openSRESSTNew(){
+  S_SRESST.currentId = null;
+  resetSRESSTForm();
+  document.getElementById('sr-date-declaration').value = new Date().toISOString().slice(0,10);
+  document.getElementById('sresst-form-title').textContent = 'Nouvelle fiche SRESST';
+  showSRESSTView('form');
+}
+
+function openSRESSTEvent(id){
+  const ev = S_SRESST.events.find(e=>e.id===id);
+  if(!ev) return;
+  S_SRESST.currentId = id;
+  fillSRESSTForm(ev);
+  document.getElementById('sresst-form-title').textContent = 'Fiche SRESST — '+(ev.dateEvenement||ev.createdAt);
+  showSRESSTView('form');
+}
+
+function resetSRESSTForm(){
+  document.querySelectorAll('#sresst-form-view input:not([disabled]), #sresst-form-view textarea:not([disabled]), #sresst-form-view select:not([disabled])').forEach(el=>{
+    if(el.type==='checkbox'||el.type==='radio') el.checked=false;
+    else el.value='';
+  });
+}
+
+function fillSRESSTForm(ev){
+  resetSRESSTForm();
+  const set = (id,val) => { const el=document.getElementById(id); if(el) el.value=val||''; };
+  set('sr-nom-prenom', ev.nomPrenom);
+  set('sr-fonction', ev.fonction);
+  set('sr-date-declaration', ev.dateDeclaration);
+  set('sr-temoins', ev.temoins);
+  set('sr-salaries', ev.salariesConcernes);
+  set('sr-num-qhse', ev.numEvenementQHSE);
+  set('sr-date-evenement', ev.dateEvenement);
+  set('sr-heure', ev.heureEvenement);
+  set('sr-lieu', ev.lieuChantier);
+  set('sr-commune', ev.communeDept);
+  set('sr-activite-autre', ev.activiteAutre||'');
+  set('sr-description', ev.descriptionFaits);
+  set('sr-cause-milieu', ev.causeMilieu);
+  set('sr-cause-materiel', ev.causeMateriel);
+  set('sr-cause-methode', ev.causeMethode);
+  set('sr-cause-mo', ev.causeMainOeuvre);
+  set('sr-cause-mgmt', ev.causeManagement);
+  set('sr-mesures', ev.mesuresImmediates);
+  set('sr-proposition', ev.propositionDeclarant);
+  if(ev.agence){ const r=document.querySelector(`input[name="sr-agence"][value="${ev.agence}"]`); if(r) r.checked=true; }
+  if(ev.anonyme){ const r=document.querySelector(`input[name="sr-anonyme"][value="${ev.anonyme}"]`); if(r) r.checked=true; }
+  if(ev.typeEvenement){ const r=document.querySelector(`input[name="sr-type"][value="${ev.typeEvenement}"]`); if(r) r.checked=true; }
+  if(ev.gravite){ const r=document.querySelector(`input[name="sr-gravite"][value="${ev.gravite}"]`); if(r) r.checked=true; }
+  (ev.activites||[]).forEach(v=>{ const c=document.querySelector(`input[name="sr-activite"][value="${v}"]`); if(c) c.checked=true; });
+  (ev.conditions||[]).forEach(v=>{ const c=document.querySelector(`input[name="sr-condition"][value="${v}"]`); if(c) c.checked=true; });
+  (ev.dangers||[]).forEach(v=>{ const c=document.querySelector(`input[name="sr-danger"][value="${v}"]`); if(c) c.checked=true; });
+}
+
+function getSRESSTFormData(){
+  const g = id => { const el=document.getElementById(id); return el?el.value:''; };
+  const radVal = name => { const r=document.querySelector(`input[name="${name}"]:checked`); return r?r.value:''; };
+  const checks = name => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(c=>c.value);
+  return {
+    id: S_SRESST.currentId || Date.now().toString(),
+    createdAt: S_SRESST.currentId ? (S_SRESST.events.find(e=>e.id===S_SRESST.currentId)?.createdAt||Date.now()) : Date.now(),
+    nomPrenom: g('sr-nom-prenom'), fonction: g('sr-fonction'),
+    agence: radVal('sr-agence'), dateDeclaration: g('sr-date-declaration'),
+    anonyme: radVal('sr-anonyme'), temoins: g('sr-temoins'),
+    salariesConcernes: g('sr-salaries'), numEvenementQHSE: g('sr-num-qhse'),
+    typeEvenement: radVal('sr-type'), gravite: radVal('sr-gravite'),
+    dateEvenement: g('sr-date-evenement'), heureEvenement: g('sr-heure'),
+    lieuChantier: g('sr-lieu'), communeDept: g('sr-commune'),
+    activites: checks('sr-activite'), activiteAutre: g('sr-activite-autre'),
+    conditions: checks('sr-condition'), descriptionFaits: g('sr-description'),
+    dangers: checks('sr-danger'),
+    causeMilieu: g('sr-cause-milieu'), causeMateriel: g('sr-cause-materiel'),
+    causeMethode: g('sr-cause-methode'), causeMainOeuvre: g('sr-cause-mo'),
+    causeManagement: g('sr-cause-mgmt'), mesuresImmediates: g('sr-mesures'),
+    propositionDeclarant: g('sr-proposition'),
+  };
+}
+
+async function saveSRESSTEvent(){
+  const ev = getSRESSTFormData();
+  await db.put('sresst', ev);
+  const idx = S_SRESST.events.findIndex(e=>e.id===ev.id);
+  if(idx>=0) S_SRESST.events[idx]=ev; else S_SRESST.events.push(ev);
+  S_SRESST.currentId = ev.id;
+  toast('✅ Fiche SRESST enregistrée');
+}
+
+async function deleteSRESSTEvent(id){
+  if(!confirm('Supprimer cette fiche ?')) return;
+  await db.del('sresst', id);
+  S_SRESST.events = S_SRESST.events.filter(e=>e.id!==id);
+  renderSRESSTList();
+}
+
+// ── Export Word SRESST ──
+async function doSRESSTWordDocx(){
+  await saveSRESSTEvent();
+  const ev = getSRESSTFormData();
+
+  // Charger docx.js
+  await Promise.all([
+    new Promise((resolve,reject)=>{
+      if(window.docx) return resolve();
+      const s=document.createElement('script');
+      s.src='https://unpkg.com/docx@8.5.0/build/index.umd.js';
+      s.onload=resolve; s.onerror=()=>reject(new Error('Impossible de charger docx.js'));
+      document.head.appendChild(s);
+    }),
+    new Promise((resolve)=>{
+      if(window.JSZip) return resolve();
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      s.onload=resolve; s.onerror=resolve;
+      document.head.appendChild(s);
+    })
+  ]).catch(e=>{toast('⚠️ '+(e?.message||'Erreur chargement librairie'));});
+  if(!window.docx){ toast('❌ Impossible de charger la librairie docx.js'); return; }
+
+  try {
+    const {
+      Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+      ImageRun, Header, Footer, WidthType, AlignmentType, BorderStyle,
+      ShadingType, PageNumber, VerticalAlign, HeadingLevel
+    } = window.docx;
+
+    const NAVY='0E2841', ORANGE='E8620A', LGRAY='F4F6F9', MGRAY='D1D5DB', DGRAY='374151', WHITE='FFFFFF', FONT='Calibri';
+    const CW=9638;
+    const brd=(color,size=4)=>({style:BorderStyle.SINGLE,size,color:color||MGRAY});
+    const noBorder={top:brd(WHITE,1),left:brd(WHITE,1),bottom:brd(WHITE,1),right:brd(WHITE,1)};
+    const borders={top:brd(MGRAY),left:brd(MGRAY),bottom:brd(MGRAY),right:brd(MGRAY)};
+
+    const cell=(text,opts={})=>new TableCell({
+      borders: opts.borders||borders,
+      shading: opts.shade?{type:ShadingType.CLEAR,fill:opts.shade}:undefined,
+      verticalAlign: VerticalAlign.CENTER,
+      width:{size:opts.w||CW,type:WidthType.DXA},
+      columnSpan: opts.span||1,
+      children:[new Paragraph({
+        alignment: opts.align||AlignmentType.LEFT,
+        children:[new TextRun({text:String(text||''),font:FONT,size:opts.sz||20,bold:!!opts.bold,color:opts.color||'000000'})]
+      })]
+    });
+
+    const sectionHdr=(num,title)=>new Table({width:{size:CW,type:WidthType.DXA},rows:[
+      new TableRow({children:[cell(`§${num} — ${title}`,{shade:NAVY,bold:true,color:WHITE,sz:22,w:CW})]})
+    ]});
+
+    const chk=(val,checked)=>(checked?'☑':'☐')+' '+val;
+    const row2=(label,value)=>new TableRow({children:[
+      cell(label,{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.35)}),
+      cell(value||'',{sz:20,w:Math.round(CW*0.65)})
+    ]});
+    const sp=()=>new Paragraph({children:[new TextRun({text:'',size:18})]});
+
+    // Bannière
+    const bannerBytes = _dataUrlToBytes(_BANNER_V2_B64);
+    const bannerEl = bannerBytes ? new Paragraph({
+      alignment:AlignmentType.CENTER,
+      children:[new ImageRun({data:bannerBytes,transformation:{width:595,height:120},type:'jpg'})]
+    }) : new Paragraph({children:[new TextRun({text:'NEOCONCEPT VRD',font:FONT,size:32,bold:true,color:NAVY})]});
+
+    // Type événement
+    const TYPES=['AT','ATSA','PA','SD','CR','DYS','AGR'];
+    const TYPE_LABELS={AT:'Accident du travail avec arrêt (AT)',ATSA:'Accident du travail sans arrêt (ATSA)',PA:"Presqu'accident (PA)",SD:'Situation dangereuse (SD)',CR:'Comportement à risque (CR)',DYS:'Dysfonctionnement (DYS)',AGR:'Agression / incivilité (AGR)'};
+
+    const gravLabels={1:'1 – Mineure',2:'2 – Modérée',3:'3 – Sérieuse',4:'4 – Grave',5:'5 – Très grave'};
+
+    const makeCheckRow=(label,values,selected)=>new TableRow({children:[
+      cell(label,{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.3)}),
+      new TableCell({borders,width:{size:Math.round(CW*0.7),type:WidthType.DXA},children:[
+        new Paragraph({children:values.map(v=>new TextRun({text:(selected.includes?selected.includes(v):selected===v?'☑':'☐')+' '+v+'   ',font:FONT,size:18}))})
+      ]})
+    ]});
+
+    const doc = new Document({
+      sections:[{
+        properties:{page:{margin:{top:720,right:720,bottom:720,left:720}}},
+        headers:{default:new Header({children:[bannerEl]})},
+        footers:{default:new Footer({children:[new Paragraph({
+          alignment:AlignmentType.CENTER,
+          children:[new TextRun({text:'FORM-QHSE-001 | Version 02 | Neoconcept VRD | Page ',font:FONT,size:16,color:DGRAY}),
+                   new TextRun({children:[PageNumber.CURRENT],font:FONT,size:16,color:DGRAY})]
+        })]})},
+        children:[
+          // Titre
+          new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'FICHE DE REMONTÉE DES ÉVÉNEMENTS',font:FONT,size:32,bold:true,color:NAVY})]}),
+          new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Réf. FORM-QHSE-001 v02  |  Date de génération : '+new Date().toLocaleDateString('fr-FR'),font:FONT,size:18,color:DGRAY})]}),
+          sp(),
+          // Intro
+          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
+            cell('⚠ Pourquoi remonter ? Chaque presqu'accident ou situation dangereuse signalé permet de prévenir un accident futur. Votre vigilance protège vos collègues.',{shade:'FFF9C4',sz:18,w:CW})
+          ]})]}),
+          sp(),
+
+          // §1
+          sectionHdr(1,'Identification du déclarant'),
+          new Table({width:{size:CW,type:WidthType.DXA},rows:[
+            row2('Nom – Prénom',ev.nomPrenom),
+            row2('Fonction / Poste',ev.fonction),
+            row2('Agence',['Paris OUEST','Paris EST','Grand EST','NORD'].map(a=>chk(a,ev.agence===a)).join('   ')),
+            row2('Date de déclaration',ev.dateDeclaration),
+            row2('Déclaration anonyme ?',chk('Oui',ev.anonyme==='Oui')+'   '+chk('Non',ev.anonyme==='Non')),
+            row2('Témoin(s)',ev.temoins),
+            row2('Salarié(s) concerné(s)',ev.salariesConcernes),
+            row2('N° événement (QHSE)',ev.numEvenementQHSE),
+          ]}),
+          sp(),
+
+          // §2
+          sectionHdr(2,"Nature de l'événement"),
+          new Table({width:{size:CW,type:WidthType.DXA},rows:[
+            makeCheckRow("Type d'événement",Object.values(TYPE_LABELS),[TYPE_LABELS[ev.typeEvenement]||'']),
+            makeCheckRow('Gravité potentielle',Object.values(gravLabels),[gravLabels[ev.gravite]||'']),
+          ]}),
+          sp(),
+
+          // §3
+          sectionHdr(3,'Lieu, date et contexte'),
+          new Table({width:{size:CW,type:WidthType.DXA},rows:[
+            row2('Date événement',ev.dateEvenement),
+            row2('Heure',ev.heureEvenement),
+            row2('Lieu / Chantier',ev.lieuChantier),
+            row2('Commune – Département',ev.communeDept),
+            makeCheckRow('Activité en cours',['Détection réseaux','Topographie','Études / MOE','SIG / Traitement données','Déplacement','Bureau'],ev.activites||[]),
+            row2('Activité autre',ev.activiteAutre),
+            makeCheckRow('Conditions particulières',['Voirie ouverte','Travail isolé','Co-activité','Météo défavorable','Nuit / faible visibilité','Espace confiné'],ev.conditions||[]),
+          ]}),
+          sp(),
+
+          // §4
+          sectionHdr(4,'Description des faits'),
+          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
+            new TableCell({borders,width:{size:CW,type:WidthType.DXA},children:[
+              new Paragraph({children:[new TextRun({text:ev.descriptionFaits||'',font:FONT,size:20})]}),
+              new Paragraph({children:[new TextRun({text:' ',size:20})]}),
+              new Paragraph({children:[new TextRun({text:' ',size:20})]}),
+            ]})
+          ]})]}),
+          sp(),
+
+          // §5
+          sectionHdr(5,'Dangers / Risques identifiés'),
+          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
+            new TableCell({borders,width:{size:CW,type:WidthType.DXA},children:[
+              new Paragraph({children:['Chute de plain-pied','Chute de hauteur','Heurt / collision véhicule','Risque routier','Manutention manuelle','Manutention mécanique','Électrique','Risque chimique','Bruit','Vibrations','Effondrement / éboulement','Ensevelissement (tranchée)','Réseau enterré','Ligne aérienne','Espace confiné','Atmosphère ATEX / H2S','Outil portatif / coupant','Engin de chantier','Incendie / explosion','Postural / TMS','Agression / incivilité','Psychosocial / stress','Biologique','Autre'].map(d=>new TextRun({text:((ev.dangers||[]).includes(d)?'☑':'☐')+' '+d+'   ',font:FONT,size:18}))})
+            ]})
+          ]})]}),
+          sp(),
+
+          // §6
+          sectionHdr(6,'Causes immédiates supposées (méthode 5M)'),
+          new Table({width:{size:CW,type:WidthType.DXA},rows:[
+            row2('Milieu (environnement)',ev.causeMilieu),
+            row2('Matériel (équipements)',ev.causeMateriel),
+            row2('Méthode (procédure)',ev.causeMethode),
+            row2("Main-d'œuvre (formation)",ev.causeMainOeuvre),
+            row2('Management (organisation)',ev.causeManagement),
+          ]}),
+          sp(),
+
+          // §7
+          sectionHdr(7,'Mesures immédiates prises'),
+          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
+            new TableCell({borders,width:{size:CW,type:WidthType.DXA},children:[
+              new Paragraph({children:[new TextRun({text:ev.mesuresImmediates||'',font:FONT,size:20})]}),
+              new Paragraph({children:[new TextRun({text:' ',size:20})]}),
+            ]})
+          ]})]}),
+          sp(),
+
+          // §8
+          sectionHdr(8,'Proposition du déclarant (facultatif)'),
+          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
+            new TableCell({borders,width:{size:CW,type:WidthType.DXA},children:[
+              new Paragraph({children:[new TextRun({text:ev.propositionDeclarant||'',font:FONT,size:20})]}),
+              new Paragraph({children:[new TextRun({text:' ',size:20})]}),
+            ]})
+          ]})]}),
+          sp(),
+
+          // Séparateur QHSE
+          new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'═══ PARTIE RÉSERVÉE À LA FONCTION QHSE / À L'ENCADREMENT — À NE PAS REMPLIR PAR L'AGENT ═══',font:FONT,size:20,bold:true,color:ORANGE})]}),
+          sp(),
+
+          // §9
+          sectionHdr(9,'Évaluation du risque (matrice criticité)'),
+          new Table({width:{size:CW,type:WidthType.DXA},rows:[
+            row2('Barème','1-4 Faible · 5-9 Modéré · 10-15 Élevé · 16-25 Critique'),
+            new TableRow({children:[
+              cell('Gravité G',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
+              cell('Probabilité P',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
+              cell('Criticité C = G×P',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
+            ]}),
+            new TableRow({children:[
+              cell('',{w:Math.round(CW/3)}),
+              cell('',{w:Math.round(CW/3)}),
+              cell('',{w:Math.round(CW/3)}),
+            ]}),
+          ]}),
+          sp(),
+
+          // §10
+          sectionHdr(10,"Plan d'action"),
+          new Table({width:{size:CW,type:WidthType.DXA},rows:[
+            new TableRow({children:[
+              cell('N°',{shade:LGRAY,bold:true,sz:18,w:400}),
+              cell('Action corrective / préventive',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.45)}),
+              cell('Responsable',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.2)}),
+              cell('Échéance',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.15)}),
+              cell('Statut',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.1)}),
+            ]}),
+            ...[1,2,3].map(n=>new TableRow({children:[
+              cell(String(n),{sz:18,w:400}),
+              cell('',{w:Math.round(CW*0.45)}),
+              cell('',{w:Math.round(CW*0.2)}),
+              cell('',{w:Math.round(CW*0.15)}),
+              cell('☐ À faire
+☐ En cours
+☐ Soldée',{sz:16,w:Math.round(CW*0.1)}),
+            ]}))
+          ]}),
+          sp(),
+
+          // §11
+          sectionHdr(11,'Décisions de traitement'),
+          new Table({width:{size:CW,type:WidthType.DXA},rows:[
+            row2('Mise à jour DUERP ?','☐ Oui  ☐ Non   Unité de travail : '),
+            row2('Diffusion REX ?','☐ Oui  ☐ Non   ☐ ¼h sécurité  ☐ Note interne  ☐ Affichage'),
+            row2('Analyse approfondie ?','☐ Non requise  ☐ 5 Pourquoi  ☐ Arbre des causes  ☐ Ishikawa'),
+          ]}),
+          sp(),
+
+          // §12
+          sectionHdr(12,'Validations'),
+          new Table({width:{size:CW,type:WidthType.DXA},rows:[
+            new TableRow({children:[
+              cell('Déclarant',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
+              cell('Responsable hiérarchique',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
+              cell('Responsable QHSE',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
+            ]}),
+            new TableRow({children:[
+              cell('Nom :
+Date :
+
+
+(Signature)',{sz:18,w:Math.round(CW/3)}),
+              cell('Nom :
+Date :
+
+
+(Signature)',{sz:18,w:Math.round(CW/3)}),
+              cell('Nom :
+Date :
+
+
+(Signature)',{sz:18,w:Math.round(CW/3)}),
+            ]}),
+          ]}),
+        ]
+      }]
+    });
+
+    const blob = await Packer.toBlob(doc);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const fname = 'SRESST_'+(ev.typeEvenement||'fiche')+'_'+(ev.dateEvenement||new Date().toISOString().slice(0,10))+'.docx';
+    a.download = fname;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('📄 Export Word SRESST terminé');
+  } catch(e){
+    console.error(e);
+    toast('❌ Erreur export Word : '+(e?.message||e));
+  }
+}
+
+
 
 </script>
 </body>
