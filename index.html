@@ -6768,7 +6768,7 @@ async function _generateOuvragesWord(ouvrages, filename){
       })
     ];
   } else {
-    hdrChildren = [mkP([new TextRun({text:'NeoConceptVRD — NCVRD Detect', bold:true, size:20, font:'Calibri'})])];
+    hdrChildren = [mkP([new TextRun({text:'NeoConceptVRD - NCVRD Detect', bold:true, size:20, font:'Calibri'})])];
   }
   const pageHeader = new Header({ children: hdrChildren });
 
@@ -9806,7 +9806,7 @@ async function loadDemoData(){
   // Rapport complet chantier terminé
   await db.put('rapports',{
     id:'demo-r2',chantierId:'demo-c2',
-    client:'Mairie de Versailles — Direction des Travaux',
+    client:'Mairie de Versailles - Direction des Travaux',
     natureOperations:"Détection et relevé topographique des réseaux souterrains avant travaux de rénovation du réseau d'éclairage public et requalification de voirie",
     classePresicion:'A',
     adresse:'18 Avenue de Paris, 78000 Versailles',
@@ -9829,15 +9829,15 @@ async function loadDemoData(){
     ],
     logiciels:[{type:'AUTOCAD/COVADIS',marque:'AUTODESK'}],
     networks:[
-      {id:'demo2-n1',nature:'Éclairage public',methode:'Radiodétection 50Hz',remarques:"Câble cuivre 4x16mm² — trottoir côté impair. Profondeur 0,60m. 14 candélabres repérés.",active:true,photo:null},
-      {id:'demo2-n2',nature:'ENEDIS BT',methode:'Radiodétection signal induit 8kHz',remarques:"Réseau BT 230/400V — branchements d'immeubles haussmanniens. Profondeur 0,85m.",active:true,photo:null},
-      {id:'demo2-n3',nature:'France Télécom / Orange',methode:'GEORADAR 655 MHz',remarques:'3 fourreaux PVC Ø63mm — infrastructure téléphonique historique.',active:true,photo:null},
-      {id:'demo2-n4',nature:'AEP (Eau Potable)',methode:'GEORADAR 655 MHz + Radiodétection',remarques:'Conduite fonte grise DN200 — réseau historique 19ème. Profondeur 0,80 à 1,20m.',active:true,photo:null},
-      {id:'demo2-n5',nature:'Assainissement EU',methode:'GEORADAR 655 MHz',remarques:'Collecteur maçonné 0,60x0,90m — profondeur 2,10m. Regards tous les 30m.',active:true,photo:null},
-      {id:'demo2-n6',nature:'GAZ GrDF',methode:'Radiodétection fréquence 50Hz',remarques:"Canalisation acier DN80 — MPS. Profondeur 0,70m. Coffret de détente au n°24.",active:true,photo:null}
+      {id:'demo2-n1',nature:'Éclairage public',methode:'Radiodétection 50Hz',remarques:"Câble cuivre 4x16mm² - trottoir côté impair. Profondeur 0,60m. 14 candélabres repérés.",active:true,photo:null},
+      {id:'demo2-n2',nature:'ENEDIS BT',methode:'Radiodétection signal induit 8kHz',remarques:"Réseau BT 230/400V - branchements d'immeubles haussmanniens. Profondeur 0,85m.",active:true,photo:null},
+      {id:'demo2-n3',nature:'France Télécom / Orange',methode:'GEORADAR 655 MHz',remarques:'3 fourreaux PVC Ø63mm - infrastructure téléphonique historique.',active:true,photo:null},
+      {id:'demo2-n4',nature:'AEP (Eau Potable)',methode:'GEORADAR 655 MHz + Radiodétection',remarques:'Conduite fonte grise DN200 - réseau historique 19ème. Profondeur 0,80 à 1,20m.',active:true,photo:null},
+      {id:'demo2-n5',nature:'Assainissement EU',methode:'GEORADAR 655 MHz',remarques:'Collecteur maçonné 0,60x0,90m - profondeur 2,10m. Regards tous les 30m.',active:true,photo:null},
+      {id:'demo2-n6',nature:'GAZ GrDF',methode:'Radiodétection fréquence 50Hz',remarques:"Canalisation acier DN80 - MPS. Profondeur 0,70m. Coffret de détente au n°24.",active:true,photo:null}
     ],
-    conclusions:"L'ensemble des réseaux ont été géolocalisés par notre géomètre Élodie MARTIN avec la station totale LEICA TS13 et le GPS LEICA GG04 Plus.\n\nLes données sont reportées sous AUTOCAD/COVADIS — plan joint au rapport.\n\nClasse de précision A atteinte sur 180 ml. Mission terminée et validée par la Mairie de Versailles le 28/02/2024.",
-    observations:"— Ancien réseau de chauffage urbain désaffecté non référencé — signalé à la Mairie.\n— Zone pavée historique protégée : méthodes non-intrusives uniquement.\n— Légère pluie le 14/02 — passages supplémentaires effectués zone nord.\n— Rapport validé et signé par M. Jacques LEFEBVRE (Mairie de Versailles) le 28/02/2024.",
+    conclusions:"L'ensemble des réseaux ont été géolocalisés par notre géomètre Élodie MARTIN avec la station totale LEICA TS13 et le GPS LEICA GG04 Plus.\n\nLes données sont reportées sous AUTOCAD/COVADIS - plan joint au rapport.\n\nClasse de précision A atteinte sur 180 ml. Mission terminée et validée par la Mairie de Versailles le 28/02/2024.",
+    observations:"- Ancien réseau de chauffage urbain désaffecté non référencé - signalé à la Mairie.\n- Zone pavée historique protégée : méthodes non-intrusives uniquement.\n- Légère pluie le 14/02 - passages supplémentaires effectués zone nord.\n- Rapport validé et signé par M. Jacques LEFEBVRE (Mairie de Versailles) le 28/02/2024.",
     conclusionPhotos:[],
     updatedAt:now - 86400000*25
   });
@@ -9864,16 +9864,16 @@ async function loadDemoData(){
     ],
     logiciels:[{type:'AUTOCAD/COVADIS',marque:'AUTODESK'}],
     networks:[
-      {id:'demo-n1',nature:'ENEDIS HTA',methode:'Radiodétection en fréquence 50Hz et signal induit 8kHz',remarques:'Réseau câble souterrain 20kV — profondeur moyenne 1,20m',active:true,photo:null},
-      {id:'demo-n2',nature:'ENEDIS BT',methode:'Radiodétection signal induit 8kHz',remarques:'Réseau basse tension 230/400V — plusieurs branchements repérés',active:true,photo:null},
-      {id:'demo-n3',nature:'France Télécom / Orange',methode:'GEORADAR 655 MHz',remarques:'Faisceau de fourreaux télécom — 4 conduits Ø50mm confirmés',active:true,photo:null},
-      {id:'demo-n4',nature:'GAZ GrDF',methode:'Radiodétection fréquence 50Hz + Flexitrace',remarques:'Canalisation PE DN100 — pression MPS. Profondeur 0,90m',active:true,photo:null},
-      {id:'demo-n5',nature:'AEP (Eau Potable)',methode:'GEORADAR 655 MHz',remarques:'Conduite fonte DN150 — très bon signal radar',active:true,photo:null},
-      {id:'demo-n6',nature:'Assainissement EU/EP',methode:'GEORADAR 655 MHz',remarques:'Collecteur béton Ø300mm EP + Ø200mm EU — profondeur 1,50m',active:true,photo:null},
-      {id:'demo-n7',nature:'Éclairage public',methode:'Radiodétection 50Hz',remarques:'Câble éclairage public — longe le trottoir côté pair',active:true,photo:null}
+      {id:'demo-n1',nature:'ENEDIS HTA',methode:'Radiodétection en fréquence 50Hz et signal induit 8kHz',remarques:'Réseau câble souterrain 20kV - profondeur moyenne 1,20m',active:true,photo:null},
+      {id:'demo-n2',nature:'ENEDIS BT',methode:'Radiodétection signal induit 8kHz',remarques:'Réseau basse tension 230/400V - plusieurs branchements repérés',active:true,photo:null},
+      {id:'demo-n3',nature:'France Télécom / Orange',methode:'GEORADAR 655 MHz',remarques:'Faisceau de fourreaux télécom - 4 conduits Ø50mm confirmés',active:true,photo:null},
+      {id:'demo-n4',nature:'GAZ GrDF',methode:'Radiodétection fréquence 50Hz + Flexitrace',remarques:'Canalisation PE DN100 - pression MPS. Profondeur 0,90m',active:true,photo:null},
+      {id:'demo-n5',nature:'AEP (Eau Potable)',methode:'GEORADAR 655 MHz',remarques:'Conduite fonte DN150 - très bon signal radar',active:true,photo:null},
+      {id:'demo-n6',nature:'Assainissement EU/EP',methode:'GEORADAR 655 MHz',remarques:'Collecteur béton Ø300mm EP + Ø200mm EU - profondeur 1,50m',active:true,photo:null},
+      {id:'demo-n7',nature:'Éclairage public',methode:'Radiodétection 50Hz',remarques:'Câble éclairage public - longe le trottoir côté pair',active:true,photo:null}
     ],
     conclusions:'L\'ensemble des réseaux géolocalisés à l\'aide du géoradar et de l\'appareil de radiodétection ont été relevés par notre géomètre à l\'aide d\'une tablette Panasonic Toughbook FZ-G1, d\'une station totale LEICA TS13 et d\'une antenne GPS LEICA GG04 Plus.\n\nCes données ont ensuite été reportées sous format AUTOCAD/COVADIS, dont le plan est joint au présent rapport.\n\nLa classe de précision A est atteinte sur l\'ensemble de la zone d\'investigation.',
-    observations:'— Réseau fibre optique non détecté dans la zone nord (accès impossible — véhicule stationné).\n— Présence d\'un réseau inconnu de type métallique en croisement avec l\'AEP au PR 45 — signalé au maître d\'ouvrage.\n— Conditions météo favorables — sol sec — bonne pénétration radar.',
+    observations:'- Réseau fibre optique non détecté dans la zone nord (accès impossible - véhicule stationné).\n- Présence d\'un réseau inconnu de type métallique en croisement avec l\'AEP au PR 45 - signalé au maître d\'ouvrage.\n- Conditions météo favorables - sol sec - bonne pénétration radar.',
     conclusionPhotos:[],updatedAt:now
   });
 
@@ -10708,31 +10708,39 @@ async function doSRESSTWordDocx(){
       ShadingType, PageNumber, VerticalAlign, HeadingLevel
     } = window.docx;
 
-    const NAVY='0E2841', ORANGE='E8620A', LGRAY='F4F6F9', MGRAY='D1D5DB', DGRAY='374151', WHITE='FFFFFF', FONT='Calibri';
-    const CW=9638;
+    // ── Palette identique au rapport de détection ──────────────────────────
+    const NAVY='0E2841', ORANGE='E8620A';
+    const LGRAY='F4F6F9', MGRAY='D1D5DB', DGRAY='374151';
+    const WHITE='FFFFFF', FONT='Calibri';
+    const CW=9638; // A4, marges 1134
+
     const brd=(color,size=4)=>({style:BorderStyle.SINGLE,size,color:color||MGRAY});
-    const noBorder={top:brd(WHITE,1),left:brd(WHITE,1),bottom:brd(WHITE,1),right:brd(WHITE,1)};
     const borders={top:brd(MGRAY),left:brd(MGRAY),bottom:brd(MGRAY),right:brd(MGRAY)};
-    const bordersOrange={top:brd(ORANGE),left:brd(ORANGE,8),bottom:brd(ORANGE),right:brd(ORANGE)};
+    const brdObs={top:brd(ORANGE,8),left:brd(ORANGE,16),bottom:brd(ORANGE,8),right:brd(MGRAY)};
+
+    // mkRun — identique au rapport de détection
+    function mkRun(text,o={}){
+      return new TextRun({text:String(text??''),font:FONT,size:o.size??22,bold:!!o.bold,italics:!!o.italics,color:o.color??DGRAY});
+    }
 
     // Cellule standard
     const cell=(text,opts={})=>new TableCell({
       borders: opts.borders||borders,
-      shading: opts.shade?{type:ShadingType.CLEAR,fill:opts.shade}:undefined,
+      shading:{type:ShadingType.CLEAR,fill:opts.fill||opts.shade||WHITE},
       verticalAlign: opts.valign||VerticalAlign.CENTER,
       width:{size:opts.w||CW,type:WidthType.DXA},
       columnSpan: opts.span||1,
       margins:{top:80,bottom:80,left:140,right:140},
       children:[new Paragraph({
         alignment: opts.align||AlignmentType.LEFT,
-        children:[new TextRun({text:String(text||''),font:FONT,size:opts.sz||20,bold:!!opts.bold,color:opts.color||'000000',italics:!!opts.italic})]
+        children:[new TextRun({text:String(text||''),font:FONT,size:opts.sz||20,bold:!!opts.bold,color:opts.color||(opts.header?WHITE:DGRAY),italics:!!opts.italic})]
       })]
     });
 
-    // Cellule multi-paragraphes (pour signatures, listes…)
+    // Cellule multi-paragraphes (signatures, listes, champs libres)
     const cellP=(paragraphs,opts={})=>new TableCell({
       borders: opts.borders||borders,
-      shading: opts.shade?{type:ShadingType.CLEAR,fill:opts.shade}:undefined,
+      shading:{type:ShadingType.CLEAR,fill:opts.fill||opts.shade||WHITE},
       verticalAlign: opts.valign||VerticalAlign.TOP,
       width:{size:opts.w||CW,type:WidthType.DXA},
       columnSpan: opts.span||1,
@@ -10740,26 +10748,27 @@ async function doSRESSTWordDocx(){
       children: paragraphs
     });
 
-    // En-tête de section navy + barre orange gauche
-    const sectionHdr=(num,title)=>new Table({width:{size:CW,type:WidthType.DXA},rows:[
-      new TableRow({children:[
-        new TableCell({borders:{top:brd(ORANGE),left:brd(ORANGE,12),bottom:brd(ORANGE),right:brd(ORANGE)},
-          shading:{type:ShadingType.CLEAR,fill:NAVY},
-          width:{size:CW,type:WidthType.DXA},margins:{top:100,bottom:100,left:180,right:140},
-          children:[new Paragraph({children:[
-            new TextRun({text:`§${num}`,font:FONT,size:24,bold:true,color:ORANGE}),
-            new TextRun({text:`  ${title}`,font:FONT,size:22,bold:true,color:WHITE}),
-          ]})]
-        })
-      ]})
-    ]});
+    // En-tête de section — même style que sectionTitle() du rapport de détection
+    // Paragraph fond F9F9F9 + bordure basse NAVY + numéro orange
+    const sectionHdr=(num,title)=>new Paragraph({
+      spacing:{before:280,after:0},
+      shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},
+      border:{bottom:{style:BorderStyle.SINGLE,size:14,color:NAVY}},
+      children:[
+        mkRun(`  §${num}  `,{size:26,bold:true,color:ORANGE}),
+        mkRun(title.toUpperCase(),{size:24,bold:true,color:NAVY}),
+      ]
+    });
 
     const chk=(val,checked)=>(checked?'☑ ':'☐ ')+val;
+
+    // row2 — label LGRAY+NAVY, valeur WHITE+DGRAY (comme makeInfoTable du rapport détection)
     const row2=(label,value)=>new TableRow({children:[
-      cell(label,{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.35)}),
-      cell(value||'—',{sz:20,w:Math.round(CW*0.65)})
+      cell(label,{fill:LGRAY,bold:true,color:NAVY,sz:18,w:Math.round(CW*0.35)}),
+      cell(value||'-',{fill:WHITE,color:DGRAY,sz:20,w:Math.round(CW*0.65)})
     ]});
-    const sp=(h=1)=>new Paragraph({spacing:{after:0},children:[new TextRun({text:'',size:h===2?24:18})]});
+
+    const sp=(after=100)=>new Paragraph({spacing:{after},children:[]});
 
     // Bannière — mêmes dimensions que le rapport chantier (21,06 cm × 5,63 cm)
     const bannerBytes = _dataUrlToBytes(_BANNER_V2_B64);
@@ -10775,7 +10784,7 @@ async function doSRESSTWordDocx(){
 
     // Ligne de cases à cocher — chaque option sur sa propre ligne dans la cellule
     const makeCheckRow=(label,values,selected,cols=1)=>new TableRow({children:[
-      cell(label,{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.3),valign:VerticalAlign.TOP}),
+      cell(label,{fill:LGRAY,bold:true,color:NAVY,sz:18,w:Math.round(CW*0.3),valign:VerticalAlign.TOP}),
       cellP(
         cols===2
           ? (()=>{
@@ -10815,36 +10824,35 @@ async function doSRESSTWordDocx(){
           new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:80},children:[new TextRun({text:'FICHE DE REMONTÉE DES ÉVÉNEMENTS SST',font:FONT,size:36,bold:true,color:NAVY})]}),
           new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:160},children:[new TextRun({text:'Système de Remontée des Événements SST  ·  FORM-QHSE-001 v02',font:FONT,size:18,color:DGRAY,italics:true})]}),
 
-          // ── Bandeau de synthèse (type + gravité + date + agence)
+          // ── Bandeau de synthèse — style makeTable du rapport détection (F9F9F9 + NAVY)
           new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[Math.round(CW*0.28),Math.round(CW*0.24),Math.round(CW*0.24),Math.round(CW*0.24)],rows:[
-            new TableRow({children:[
-              cell('Type d\'événement',{shade:NAVY,bold:true,color:WHITE,sz:17,w:Math.round(CW*0.28)}),
-              cell('Gravité estimée',{shade:NAVY,bold:true,color:WHITE,sz:17,w:Math.round(CW*0.24)}),
-              cell('Date de l\'événement',{shade:NAVY,bold:true,color:WHITE,sz:17,w:Math.round(CW*0.24)}),
-              cell('Agence',{shade:NAVY,bold:true,color:WHITE,sz:17,w:Math.round(CW*0.24)}),
+            new TableRow({tableHeader:true,children:[
+              cell('Type d\'événement',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW*0.28),align:AlignmentType.CENTER}),
+              cell('Gravité estimée',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW*0.24),align:AlignmentType.CENTER}),
+              cell('Date de l\'événement',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW*0.24),align:AlignmentType.CENTER}),
+              cell('Agence',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW*0.24),align:AlignmentType.CENTER}),
             ]}),
             new TableRow({children:[
-              cell((TYPE_LABELS[ev.typeEvenement]||ev.typeEvenement||'—'),{sz:20,bold:true,color:ORANGE,w:Math.round(CW*0.28)}),
-              cell((gravLabels[ev.gravite]||'—'),{sz:20,w:Math.round(CW*0.24)}),
-              cell(ev.dateEvenement||'—',{sz:20,w:Math.round(CW*0.24)}),
-              cell(ev.agence||'—',{sz:20,w:Math.round(CW*0.24)}),
+              cell(TYPE_LABELS[ev.typeEvenement]||ev.typeEvenement||'-',{fill:WHITE,sz:20,bold:true,color:ORANGE,w:Math.round(CW*0.28),align:AlignmentType.CENTER}),
+              cell(gravLabels[ev.gravite]||'-',{fill:WHITE,color:DGRAY,sz:20,w:Math.round(CW*0.24),align:AlignmentType.CENTER}),
+              cell(ev.dateEvenement||'-',{fill:WHITE,color:DGRAY,sz:20,w:Math.round(CW*0.24),align:AlignmentType.CENTER}),
+              cell(ev.agence||'-',{fill:WHITE,color:DGRAY,sz:20,w:Math.round(CW*0.24),align:AlignmentType.CENTER}),
             ]}),
           ]}),
-          sp(),
+          sp(80),
 
-          // ── Encadré d'avertissement
+          // ── Encadré avertissement — style makeObsBox du rapport détection (FFF7ED + brdObs)
           new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
-            cellP([new Paragraph({children:[
-              new TextRun({text:'⚠  ',font:FONT,size:18,bold:true,color:ORANGE}),
-              new TextRun({text:'Pourquoi remonter ?  ',font:FONT,size:18,bold:true,color:NAVY}),
-              new TextRun({text:'Chaque presqu\'accident ou situation dangereuse signalé permet de prévenir un accident futur. Votre vigilance protège vos collègues.',font:FONT,size:18,color:'555555'}),
-            ]})],{shade:'FFF8E6',w:CW,borders:{top:brd(ORANGE),left:brd(ORANGE,8),bottom:brd(ORANGE),right:brd(ORANGE)}})
+            cellP([
+              new Paragraph({children:[mkRun('⚠  POURQUOI REMONTER ?',{bold:true,color:ORANGE,size:20})]}),
+              new Paragraph({spacing:{before:40,after:40},indent:{left:200},children:[mkRun('Chaque presqu\'accident ou situation dangereuse signalé permet de prévenir un accident futur. Votre vigilance protège vos collègues.',{color:DGRAY,size:20})]}),
+            ],{fill:'FFF7ED',w:CW,borders:brdObs})
           ]})]}),
-          sp(),
+          sp(60),
 
           // ── Date génération
-          new Paragraph({alignment:AlignmentType.RIGHT,spacing:{after:80},children:[new TextRun({text:'Généré le '+new Date().toLocaleDateString('fr-FR')+' à '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),font:FONT,size:16,color:MGRAY,italics:true})]}),
-          sp(),
+          new Paragraph({alignment:AlignmentType.RIGHT,spacing:{after:80},children:[mkRun('Généré le '+new Date().toLocaleDateString('fr-FR')+' à '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),{size:16,color:MGRAY,italics:true})]}),
+          sp(80),
 
           // §1
           sectionHdr(1,'Identification du déclarant'),
@@ -10865,7 +10873,7 @@ async function doSRESSTWordDocx(){
           sectionHdr(2,"Nature de l'événement"),
           new Table({width:{size:CW,type:WidthType.DXA},rows:[
             makeCheckRow("Type d'événement",Object.values(TYPE_LABELS),[TYPE_LABELS[ev.typeEvenement]||'']),
-            row2('Salarié(s) concerné(s)',ev.salariesConcernes||'—'),
+            row2('Salarié(s) concerné(s)',ev.salariesConcernes||'-'),
             makeCheckRow('Gravité potentielle estimée',Object.values(gravLabels),[gravLabels[ev.gravite]||'']),
           ]}),
           sp(),
@@ -10874,13 +10882,13 @@ async function doSRESSTWordDocx(){
           sectionHdr(3,'Lieu, date et contexte'),
           new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[Math.round(CW*0.5),Math.round(CW*0.5)],rows:[
             new TableRow({children:[
-              cell('Date de l\'événement',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.25)}),
-              cell(ev.dateEvenement||'—',{sz:20,w:Math.round(CW*0.25)}),
-              cell('Heure',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.2)}),
-              cell(ev.heureEvenement||'—',{sz:20,w:Math.round(CW*0.3)}),
+              cell('Date de l\'événement',{fill:LGRAY,bold:true,color:NAVY,sz:18,w:Math.round(CW*0.25)}),
+              cell(ev.dateEvenement||'-',{fill:WHITE,color:DGRAY,sz:20,w:Math.round(CW*0.25)}),
+              cell('Heure',{fill:LGRAY,bold:true,color:NAVY,sz:18,w:Math.round(CW*0.2)}),
+              cell(ev.heureEvenement||'-',{fill:WHITE,color:DGRAY,sz:20,w:Math.round(CW*0.3)}),
             ]}),
-            row2('Lieu / Chantier',ev.lieuChantier||'—'),
-            row2('Commune – Département',ev.communeDept||'—'),
+            row2('Lieu / Chantier',ev.lieuChantier||'-'),
+            row2('Commune - Departement',ev.communeDept||'-'),
             makeCheckRow('Activité en cours',['Détection réseaux','Topographie','Études / MOE','SIG / Cartographie','Chantier (terrain)','Déplacement','Bureau','Autre'],[ev.activite||''],2),
             ...(ev.activiteAutre?[row2('Activité – précisions',ev.activiteAutre)]:[]),
             makeCheckRow('Conditions particulières',['Voirie ouverte','Travail isolé','Co-activité','Météo défavorable','Nuit / faible visibilité','Espace confiné','Hauteur'],ev.conditions||[],2),
@@ -10891,10 +10899,10 @@ async function doSRESSTWordDocx(){
           // §4
           sectionHdr(4,'Description des faits'),
           new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
-            new TableCell({borders,width:{size:CW,type:WidthType.DXA},children:[
-              new Paragraph({children:[new TextRun({text:ev.descriptionFaits||'',font:FONT,size:20})]}),
-              new Paragraph({children:[new TextRun({text:' ',size:20})]}),
-              new Paragraph({children:[new TextRun({text:' ',size:20})]}),
+            new TableCell({borders,shading:{type:ShadingType.CLEAR,fill:WHITE},width:{size:CW,type:WidthType.DXA},margins:{top:120,bottom:120,left:160,right:160},children:[
+              new Paragraph({children:[mkRun(ev.descriptionFaits||'',{size:20,color:DGRAY})]}),
+              new Paragraph({children:[mkRun(' ',{size:20})]}),
+              new Paragraph({children:[mkRun(' ',{size:20})]}),
             ]})
           ]})]}),
           sp(),
@@ -10924,10 +10932,10 @@ async function doSRESSTWordDocx(){
               const all=[...(items||[])];
               if(autre) all.push('Autre : '+autre);
               const paras = all.length
-                ? all.map(t=>new Paragraph({children:[new TextRun({text:'• '+t,font:FONT,size:18})]}))
-                : [new Paragraph({children:[new TextRun({text:'—',font:FONT,size:18,color:'AAAAAA'})]})];
+                ? all.map(t=>new Paragraph({spacing:{before:30,after:30},indent:{left:160},children:[mkRun('–  '+t,{size:18,color:DGRAY})]}))
+                : [new Paragraph({children:[mkRun('-',{size:18,color:MGRAY})]})];
               return new TableRow({children:[
-                cell(label,{shade:LGRAY,bold:true,sz:18,w:Math.round(CW*0.28)}),
+                cell(label,{fill:LGRAY,bold:true,color:NAVY,sz:18,w:Math.round(CW*0.28)}),
                 new TableCell({borders,width:{size:Math.round(CW*0.72),type:WidthType.DXA},
                   children:paras,
                   margins:{top:80,bottom:80,left:120,right:120}
@@ -10947,9 +10955,9 @@ async function doSRESSTWordDocx(){
           // §7
           sectionHdr(7,'Mesures immédiates prises'),
           new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
-            new TableCell({borders,width:{size:CW,type:WidthType.DXA},children:[
-              new Paragraph({children:[new TextRun({text:ev.mesuresImmediates||'',font:FONT,size:20})]}),
-              new Paragraph({children:[new TextRun({text:' ',size:20})]}),
+            new TableCell({borders,shading:{type:ShadingType.CLEAR,fill:WHITE},width:{size:CW,type:WidthType.DXA},margins:{top:120,bottom:120,left:160,right:160},children:[
+              new Paragraph({children:[mkRun(ev.mesuresImmediates||'',{size:20,color:DGRAY})]}),
+              new Paragraph({children:[mkRun(' ',{size:20})]}),
             ]})
           ]})]}),
           sp(),
@@ -10957,30 +10965,34 @@ async function doSRESSTWordDocx(){
           // §8
           sectionHdr(8,'Proposition du déclarant (facultatif)'),
           new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
-            new TableCell({borders,width:{size:CW,type:WidthType.DXA},children:[
-              new Paragraph({children:[new TextRun({text:ev.propositionDeclarant||'',font:FONT,size:20})]}),
-              new Paragraph({children:[new TextRun({text:' ',size:20})]}),
+            new TableCell({borders,shading:{type:ShadingType.CLEAR,fill:WHITE},width:{size:CW,type:WidthType.DXA},margins:{top:120,bottom:120,left:160,right:160},children:[
+              new Paragraph({children:[mkRun(ev.propositionDeclarant||'',{size:20,color:DGRAY})]}),
+              new Paragraph({children:[mkRun(' ',{size:20})]}),
             ]})
           ]})]}),
           sp(),
 
-          // Séparateur QHSE
-          new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'═══ PARTIE RÉSERVÉE À LA FONCTION QHSE / À L\'ENCADREMENT — À NE PAS REMPLIR PAR L\'AGENT ═══',font:FONT,size:20,bold:true,color:ORANGE})]}),
+          // ── Séparateur QHSE — style bande orange (comme makeObsBox)
+          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
+            cellP([new Paragraph({alignment:AlignmentType.CENTER,children:[
+              mkRun('⚠  PARTIE RÉSERVÉE À LA FONCTION QHSE / À L\'ENCADREMENT  ⚠',{bold:true,color:ORANGE,size:20}),
+            ]})],{fill:'FFF7ED',w:CW,borders:brdObs})
+          ]})]}),
           sp(),
 
           // §9
           sectionHdr(9,'Évaluation du risque (matrice criticité)'),
           new Table({width:{size:CW,type:WidthType.DXA},rows:[
             row2('Barème','1-4 Faible · 5-9 Modéré · 10-15 Élevé · 16-25 Critique'),
-            new TableRow({children:[
-              cell('Gravité G',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
-              cell('Probabilité P',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
-              cell('Criticité C = G×P',{shade:LGRAY,bold:true,sz:18,w:Math.round(CW/3)}),
+            new TableRow({tableHeader:true,children:[
+              cell('Gravité G (1-5)',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW/3),align:AlignmentType.CENTER}),
+              cell('Probabilité P (1-5)',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW/3),align:AlignmentType.CENTER}),
+              cell('Criticité C = G × P',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW/3),align:AlignmentType.CENTER}),
             ]}),
             new TableRow({children:[
-              cell('',{w:Math.round(CW/3)}),
-              cell('',{w:Math.round(CW/3)}),
-              cell('',{w:Math.round(CW/3)}),
+              cell('',{fill:WHITE,w:Math.round(CW/3)}),
+              cell('',{fill:WHITE,w:Math.round(CW/3)}),
+              cell('',{fill:WHITE,w:Math.round(CW/3)}),
             ]}),
           ]}),
           sp(),
@@ -10988,23 +11000,23 @@ async function doSRESSTWordDocx(){
           // §10
           sectionHdr(10,"Plan d'action"),
           new Table({width:{size:CW,type:WidthType.DXA},rows:[
-            new TableRow({children:[
-              cell('N°',{shade:NAVY,bold:true,color:WHITE,sz:18,w:400}),
-              cell('Action corrective / préventive',{shade:NAVY,bold:true,color:WHITE,sz:18,w:Math.round(CW*0.42)}),
-              cell('Responsable',{shade:NAVY,bold:true,color:WHITE,sz:18,w:Math.round(CW*0.2)}),
-              cell('Échéance',{shade:NAVY,bold:true,color:WHITE,sz:18,w:Math.round(CW*0.16)}),
-              cell('Statut',{shade:NAVY,bold:true,color:WHITE,sz:18,w:Math.round(CW*0.14)}),
+            new TableRow({tableHeader:true,children:[
+              cell('N°',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:400,align:AlignmentType.CENTER}),
+              cell('Action corrective / préventive',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW*0.42)}),
+              cell('Responsable',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW*0.2),align:AlignmentType.CENTER}),
+              cell('Échéance',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW*0.16),align:AlignmentType.CENTER}),
+              cell('Statut',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW*0.14),align:AlignmentType.CENTER}),
             ]}),
-            ...[1,2,3].map(n=>new TableRow({children:[
-              cell(String(n),{sz:20,bold:true,color:ORANGE,w:400}),
-              cellP([new Paragraph({children:[new TextRun({text:'',size:20})]}),new Paragraph({children:[new TextRun({text:'',size:20})]}),new Paragraph({children:[new TextRun({text:'',size:20})]})],{w:Math.round(CW*0.42)}),
-              cellP([new Paragraph({children:[new TextRun({text:'',size:20})]})],{w:Math.round(CW*0.2)}),
-              cellP([new Paragraph({children:[new TextRun({text:'',size:20})]})],{w:Math.round(CW*0.16)}),
+            ...[1,2,3].map((n,i)=>new TableRow({children:[
+              cell(String(n),{fill:i%2===0?WHITE:LGRAY,sz:20,bold:true,color:NAVY,w:400,align:AlignmentType.CENTER}),
+              cellP([new Paragraph({children:[mkRun(' ',{size:20})]}),new Paragraph({children:[mkRun(' ',{size:20})]}),new Paragraph({children:[mkRun(' ',{size:20})]})],{fill:i%2===0?WHITE:LGRAY,w:Math.round(CW*0.42)}),
+              cellP([new Paragraph({children:[mkRun(' ',{size:20})]})],{fill:i%2===0?WHITE:LGRAY,w:Math.round(CW*0.2)}),
+              cellP([new Paragraph({children:[mkRun(' ',{size:20})]})],{fill:i%2===0?WHITE:LGRAY,w:Math.round(CW*0.16)}),
               cellP([
-                new Paragraph({children:[new TextRun({text:'☐ À faire',font:FONT,size:17})]}),
-                new Paragraph({children:[new TextRun({text:'☐ En cours',font:FONT,size:17})]}),
-                new Paragraph({children:[new TextRun({text:'☐ Soldée',font:FONT,size:17})]}),
-              ],{w:Math.round(CW*0.14)}),
+                new Paragraph({children:[mkRun('☐ À faire',{size:17})]}),
+                new Paragraph({children:[mkRun('☐ En cours',{size:17})]}),
+                new Paragraph({children:[mkRun('☐ Soldée',{size:17})]}),
+              ],{fill:i%2===0?WHITE:LGRAY,w:Math.round(CW*0.14)}),
             ]}))
           ]}),
           sp(),
@@ -11021,10 +11033,10 @@ async function doSRESSTWordDocx(){
           // §12
           sectionHdr(12,'Validations et signatures'),
           new Table({width:{size:CW,type:WidthType.DXA},rows:[
-            new TableRow({children:[
-              cell('Déclarant',{shade:NAVY,bold:true,color:WHITE,sz:18,w:Math.round(CW/3)}),
-              cell('Responsable hiérarchique',{shade:NAVY,bold:true,color:WHITE,sz:18,w:Math.round(CW/3)}),
-              cell('Responsable QHSE',{shade:NAVY,bold:true,color:WHITE,sz:18,w:Math.round(CW/3)}),
+            new TableRow({tableHeader:true,children:[
+              cell('Déclarant',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW/3),align:AlignmentType.CENTER}),
+              cell('Responsable hiérarchique',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW/3),align:AlignmentType.CENTER}),
+              cell('Responsable QHSE',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW/3),align:AlignmentType.CENTER}),
             ]}),
             new TableRow({children:[
               cellP([
