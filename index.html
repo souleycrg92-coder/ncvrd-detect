@@ -2277,16 +2277,33 @@ html[data-terrain="1"] {
             <span>§1 — Identification du déclarant</span><span class="acc-chevron">▼</span>
           </button>
           <div class="acc-body">
+            <!-- Q1 — Déclaration anonyme (en premier, conditionne les champs suivants) -->
             <div class="form-group">
-              <label class="form-label">Nom – Prénom</label>
-              <input class="form-input" id="sr-nom-prenom" type="text" placeholder="Nom Prénom">
+              <label class="form-label">Déclaration anonyme ? <span style="color:var(--red)">*</span></label>
+              <div style="display:flex;gap:16px;margin-top:6px">
+                <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-anonyme" value="Oui" onchange="toggleSRESSTAnonymous(this.value)"> Oui</label>
+                <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-anonyme" value="Non" onchange="toggleSRESSTAnonymous(this.value)" checked> Non</label>
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:5px">Si "Oui", vos coordonnées seront masquées dans le registre</div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Fonction / Poste</label>
-              <input class="form-input" id="sr-fonction" type="text" placeholder="Technicien, Chef de chantier…">
+            <!-- Q2-Q4 — Champs identité (masqués si anonyme) -->
+            <div id="sr-id-fields">
+              <div class="form-group">
+                <label class="form-label">Nom – Prénom</label>
+                <input class="form-input" id="sr-nom-prenom" type="text" placeholder="Nom Prénom">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Fonction / Poste</label>
+                <input class="form-input" id="sr-fonction" type="text" placeholder="Technicien, Chef de chantier…">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email NCVRD</label>
+                <input class="form-input" id="sr-email" type="email" placeholder="prenom.nom@neoconceptvrd.fr">
+              </div>
             </div>
+            <!-- Q5 — Agence -->
             <div class="form-group">
-              <label class="form-label">Agence</label>
+              <label class="form-label">Agence <span style="color:var(--red)">*</span></label>
               <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
                 <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-agence" value="Paris OUEST"> Paris OUEST</label>
                 <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-agence" value="Paris EST"> Paris EST</label>
@@ -2294,28 +2311,15 @@ html[data-terrain="1"] {
                 <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-agence" value="NORD"> NORD</label>
               </div>
             </div>
+            <!-- Q6 — Date de déclaration -->
             <div class="form-group">
-              <label class="form-label">Date de déclaration</label>
+              <label class="form-label">Date de déclaration <span style="color:var(--red)">*</span></label>
               <input class="form-input" id="sr-date-declaration" type="date">
             </div>
-            <div class="form-group">
-              <label class="form-label">Déclaration anonyme ?</label>
-              <div style="display:flex;gap:16px;margin-top:6px">
-                <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-anonyme" value="Oui"> Oui</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-anonyme" value="Non"> Non</label>
-              </div>
-            </div>
+            <!-- Q7 — Témoin(s) -->
             <div class="form-group">
               <label class="form-label">Témoin(s) éventuel(s)</label>
-              <input class="form-input" id="sr-temoins" type="text" placeholder="Noms des témoins">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Salarié(s) concerné(s)</label>
-              <input class="form-input" id="sr-salaries" type="text" placeholder="Noms des salariés">
-            </div>
-            <div class="form-group">
-              <label class="form-label">N° événement (QHSE)</label>
-              <input class="form-input" id="sr-num-qhse" type="text" placeholder="Ex. QHSE-2024-001">
+              <input class="form-input" id="sr-temoins" type="text" placeholder="Noms des témoins (facultatif)">
             </div>
           </div>
         </div>
@@ -2338,8 +2342,14 @@ html[data-terrain="1"] {
                 <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#fff"><input type="radio" name="sr-type" value="AGR"> Agression / incivilité (AGR)</label>
               </div>
             </div>
+            <!-- Q9 — Salarié(s) concerné(s) -->
             <div class="form-group" style="margin-top:14px">
-              <label class="form-label">Gravité potentielle</label>
+              <label class="form-label">Salarié(s) concerné(s) <span id="sr-salaries-required" style="color:var(--red);display:none">*</span></label>
+              <input class="form-input" id="sr-salaries" type="text" placeholder="Noms des salariés impliqués (obligatoire si AT / ATSA)">
+            </div>
+            <!-- Q10 — Gravité -->
+            <div class="form-group" style="margin-top:14px">
+              <label class="form-label">Gravité potentielle estimée <span style="color:var(--red)">*</span></label>
               <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
                 <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-gravite" value="1"> 1 – Mineure</label>
                 <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-gravite" value="2"> 2 – Modérée</label>
@@ -2376,18 +2386,20 @@ html[data-terrain="1"] {
               <input class="form-input" id="sr-commune" type="text" placeholder="Ex. Paris – 75">
             </div>
             <div class="form-group">
-              <label class="form-label">Activité en cours</label>
-              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-activite" value="Détection réseaux"> Détection réseaux</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-activite" value="Topographie"> Topographie</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-activite" value="Études / MOE"> Études / MOE</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-activite" value="SIG / Traitement données"> SIG / Traitement données</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-activite" value="Déplacement"> Déplacement</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-activite" value="Bureau"> Bureau</label>
+              <label class="form-label">Activité en cours <span style="color:var(--red)">*</span></label>
+              <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="radio" name="sr-activite" value="Détection réseaux"> Détection réseaux</label>
+                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="radio" name="sr-activite" value="Topographie"> Topographie</label>
+                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="radio" name="sr-activite" value="Études / MOE"> Études / MOE</label>
+                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="radio" name="sr-activite" value="SIG / Cartographie"> SIG / Cartographie</label>
+                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="radio" name="sr-activite" value="Chantier (terrain)"> Chantier (terrain)</label>
+                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="radio" name="sr-activite" value="Déplacement"> Déplacement</label>
+                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="radio" name="sr-activite" value="Bureau"> Bureau</label>
+                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="radio" name="sr-activite" value="Autre" onchange="document.getElementById('sr-activite-autre-wrap').style.display='flex'"> Autre</label>
               </div>
-              <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
-                <span style="font-size:12px;color:var(--muted)">Autre :</span>
-                <input class="form-input" id="sr-activite-autre" type="text" style="flex:1;padding:6px 10px;font-size:12px" placeholder="Préciser…">
+              <div id="sr-activite-autre-wrap" style="display:none;align-items:center;gap:6px;margin-top:6px">
+                <span style="font-size:12px;color:var(--muted)">Préciser :</span>
+                <input class="form-input" id="sr-activite-autre" type="text" style="flex:1;padding:6px 10px;font-size:12px" placeholder="Préciser l'activité…">
               </div>
             </div>
             <div class="form-group">
@@ -2399,7 +2411,9 @@ html[data-terrain="1"] {
                 <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-condition" value="Météo défavorable"> Météo défavorable</label>
                 <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-condition" value="Nuit / faible visibilité"> Nuit / faible visibilité</label>
                 <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-condition" value="Espace confiné"> Espace confiné</label>
+                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-condition" value="Hauteur"> Hauteur</label>
               </div>
+              <input class="form-input" id="sr-condition-autre" type="text" placeholder="Autre : préciser…" style="margin-top:8px">
             </div>
           </div>
         </div>
@@ -2449,6 +2463,7 @@ html[data-terrain="1"] {
               <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Biologique"> Biologique</label>
               <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Autre"> Autre</label>
             </div>
+            <input class="form-input" id="sr-danger-autre" type="text" placeholder="Autre danger : préciser…" style="margin-top:8px">
           </div>
         </div>
 
@@ -10456,11 +10471,22 @@ function openSRESSTEvent(id){
   showSRESSTView('form');
 }
 
+function toggleSRESSTAnonymous(val){
+  const block = document.getElementById('sr-id-fields');
+  if(block) block.style.display = val==='Oui' ? 'none' : 'block';
+}
+
 function resetSRESSTForm(){
   document.querySelectorAll('#sresst-form-view input:not([disabled]), #sresst-form-view textarea:not([disabled]), #sresst-form-view select:not([disabled])').forEach(el=>{
     if(el.type==='checkbox'||el.type==='radio') el.checked=false;
     else el.value='';
   });
+  // Remettre Non par défaut pour anonyme et afficher les champs identité
+  const nonRadio = document.querySelector('input[name="sr-anonyme"][value="Non"]');
+  if(nonRadio){ nonRadio.checked=true; toggleSRESSTAnonymous('Non'); }
+  // Cacher le champ "Autre activité"
+  const auWrap = document.getElementById('sr-activite-autre-wrap');
+  if(auWrap) auWrap.style.display='none';
 }
 
 function fillSRESSTForm(ev){
@@ -10468,10 +10494,10 @@ function fillSRESSTForm(ev){
   const set = (id,val) => { const el=document.getElementById(id); if(el) el.value=val||''; };
   set('sr-nom-prenom', ev.nomPrenom);
   set('sr-fonction', ev.fonction);
+  set('sr-email', ev.email||'');
   set('sr-date-declaration', ev.dateDeclaration);
   set('sr-temoins', ev.temoins);
   set('sr-salaries', ev.salariesConcernes);
-  set('sr-num-qhse', ev.numEvenementQHSE);
   set('sr-date-evenement', ev.dateEvenement);
   set('sr-heure', ev.heureEvenement);
   set('sr-lieu', ev.lieuChantier);
@@ -10493,11 +10519,17 @@ function fillSRESSTForm(ev){
   set('sr-proposition', ev.propositionDeclarant);
   if(ev.agence){ const r=document.querySelector(`input[name="sr-agence"][value="${ev.agence}"]`); if(r) r.checked=true; }
   if(ev.anonyme){ const r=document.querySelector(`input[name="sr-anonyme"][value="${ev.anonyme}"]`); if(r) r.checked=true; }
+  toggleSRESSTAnonymous(ev.anonyme||'Non');
   if(ev.typeEvenement){ const r=document.querySelector(`input[name="sr-type"][value="${ev.typeEvenement}"]`); if(r) r.checked=true; }
   if(ev.gravite){ const r=document.querySelector(`input[name="sr-gravite"][value="${ev.gravite}"]`); if(r) r.checked=true; }
-  (ev.activites||[]).forEach(v=>{ const c=document.querySelector(`input[name="sr-activite"][value="${v}"]`); if(c) c.checked=true; });
+  // Activité (radio, choix unique)
+  const actVal = ev.activite || (ev.activites&&ev.activites[0]) || '';
+  if(actVal){ const r=document.querySelector(`input[name="sr-activite"][value="${actVal}"]`); if(r) r.checked=true; }
+  if(actVal==='Autre'){ const w=document.getElementById('sr-activite-autre-wrap'); if(w) w.style.display='flex'; }
   (ev.conditions||[]).forEach(v=>{ const c=document.querySelector(`input[name="sr-condition"][value="${v}"]`); if(c) c.checked=true; });
+  set('sr-condition-autre', ev.conditionAutre||'');
   (ev.dangers||[]).forEach(v=>{ const c=document.querySelector(`input[name="sr-danger"][value="${v}"]`); if(c) c.checked=true; });
+  set('sr-danger-autre', ev.dangerAutre||'');
 }
 
 function getSRESSTFormData(){
@@ -10507,16 +10539,16 @@ function getSRESSTFormData(){
   return {
     id: S_SRESST.currentId || Date.now().toString(),
     createdAt: S_SRESST.currentId ? (S_SRESST.events.find(e=>e.id===S_SRESST.currentId)?.createdAt||Date.now()) : Date.now(),
-    nomPrenom: g('sr-nom-prenom'), fonction: g('sr-fonction'),
+    nomPrenom: g('sr-nom-prenom'), fonction: g('sr-fonction'), email: g('sr-email'),
     agence: radVal('sr-agence'), dateDeclaration: g('sr-date-declaration'),
     anonyme: radVal('sr-anonyme'), temoins: g('sr-temoins'),
-    salariesConcernes: g('sr-salaries'), numEvenementQHSE: g('sr-num-qhse'),
+    salariesConcernes: g('sr-salaries'),
     typeEvenement: radVal('sr-type'), gravite: radVal('sr-gravite'),
     dateEvenement: g('sr-date-evenement'), heureEvenement: g('sr-heure'),
     lieuChantier: g('sr-lieu'), communeDept: g('sr-commune'),
-    activites: checks('sr-activite'), activiteAutre: g('sr-activite-autre'),
-    conditions: checks('sr-condition'), descriptionFaits: g('sr-description'),
-    dangers: checks('sr-danger'),
+    activite: radVal('sr-activite'), activiteAutre: g('sr-activite-autre'),
+    conditions: checks('sr-condition'), conditionAutre: g('sr-condition-autre'), descriptionFaits: g('sr-description'),
+    dangers: checks('sr-danger'), dangerAutre: g('sr-danger-autre'),
     causeMilieuItems: checks('sr-cause-milieu-item'), causeMilieuAutre: g('sr-cause-milieu-autre'),
     causeMaterielItems: checks('sr-cause-materiel-item'), causeMaterielAutre: g('sr-cause-materiel-autre'),
     causeMethodeItems: checks('sr-cause-methode-item'), causeMethodeAutre: g('sr-cause-methode-autre'),
@@ -10649,14 +10681,15 @@ async function doSRESSTWordDocx(){
           // §1
           sectionHdr(1,'Identification du déclarant'),
           new Table({width:{size:CW,type:WidthType.DXA},rows:[
-            row2('Nom – Prénom',ev.nomPrenom),
-            row2('Fonction / Poste',ev.fonction),
+            row2('Déclaration anonyme ?',chk('Oui',ev.anonyme==='Oui')+'   '+chk('Non',ev.anonyme==='Non')),
+            ...(ev.anonyme!=='Oui'?[
+              row2('Nom – Prénom',ev.nomPrenom),
+              row2('Fonction / Poste',ev.fonction),
+              row2('Email NCVRD',ev.email),
+            ]:[]),
             row2('Agence',['Paris OUEST','Paris EST','Grand EST','NORD'].map(a=>chk(a,ev.agence===a)).join('   ')),
             row2('Date de déclaration',ev.dateDeclaration),
-            row2('Déclaration anonyme ?',chk('Oui',ev.anonyme==='Oui')+'   '+chk('Non',ev.anonyme==='Non')),
             row2('Témoin(s)',ev.temoins),
-            row2('Salarié(s) concerné(s)',ev.salariesConcernes),
-            row2('N° événement (QHSE)',ev.numEvenementQHSE),
           ]}),
           sp(),
 
@@ -10664,7 +10697,8 @@ async function doSRESSTWordDocx(){
           sectionHdr(2,"Nature de l'événement"),
           new Table({width:{size:CW,type:WidthType.DXA},rows:[
             makeCheckRow("Type d'événement",Object.values(TYPE_LABELS),[TYPE_LABELS[ev.typeEvenement]||'']),
-            makeCheckRow('Gravité potentielle',Object.values(gravLabels),[gravLabels[ev.gravite]||'']),
+            row2('Salarié(s) concerné(s)',ev.salariesConcernes),
+            makeCheckRow('Gravité potentielle estimée',Object.values(gravLabels),[gravLabels[ev.gravite]||'']),
           ]}),
           sp(),
 
@@ -10675,9 +10709,10 @@ async function doSRESSTWordDocx(){
             row2('Heure',ev.heureEvenement),
             row2('Lieu / Chantier',ev.lieuChantier),
             row2('Commune – Département',ev.communeDept),
-            makeCheckRow('Activité en cours',['Détection réseaux','Topographie','Études / MOE','SIG / Traitement données','Déplacement','Bureau'],ev.activites||[]),
-            row2('Activité autre',ev.activiteAutre),
-            makeCheckRow('Conditions particulières',['Voirie ouverte','Travail isolé','Co-activité','Météo défavorable','Nuit / faible visibilité','Espace confiné'],ev.conditions||[]),
+            makeCheckRow('Activité en cours',['Détection réseaux','Topographie','Études / MOE','SIG / Cartographie','Chantier (terrain)','Déplacement','Bureau','Autre'],[ev.activite||'']),
+            row2('Activité – précisions',ev.activiteAutre),
+            makeCheckRow('Conditions particulières',['Voirie ouverte','Travail isolé','Co-activité','Météo défavorable','Nuit / faible visibilité','Espace confiné','Hauteur'],ev.conditions||[]),
+            row2('Autre condition',ev.conditionAutre||''),
           ]}),
           sp(),
 
@@ -10694,11 +10729,14 @@ async function doSRESSTWordDocx(){
 
           // §5
           sectionHdr(5,'Dangers / Risques identifiés'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
-            new TableCell({borders,width:{size:CW,type:WidthType.DXA},children:[
-              new Paragraph({children:['Chute de plain-pied','Chute de hauteur','Heurt / collision véhicule','Risque routier','Manutention manuelle','Manutention mécanique','Électrique','Risque chimique','Bruit','Vibrations','Effondrement / éboulement','Ensevelissement (tranchée)','Réseau enterré','Ligne aérienne','Espace confiné','Atmosphère ATEX / H2S','Outil portatif / coupant','Engin de chantier','Incendie / explosion','Postural / TMS','Agression / incivilité','Psychosocial / stress','Biologique','Autre'].map(d=>new TextRun({text:((ev.dangers||[]).includes(d)?'☑':'☐')+' '+d+'   ',font:FONT,size:18}))})
-            ]})
-          ]})]}),
+          new Table({width:{size:CW,type:WidthType.DXA},rows:[
+            new TableRow({children:[
+              new TableCell({borders,width:{size:CW,type:WidthType.DXA},children:[
+                new Paragraph({children:['Chute de plain-pied','Chute de hauteur','Heurt / collision véhicule','Risque routier','Manutention manuelle','Manutention mécanique','Électrique','Risque chimique','Bruit','Vibrations','Effondrement / éboulement','Ensevelissement (tranchée)','Réseau enterré','Ligne aérienne','Espace confiné','Atmosphère ATEX / H2S','Outil portatif / coupant','Engin de chantier','Incendie / explosion','Postural / TMS','Agression / incivilité','Psychosocial / stress','Biologique','Autre'].map(d=>new TextRun({text:((ev.dangers||[]).includes(d)?'☑':'☐')+' '+d+'   ',font:FONT,size:18}))})
+              ]})
+            ]}),
+            row2('Autre danger',ev.dangerAutre||''),
+          ]}),
           sp(),
 
           // §6
