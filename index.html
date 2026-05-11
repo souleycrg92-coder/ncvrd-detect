@@ -1064,6 +1064,89 @@ html[data-terrain="1"] {
 /* ── EMPTY STATE SVG ─────────────────── */
 .empty-state-svg{width:120px;height:120px;margin:0 auto 12px;opacity:.7}
 .empty-state-svg svg{width:100%;height:100%}
+
+/* ══════════════════════════════════════════
+   SRESST FORM — Layout amélioré
+══════════════════════════════════════════ */
+/* Numéro de section dans le toggle */
+.sr-num{display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),#8b5cf6);color:#fff;
+  font-size:10px;font-weight:900;margin-right:9px;flex-shrink:0;
+  box-shadow:0 2px 6px rgba(59,130,246,.35)}
+/* Type d'événement — cartes pleine largeur */
+.sr-event-card{display:flex;align-items:center;gap:10px;
+  padding:11px 14px;border-radius:12px;
+  background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);
+  cursor:pointer;transition:background .15s,border-color .15s;
+  font-size:13px;color:var(--text);line-height:1.35;user-select:none}
+.sr-event-card:has(input:checked){background:rgba(59,130,246,.14);border-color:rgba(59,130,246,.5);color:#fff}
+.sr-event-card input{accent-color:var(--accent);flex-shrink:0}
+.sr-event-badge{font-size:9px;font-weight:900;letter-spacing:.6px;
+  background:rgba(59,130,246,.2);color:var(--accent);
+  border-radius:5px;padding:2px 7px;margin-left:auto;white-space:nowrap;flex-shrink:0}
+/* Grille agence 2×2 */
+.sr-agence-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.sr-agence-pill{display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 6px;border-radius:10px;
+  background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);
+  cursor:pointer;font-size:13px;font-weight:600;color:var(--text);
+  transition:background .15s,border-color .15s;user-select:none}
+.sr-agence-pill:has(input:checked){background:rgba(59,130,246,.18);border-color:var(--accent);color:#fff}
+.sr-agence-pill input{display:none}
+/* Anonyme pills */
+.sr-anon-row{display:flex;gap:10px;margin-top:8px}
+.sr-anon-pill{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:11px;border-radius:10px;
+  background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);
+  cursor:pointer;font-size:13px;font-weight:600;color:var(--text);
+  transition:background .15s,border-color .15s;user-select:none}
+.sr-anon-pill:has(input:checked){background:rgba(59,130,246,.18);border-color:var(--accent);color:#fff}
+.sr-anon-pill input{display:none}
+/* Gravité — 5 pills colorées */
+.sr-gravity-row{display:flex;gap:6px;margin-top:8px}
+.sr-gravity-pill{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:9px 3px;border-radius:10px;
+  background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);
+  cursor:pointer;font-size:10px;font-weight:800;color:var(--muted);
+  transition:background .15s,border-color .15s,color .15s;text-align:center;user-select:none}
+.sr-gravity-pill input{display:none}
+.sr-gravity-pill .g-num{font-size:16px;font-weight:900;line-height:1}
+.sr-gravity-pill[data-g="1"]:has(input:checked){background:rgba(34,197,94,.18);border-color:#22c55e;color:#22c55e}
+.sr-gravity-pill[data-g="2"]:has(input:checked){background:rgba(132,204,22,.18);border-color:#84cc16;color:#84cc16}
+.sr-gravity-pill[data-g="3"]:has(input:checked){background:rgba(234,179,8,.18);border-color:#eab308;color:#eab308}
+.sr-gravity-pill[data-g="4"]:has(input:checked){background:rgba(249,115,22,.18);border-color:#f97316;color:#f97316}
+.sr-gravity-pill[data-g="5"]:has(input:checked){background:rgba(239,68,68,.18);border-color:#ef4444;color:#ef4444}
+/* Activité — grille 2 cols */
+.sr-act-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.sr-act-pill{display:flex;align-items:center;gap:8px;
+  padding:9px 12px;border-radius:10px;
+  background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);
+  cursor:pointer;font-size:12px;color:var(--text);
+  transition:background .15s,border-color .15s;user-select:none}
+.sr-act-pill:has(input:checked){background:rgba(59,130,246,.14);border-color:rgba(59,130,246,.5);color:#fff}
+.sr-act-pill input{display:none}
+/* Chips (conditions, dangers simples) */
+.sr-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.sr-chip{display:flex;align-items:center;gap:5px;
+  padding:7px 13px;border-radius:20px;
+  background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);
+  cursor:pointer;font-size:12px;color:var(--text);
+  transition:background .15s,border-color .15s;user-select:none;white-space:nowrap}
+.sr-chip:has(input:checked){background:rgba(59,130,246,.18);border-color:var(--accent);color:#fff}
+.sr-chip input{display:none}
+/* Cartes liste SRESST */
+.sresst-card{background:var(--glass);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));
+  border:1px solid var(--glass-border);border-radius:14px;
+  padding:0;margin-bottom:10px;cursor:pointer;
+  transition:background .15s,border-color .15s;box-shadow:var(--shadow-sm);
+  overflow:hidden;display:flex;align-items:stretch}
+.sresst-card:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18)}
+.sresst-card-bar{width:5px;flex-shrink:0;background:var(--accent)}
+.sresst-card-body{padding:13px 14px;flex:1;min-width:0}
+/* Barre de progression sections */
+.sr-progress-bar{height:3px;border-radius:2px;background:rgba(255,255,255,.08);margin:0 14px 6px;overflow:hidden}
+.sr-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),#8b5cf6);transition:width .4s var(--ease)}
 </style>
 </head>
 <body>
@@ -2249,12 +2332,14 @@ html[data-terrain="1"] {
 
     <!-- ─── VUE LISTE ─── -->
     <div id="sresst-list-view">
-      <div style="position:sticky;top:0;z-index:20;background:var(--bg);padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-        <div style="font-size:17px;font-weight:800;color:#fff">🦺 SRESST</div>
-        <button class="btn-accent" style="padding:8px 16px;font-size:13px;border-radius:10px" onclick="openSRESSTNew()">➕ Nouvelle fiche</button>
+      <div style="position:sticky;top:0;z-index:20;background:var(--bg);padding:12px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:17px;font-weight:800;color:#fff">🦺 SRESST</div>
+          <div style="font-size:11px;color:var(--muted)">Remontée d'événements sécurité</div>
+        </div>
+        <button class="btn-accent" style="padding:9px 18px;font-size:13px;border-radius:20px;font-weight:700" onclick="openSRESSTNew()">➕ Nouvelle fiche</button>
       </div>
       <div style="padding:12px 14px">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Remontée d'événements sécurité — FORM-QHSE-001 v02</div>
         <div id="sresst-list"></div>
       </div>
     </div>
@@ -2262,29 +2347,29 @@ html[data-terrain="1"] {
     <!-- ─── VUE FORMULAIRE ─── -->
     <div id="sresst-form-view" style="display:none">
       <!-- Barre top -->
-      <div style="position:sticky;top:0;z-index:20;background:var(--bg);padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
-        <button onclick="showSRESSTView('list')" style="background:rgba(255,255,255,.07);border:1px solid var(--border);color:#fff;border-radius:10px;padding:7px 13px;font-size:13px">← Retour</button>
-        <div id="sresst-form-title" style="font-size:15px;font-weight:700;color:#fff;flex:1">Fiche SRESST</div>
-        <button onclick="saveSRESSTEvent()" class="btn-accent" style="padding:7px 13px;font-size:13px;border-radius:10px">💾 Enregistrer</button>
-        <button onclick="doSRESSTWordDocx()" style="background:rgba(0,120,255,.12);border:1px solid rgba(0,120,255,.3);color:var(--accent);border-radius:10px;padding:7px 13px;font-size:13px">📄 Word</button>
+      <div style="position:sticky;top:0;z-index:20;background:var(--bg);padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+        <button onclick="showSRESSTView('list')" style="background:rgba(255,255,255,.07);border:1px solid var(--border);color:#fff;border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600">‹ Retour</button>
+        <div id="sresst-form-title" style="font-size:15px;font-weight:700;color:#fff;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">🦺 Fiche SRESST</div>
+        <button onclick="doSRESSTWordDocx()" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);color:var(--accent);border-radius:20px;padding:7px 13px;font-size:13px;font-weight:600">📄 Word</button>
+        <button onclick="saveSRESSTEvent()" class="btn-accent" style="padding:7px 14px;font-size:13px;border-radius:20px;font-weight:700">💾 Sauver</button>
       </div>
 
-      <div style="padding:10px 14px">
+      <div style="padding:8px 0 0">
 
         <!-- §1 IDENTIFICATION DU DÉCLARANT -->
         <div class="acc-section">
           <button class="acc-toggle" onclick="toggleAcc(this)">
-            <span>§1 — Identification du déclarant</span><span class="acc-chevron">▼</span>
+            <span><span class="sr-num">1</span>Identification du déclarant</span><span class="acc-chevron">▼</span>
           </button>
           <div class="acc-body">
-            <!-- Q1 — Déclaration anonyme (en premier, conditionne les champs suivants) -->
+            <!-- Q1 — Déclaration anonyme -->
             <div class="form-group">
               <label class="form-label">Déclaration anonyme ? <span style="color:var(--red)">*</span></label>
-              <div style="display:flex;gap:16px;margin-top:6px">
-                <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-anonyme" value="Oui" onchange="toggleSRESSTAnonymous(this.value)"> Oui</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-anonyme" value="Non" onchange="toggleSRESSTAnonymous(this.value)" checked> Non</label>
+              <div class="sr-anon-row">
+                <label class="sr-anon-pill"><input type="radio" name="sr-anonyme" value="Non" onchange="toggleSRESSTAnonymous(this.value)" checked>👤 Identifié</label>
+                <label class="sr-anon-pill"><input type="radio" name="sr-anonyme" value="Oui" onchange="toggleSRESSTAnonymous(this.value)">🔒 Anonyme</label>
               </div>
-              <div style="font-size:11px;color:var(--muted);margin-top:5px">Si "Oui", vos coordonnées seront masquées dans le registre</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:6px">Si anonyme, vos coordonnées sont masquées dans le registre</div>
             </div>
             <!-- Q2-Q4 — Champs identité (masqués si anonyme) -->
             <div id="sr-id-fields">
@@ -2304,11 +2389,11 @@ html[data-terrain="1"] {
             <!-- Q5 — Agence -->
             <div class="form-group">
               <label class="form-label">Agence <span style="color:var(--red)">*</span></label>
-              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
-                <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-agence" value="Paris OUEST"> Paris OUEST</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-agence" value="Paris EST"> Paris EST</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-agence" value="Grand EST"> Grand EST</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-agence" value="NORD"> NORD</label>
+              <div class="sr-agence-grid">
+                <label class="sr-agence-pill"><input type="radio" name="sr-agence" value="Paris OUEST">🗼 Paris OUEST</label>
+                <label class="sr-agence-pill"><input type="radio" name="sr-agence" value="Paris EST">🗺 Paris EST</label>
+                <label class="sr-agence-pill"><input type="radio" name="sr-agence" value="Grand EST">🌄 Grand EST</label>
+                <label class="sr-agence-pill"><input type="radio" name="sr-agence" value="NORD">🧭 NORD</label>
               </div>
             </div>
             <!-- Q6 — Date de déclaration -->
@@ -2327,19 +2412,19 @@ html[data-terrain="1"] {
         <!-- §2 NATURE DE L'ÉVÉNEMENT -->
         <div class="acc-section">
           <button class="acc-toggle" onclick="toggleAcc(this)">
-            <span>§2 — Nature de l'événement</span><span class="acc-chevron">▼</span>
+            <span><span class="sr-num">2</span>Nature de l'événement</span><span class="acc-chevron">▼</span>
           </button>
           <div class="acc-body">
             <div class="form-group">
-              <label class="form-label">Type d'événement</label>
-              <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
-                <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#fff"><input type="radio" name="sr-type" value="AT"> Accident du travail avec arrêt (AT)</label>
-                <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#fff"><input type="radio" name="sr-type" value="ATSA"> Accident du travail sans arrêt (ATSA)</label>
-                <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#fff"><input type="radio" name="sr-type" value="PA"> Presqu'accident (PA)</label>
-                <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#fff"><input type="radio" name="sr-type" value="SD"> Situation dangereuse (SD)</label>
-                <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#fff"><input type="radio" name="sr-type" value="CR"> Comportement à risque (CR)</label>
-                <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#fff"><input type="radio" name="sr-type" value="DYS"> Dysfonctionnement (DYS)</label>
-                <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#fff"><input type="radio" name="sr-type" value="AGR"> Agression / incivilité (AGR)</label>
+              <label class="form-label">Type d'événement <span style="color:var(--red)">*</span></label>
+              <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+                <label class="sr-event-card"><input type="radio" name="sr-type" value="AT"><span>Accident du travail <b>avec arrêt</b></span><span class="sr-event-badge">AT</span></label>
+                <label class="sr-event-card"><input type="radio" name="sr-type" value="ATSA"><span>Accident du travail <b>sans arrêt</b></span><span class="sr-event-badge">ATSA</span></label>
+                <label class="sr-event-card"><input type="radio" name="sr-type" value="PA"><span>Presqu'accident — sans dommage mais aurait pu</span><span class="sr-event-badge">PA</span></label>
+                <label class="sr-event-card"><input type="radio" name="sr-type" value="SD"><span>Situation dangereuse — condition à risque détectée</span><span class="sr-event-badge">SD</span></label>
+                <label class="sr-event-card"><input type="radio" name="sr-type" value="CR"><span>Comportement à risque — écart aux règles observé</span><span class="sr-event-badge">CR</span></label>
+                <label class="sr-event-card"><input type="radio" name="sr-type" value="DYS"><span>Dysfonctionnement — anomalie matérielle / orga.</span><span class="sr-event-badge">DYS</span></label>
+                <label class="sr-event-card"><input type="radio" name="sr-type" value="AGR"><span>Agression / incivilité</span><span class="sr-event-badge">AGR</span></label>
               </div>
             </div>
             <!-- Q9 — Salarié(s) concerné(s) -->
@@ -2350,13 +2435,14 @@ html[data-terrain="1"] {
             <!-- Q10 — Gravité -->
             <div class="form-group" style="margin-top:14px">
               <label class="form-label">Gravité potentielle estimée <span style="color:var(--red)">*</span></label>
-              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
-                <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-gravite" value="1"> 1 – Mineure</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-gravite" value="2"> 2 – Modérée</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-gravite" value="3"> 3 – Sérieuse</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-gravite" value="4"> 4 – Grave</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#fff"><input type="radio" name="sr-gravite" value="5"> 5 – Très grave</label>
+              <div class="sr-gravity-row">
+                <label class="sr-gravity-pill" data-g="1"><input type="radio" name="sr-gravite" value="1"><span class="g-num">1</span>Mineure</label>
+                <label class="sr-gravity-pill" data-g="2"><input type="radio" name="sr-gravite" value="2"><span class="g-num">2</span>Modérée</label>
+                <label class="sr-gravity-pill" data-g="3"><input type="radio" name="sr-gravite" value="3"><span class="g-num">3</span>Sérieuse</label>
+                <label class="sr-gravity-pill" data-g="4"><input type="radio" name="sr-gravite" value="4"><span class="g-num">4</span>Grave</label>
+                <label class="sr-gravity-pill" data-g="5"><input type="radio" name="sr-gravite" value="5"><span class="g-num">5</span>Très grave</label>
               </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:6px">Estimation par le déclarant — sera réévaluée par le QHSE</div>
             </div>
           </div>
         </div>
@@ -2364,56 +2450,56 @@ html[data-terrain="1"] {
         <!-- §3 LIEU, DATE ET CONTEXTE -->
         <div class="acc-section">
           <button class="acc-toggle" onclick="toggleAcc(this)">
-            <span>§3 — Lieu, date et contexte</span><span class="acc-chevron">▼</span>
+            <span><span class="sr-num">3</span>Lieu, date et contexte</span><span class="acc-chevron">▼</span>
           </button>
           <div class="acc-body">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
               <div class="form-group">
-                <label class="form-label">Date événement</label>
+                <label class="form-label">📅 Date de l'événement <span style="color:var(--red)">*</span></label>
                 <input class="form-input" id="sr-date-evenement" type="date">
               </div>
               <div class="form-group">
-                <label class="form-label">Heure</label>
+                <label class="form-label">🕐 Heure <span style="color:var(--red)">*</span></label>
                 <input class="form-input" id="sr-heure" type="time">
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label">Lieu / Chantier</label>
+              <label class="form-label">📍 Lieu / Chantier <span style="color:var(--red)">*</span></label>
               <input class="form-input" id="sr-lieu" type="text" placeholder="Nom du chantier ou du lieu">
             </div>
             <div class="form-group">
-              <label class="form-label">Commune – Département</label>
-              <input class="form-input" id="sr-commune" type="text" placeholder="Ex. Paris – 75">
+              <label class="form-label">🏘 Commune – Département <span style="color:var(--red)">*</span></label>
+              <input class="form-input" id="sr-commune" type="text" placeholder="Ex. Bondy (93)">
             </div>
             <div class="form-group">
               <label class="form-label">Activité en cours <span style="color:var(--red)">*</span></label>
-              <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="radio" name="sr-activite" value="Détection réseaux"> Détection réseaux</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="radio" name="sr-activite" value="Topographie"> Topographie</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="radio" name="sr-activite" value="Études / MOE"> Études / MOE</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="radio" name="sr-activite" value="SIG / Cartographie"> SIG / Cartographie</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="radio" name="sr-activite" value="Chantier (terrain)"> Chantier (terrain)</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="radio" name="sr-activite" value="Déplacement"> Déplacement</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="radio" name="sr-activite" value="Bureau"> Bureau</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="radio" name="sr-activite" value="Autre" onchange="document.getElementById('sr-activite-autre-wrap').style.display='flex'"> Autre</label>
+              <div class="sr-act-grid">
+                <label class="sr-act-pill"><input type="radio" name="sr-activite" value="Détection réseaux">📡 Détection réseaux</label>
+                <label class="sr-act-pill"><input type="radio" name="sr-activite" value="Topographie">📐 Topographie</label>
+                <label class="sr-act-pill"><input type="radio" name="sr-activite" value="Études / MOE">📝 Études / MOE</label>
+                <label class="sr-act-pill"><input type="radio" name="sr-activite" value="SIG / Cartographie">🗺 SIG / Carto</label>
+                <label class="sr-act-pill"><input type="radio" name="sr-activite" value="Chantier (terrain)">⛏ Chantier terrain</label>
+                <label class="sr-act-pill"><input type="radio" name="sr-activite" value="Déplacement">🚗 Déplacement</label>
+                <label class="sr-act-pill"><input type="radio" name="sr-activite" value="Bureau">🖥 Bureau</label>
+                <label class="sr-act-pill"><input type="radio" name="sr-activite" value="Autre" onchange="document.getElementById('sr-activite-autre-wrap').style.display='flex'">✏️ Autre</label>
               </div>
-              <div id="sr-activite-autre-wrap" style="display:none;align-items:center;gap:6px;margin-top:6px">
+              <div id="sr-activite-autre-wrap" style="display:none;align-items:center;gap:6px;margin-top:8px">
                 <span style="font-size:12px;color:var(--muted)">Préciser :</span>
                 <input class="form-input" id="sr-activite-autre" type="text" style="flex:1;padding:6px 10px;font-size:12px" placeholder="Préciser l'activité…">
               </div>
             </div>
             <div class="form-group">
               <label class="form-label">Conditions particulières</label>
-              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-condition" value="Voirie ouverte"> Voirie ouverte</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-condition" value="Travail isolé"> Travail isolé</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-condition" value="Co-activité"> Co-activité</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-condition" value="Météo défavorable"> Météo défavorable</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-condition" value="Nuit / faible visibilité"> Nuit / faible visibilité</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-condition" value="Espace confiné"> Espace confiné</label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-condition" value="Hauteur"> Hauteur</label>
+              <div class="sr-chips">
+                <label class="sr-chip"><input type="checkbox" name="sr-condition" value="Voirie ouverte">🚧 Voirie ouverte</label>
+                <label class="sr-chip"><input type="checkbox" name="sr-condition" value="Travail isolé">🧍 Travail isolé</label>
+                <label class="sr-chip"><input type="checkbox" name="sr-condition" value="Co-activité">👥 Co-activité</label>
+                <label class="sr-chip"><input type="checkbox" name="sr-condition" value="Météo défavorable">🌧 Météo défavorable</label>
+                <label class="sr-chip"><input type="checkbox" name="sr-condition" value="Nuit / faible visibilité">🌙 Nuit / visibilité</label>
+                <label class="sr-chip"><input type="checkbox" name="sr-condition" value="Espace confiné">⬜ Espace confiné</label>
+                <label class="sr-chip"><input type="checkbox" name="sr-condition" value="Hauteur">⬆ Hauteur</label>
               </div>
-              <input class="form-input" id="sr-condition-autre" type="text" placeholder="Autre : préciser…" style="margin-top:8px">
+              <input class="form-input" id="sr-condition-autre" type="text" placeholder="Autre condition : préciser…" style="margin-top:8px">
             </div>
           </div>
         </div>
@@ -2421,12 +2507,13 @@ html[data-terrain="1"] {
         <!-- §4 DESCRIPTION DES FAITS -->
         <div class="acc-section">
           <button class="acc-toggle" onclick="toggleAcc(this)">
-            <span>§4 — Description des faits</span><span class="acc-chevron">▼</span>
+            <span><span class="sr-num">4</span>Description des faits</span><span class="acc-chevron">▼</span>
           </button>
           <div class="acc-body">
             <div class="form-group">
-              <label class="form-label">Description (qui, quoi, où, quand, comment)</label>
-              <textarea class="form-input" id="sr-description" rows="5" placeholder="Décrivez précisément les faits…"></textarea>
+              <label class="form-label">Description objective (qui, quoi, où, quand, comment) <span style="color:var(--red)">*</span></label>
+              <textarea class="form-input" id="sr-description" rows="5" placeholder="Décrivez précisément les faits — évitez les jugements et hypothèses…" style="resize:vertical"></textarea>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">Minimum 50 caractères requis</div>
             </div>
           </div>
         </div>
@@ -2434,43 +2521,44 @@ html[data-terrain="1"] {
         <!-- §5 DANGERS / RISQUES -->
         <div class="acc-section">
           <button class="acc-toggle" onclick="toggleAcc(this)">
-            <span>§5 — Dangers / Risques identifiés</span><span class="acc-chevron">▼</span>
+            <span><span class="sr-num">5</span>Dangers / Risques identifiés</span><span class="acc-chevron">▼</span>
           </button>
           <div class="acc-body">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin-top:6px">
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Chute de plain-pied"> Chute de plain-pied</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Chute de hauteur"> Chute de hauteur</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Heurt / collision véhicule"> Heurt / collision véhicule</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Risque routier"> Risque routier</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Manutention manuelle"> Manutention manuelle</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Manutention mécanique"> Manutention mécanique</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Électrique"> Électrique</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Risque chimique"> Risque chimique</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Bruit"> Bruit</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Vibrations"> Vibrations</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Effondrement / éboulement"> Effondrement / éboulement</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Ensevelissement (tranchée)"> Ensevelissement (tranchée)</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Réseau enterré"> Réseau enterré (énergie, gaz…)</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Ligne aérienne"> Ligne aérienne</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Espace confiné"> Espace confiné</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Atmosphère ATEX / H2S"> Atmosphère ATEX / H2S</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Outil portatif / coupant"> Outil portatif / coupant</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Engin de chantier"> Engin de chantier</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Incendie / explosion"> Incendie / explosion</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Postural / TMS"> Postural / TMS</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Agression / incivilité"> Agression / incivilité</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Psychosocial / stress"> Psychosocial / stress</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Biologique"> Biologique</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#fff"><input type="checkbox" name="sr-danger" value="Autre"> Autre</label>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Cochez tout ce qui s'applique <span style="color:var(--red)">*</span></div>
+            <div class="sr-chips">
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Chute de plain-pied">Chute plain-pied</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Chute de hauteur">Chute de hauteur</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Heurt / collision véhicule">Heurt véhicule</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Risque routier">Risque routier</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Manutention manuelle">Manutention manuelle</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Manutention mécanique">Manutention mécanique</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Électrique">⚡ Électrique</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Risque chimique">☣ Risque chimique</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Bruit">🔊 Bruit</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Vibrations">Vibrations</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Effondrement / éboulement">Effondrement</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Ensevelissement (tranchée)">Ensevelissement</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Réseau enterré">Réseau enterré</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Ligne aérienne">Ligne aérienne</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Espace confiné">Espace confiné</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Atmosphère ATEX / H2S">ATEX / H2S</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Outil portatif / coupant">Outil coupant</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Engin de chantier">Engin de chantier</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Incendie / explosion">🔥 Incendie</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Postural / TMS">Postural / TMS</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Agression / incivilité">Agression</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Psychosocial / stress">Psychosocial</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Biologique">Biologique</label>
+              <label class="sr-chip"><input type="checkbox" name="sr-danger" value="Autre">+ Autre</label>
             </div>
-            <input class="form-input" id="sr-danger-autre" type="text" placeholder="Autre danger : préciser…" style="margin-top:8px">
+            <input class="form-input" id="sr-danger-autre" type="text" placeholder="Autre danger : préciser…" style="margin-top:10px">
           </div>
         </div>
 
         <!-- §6 CAUSES IMMÉDIATES (5M) -->
         <div class="acc-section">
           <button class="acc-toggle" onclick="toggleAcc(this)">
-            <span>§6 — Causes immédiates supposées (5M)</span><span class="acc-chevron">▼</span>
+            <span><span class="sr-num">6</span>Causes immédiates supposées (5M)</span><span class="acc-chevron">▼</span>
           </button>
           <div class="acc-body">
             <!-- MILIEU -->
@@ -2578,11 +2666,12 @@ html[data-terrain="1"] {
         <!-- §7 MESURES IMMÉDIATES -->
         <div class="acc-section">
           <button class="acc-toggle" onclick="toggleAcc(this)">
-            <span>§7 — Mesures immédiates prises</span><span class="acc-chevron">▼</span>
+            <span><span class="sr-num">7</span>Mesures immédiates prises</span><span class="acc-chevron">▼</span>
           </button>
           <div class="acc-body">
             <div class="form-group">
-              <textarea class="form-input" id="sr-mesures" rows="4" placeholder="Actions immédiates réalisées sur le terrain…"></textarea>
+              <label class="form-label" style="color:var(--muted);font-size:11px;margin-bottom:6px">Mise en sécurité, balisage, arrêt de tâche, alerte hiérarchie…</label>
+              <textarea class="form-input" id="sr-mesures" rows="4" placeholder="Actions immédiates réalisées sur le terrain…" style="resize:vertical"></textarea>
             </div>
           </div>
         </div>
@@ -2590,11 +2679,12 @@ html[data-terrain="1"] {
         <!-- §8 PROPOSITION DU DÉCLARANT -->
         <div class="acc-section">
           <button class="acc-toggle" onclick="toggleAcc(this)">
-            <span>§8 — Proposition du déclarant (facultatif)</span><span class="acc-chevron">▼</span>
+            <span><span class="sr-num">8</span>Proposition du déclarant</span><span class="acc-chevron">▼</span>
           </button>
           <div class="acc-body">
             <div class="form-group">
-              <textarea class="form-input" id="sr-proposition" rows="3" placeholder="Suggestions pour éviter la récurrence…"></textarea>
+              <label class="form-label" style="color:var(--muted);font-size:11px;margin-bottom:6px">Facultatif mais encouragé — votre connaissance terrain est précieuse</label>
+              <textarea class="form-input" id="sr-proposition" rows="3" placeholder="Suggestions pour éviter la récurrence…" style="resize:vertical"></textarea>
             </div>
           </div>
         </div>
@@ -2769,9 +2859,9 @@ html[data-terrain="1"] {
         </div><!-- end QHSE block -->
 
         <!-- Boutons bas de page -->
-        <div style="display:flex;gap:10px;margin-top:20px;padding-bottom:20px">
-          <button class="btn-big btn-accent" style="flex:1" onclick="saveSRESSTEvent()">💾 Enregistrer la fiche</button>
-          <button class="btn-big" style="flex:1;background:rgba(0,120,255,.1);border:1px solid rgba(0,120,255,.3);color:var(--accent);border-radius:14px" onclick="doSRESSTWordDocx()">📄 Exporter Word</button>
+        <div style="display:flex;gap:10px;margin:20px 14px 24px">
+          <button class="btn-big btn-accent" style="flex:2;border-radius:16px;font-size:14px" onclick="saveSRESSTEvent()">💾 Enregistrer la fiche</button>
+          <button class="btn-big" style="flex:1;background:rgba(59,130,246,.1);border:1.5px solid rgba(59,130,246,.3);color:var(--accent);border-radius:16px;font-size:14px" onclick="doSRESSTWordDocx()">📄 Word</button>
         </div>
 
       </div><!-- end form padding -->
@@ -10435,18 +10525,30 @@ function renderSRESSTList(){
     el.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">Aucune fiche enregistrée.<br>Appuyez sur ➕ pour créer une fiche.</div>';
     return;
   }
-  el.innerHTML = events.map(e=>`
-    <div onclick="openSRESSTEvent('${e.id}')" style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div style="font-weight:700;font-size:14px;color:#fff">${e.typeEvenement||'Type non défini'} — ${e.dateEvenement||'Date ?'}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:3px">${e.nomPrenom||'Anonyme'} · ${e.lieuChantier||'Lieu ?'}</div>
-          <div style="font-size:11px;margin-top:4px"><span style="background:rgba(0,180,255,.12);color:var(--accent);border-radius:6px;padding:2px 8px">${_srLabel(e.typeEvenement)}</span></div>
+  const typeColors = {AT:'#ef4444',ATSA:'#f97316',PA:'#eab308',SD:'#3b82f6',CR:'#8b5cf6',DYS:'#6b7280',AGR:'#ec4899'};
+  el.innerHTML = events.map(e=>{
+    const col = typeColors[e.typeEvenement]||'var(--accent)';
+    const gBadge = e.gravite ? `<span style="background:rgba(255,255,255,.07);border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:var(--muted)">G${e.gravite}</span>` : '';
+    const dFmt = e.dateEvenement ? e.dateEvenement.split('-').reverse().join('/') : '—';
+    return `
+    <div class="sresst-card" onclick="openSRESSTEvent('${e.id}')">
+      <div class="sresst-card-bar" style="background:${col}"></div>
+      <div class="sresst-card-body">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <div style="min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+              <span style="font-size:11px;font-weight:900;letter-spacing:.6px;color:${col};background:${col}20;border-radius:5px;padding:2px 7px">${e.typeEvenement||'?'}</span>
+              ${gBadge}
+              <span style="font-size:11px;color:var(--muted)">${dFmt}</span>
+            </div>
+            <div style="font-weight:700;font-size:13px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.lieuChantier||'Lieu non renseigné'}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${e.nomPrenom||'🔒 Anonyme'} · ${e.agence||e.communeDept||''}</div>
+          </div>
+          <button onclick="event.stopPropagation();deleteSRESSTEvent('${e.id}')" style="background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);color:#ef4444;border-radius:8px;padding:5px 9px;font-size:11px;flex-shrink:0">✕</button>
         </div>
-        <button onclick="event.stopPropagation();deleteSRESSTEvent('${e.id}')" style="background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.3);color:#ef4444;border-radius:8px;padding:6px 10px;font-size:12px">✕</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function _srLabel(type){
