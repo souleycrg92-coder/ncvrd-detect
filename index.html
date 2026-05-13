@@ -3511,7 +3511,7 @@ const NCVRD_CONTACTS = [
   { prenom:'Alexandre',     email:'a.breuzard@neoconceptvrd.fr',            agence:'Paris Est'   },
   { prenom:'Jean-Paul',     email:'jp.goodridge@neoconceptvrd.fr',          agence:'Paris Est'   },
   { prenom:'Souleymane',    email:'Souleymane.mekboul@neoconceptvrd.fr',    agence:'Paris Est'   },
-  { prenom:'Aimé',          email:'aimen.goara@neoconceptvrd.fr',           agence:'Paris Est'   },
+  { prenom:'Aimen',         email:'aimen.goara@neoconceptvrd.fr',           agence:'Paris Est'   },
   { prenom:'Florian',       email:'florian.b@neoconceptvrd.fr',             agence:'Grand Est'   },
   { prenom:'Grégoire',      email:'gregoire.m@neoconceptvrd.fr',            agence:'Grand Est'   },
   { prenom:'Lucas',         email:'lucas.s@neoconceptvrd.fr',               agence:'Grand Est'   },
@@ -7917,21 +7917,14 @@ async function doWordDocx(){
       if(!dataUrl){ console.warn('[Word] toJpegForDocx → null pour:', originalSrc); return null; }
       const p=parseImg(dataUrl);
       if(!p){ console.warn('[Word] parseImg → null, type:', dataUrl.substring(0,40)); return null; }
-      // Toujours respecter le ratio réel de la photo (portrait ou paysage)
-      let w=408,h=306; // ratio 4:3 paysage par défaut
+      // Paysage : 7cm × 5cm fixes (198×142pt). Portrait : 5cm × 7cm fixes (142×198pt).
+      let w=198,h=142;
       try{
         const dims=await imgDims(dataUrl);
         if(dims.w&&dims.h){
           const ratio=dims.w/dims.h;
-          if(ratio>=1){
-            // Photo paysage : largeur max 408
-            w=408; h=Math.round(408/ratio);
-          } else {
-            // Photo portrait : hauteur max 480, largeur calculée
-            h=480; w=Math.round(480*ratio);
-            // Ne pas dépasser 408 en largeur
-            if(w>408){w=408; h=Math.round(408/ratio);}
-          }
+          if(ratio<1){ w=142; h=198; } // portrait
+          // paysage (ratio>=1) : w=198, h=142 (défaut)
         }
       }catch(e){}
       _imgTotal++; _imgOk++;
