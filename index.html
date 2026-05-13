@@ -7911,7 +7911,7 @@ async function doWordDocx(){
       return new ImageRun({type:p.type,data:p.data,transformation:{width:w,height:h},altText:{title:'Photo',description:'Photo',name:'Photo'}});
     }
     async function makeImgRunHalf(dataUrl){
-      // Photo réseau 7cm × 4cm (199pt × 113pt) - 2 colonnes
+      // Photo réseau 8cm × 6cm (227pt × 170pt) - 2 colonnes
       const originalSrc = typeof dataUrl === 'string' ? dataUrl.substring(0,80) : '(null)';
       dataUrl = await ensureDataUrl(dataUrl);
       if(!dataUrl){ console.warn('[Word] ensureDataUrl (half) → null pour:', originalSrc); return null; }
@@ -7919,13 +7919,13 @@ async function doWordDocx(){
       if(!dataUrl){ console.warn('[Word] toJpegForDocx (half) → null pour:', originalSrc); return null; }
       const p=parseImg(dataUrl);
       if(!p){ console.warn('[Word] parseImg (half) → null, type:', dataUrl.substring(0,40)); return null; }
-      let w=199,h=113;
+      let w=227,h=170;
       try{
         const dims=await imgDims(dataUrl);
         if(dims.w&&dims.h){
           const ratio=dims.w/dims.h;
-          if(ratio>=1){ w=199; h=Math.round(199/ratio); }
-          else { h=160; w=Math.round(160*ratio); if(w>199){w=199;h=Math.round(199/ratio);} }
+          if(ratio>=1){ w=227; h=Math.round(227/ratio); }
+          else { h=170; w=Math.round(170*ratio); if(w>227){w=227;h=Math.round(227/ratio);} }
         }
       }catch(e){}
       return new ImageRun({type:p.type,data:p.data,transformation:{width:w,height:h},altText:{title:'Photo',description:'Photo',name:'Photo'}});
