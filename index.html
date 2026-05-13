@@ -11151,39 +11151,44 @@ async function _doSendEmail(){
 
 // ── Wrappers blob pour chaque type de rapport ──
 
-/** Génère le blob du rapport de détection sans déclencher de téléchargement */
-async function _blobRapportDetection(){
-  // Récupère le blob généré par doWordDocx en monkey-patching temporaire createObjectURL
+/** Capture le blob d'une fonction export sans déclencher le téléchargement */
+async function _captureBlob(exportFn){
   return new Promise(async (resolve, reject)=>{
-    const orig = URL.createObjectURL.bind(URL);
-    let captured = null;
-    URL.createObjectURL = (b)=>{ captured = b; URL.createObjectURL = orig; return orig(b); };
-    try { await doWordDocx(); resolve(captured); }
-    catch(e){ URL.createObjectURL = orig; reject(e); }
+    let capturedBlob = null;
+
+    // 1 — Intercepte createObjectURL pour récupérer le blob
+    const origCreateURL = URL.createObjectURL.bind(URL);
+    URL.createObjectURL = (b)=>{
+      capturedBlob = b;
+      URL.createObjectURL = origCreateURL;
+      return origCreateURL(b);
+    };
+
+    // 2 — Intercepte click() sur les ancres pour bloquer le téléchargement
+    const origClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function(){
+      if(this.hasAttribute('download')){
+        HTMLAnchorElement.prototype.click = origClick;
+        return; // bloque le téléchargement
+      }
+      origClick.call(this);
+    };
+
+    try {
+      await exportFn();
+      HTMLAnchorElement.prototype.click = origClick;
+      resolve(capturedBlob);
+    } catch(e){
+      URL.createObjectURL = origCreateURL;
+      HTMLAnchorElement.prototype.click = origClick;
+      reject(e);
+    }
   });
 }
 
-/** Génère le blob du rapport Ouvrages sans téléchargement */
-async function _blobRapportOuvrages(){
-  return new Promise(async (resolve, reject)=>{
-    const orig = URL.createObjectURL.bind(URL);
-    let captured = null;
-    URL.createObjectURL = (b)=>{ captured = b; URL.createObjectURL = orig; return orig(b); };
-    try { await _generateOuvragesWord(S_ouvrages, 'ouvrages'); resolve(captured); }
-    catch(e){ URL.createObjectURL = orig; reject(e); }
-  });
-}
-
-/** Génère le blob du rapport SRESST sans téléchargement */
-async function _blobRapportSRESST(){
-  return new Promise(async (resolve, reject)=>{
-    const orig = URL.createObjectURL.bind(URL);
-    let captured = null;
-    URL.createObjectURL = (b)=>{ captured = b; URL.createObjectURL = orig; return orig(b); };
-    try { await doSRESSTWordDocx(); resolve(captured); }
-    catch(e){ URL.createObjectURL = orig; reject(e); }
-  });
-}
+const _blobRapportDetection = ()=> _captureBlob(doWordDocx);
+const _blobRapportOuvrages  = ()=> _captureBlob(()=>_generateOuvragesWord(S_ouvrages,'ouvrages'));
+const _blobRapportSRESST    = ()=> _captureBlob(doSRESSTWordDocx);
 
 // ── Raccourcis UI ──
 function emailRapportDetection(){
