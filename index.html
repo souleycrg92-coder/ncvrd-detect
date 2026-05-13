@@ -3403,10 +3403,16 @@ body::before{
         <div style="font-size:11px;color:var(--muted);margin-top:2px">Fichier Word (.docx)</div>
       </div>
     </div>
-    <!-- Champ destinataire (optionnel, utilisé en fallback bureau) -->
+    <!-- Destinataire — liste déroulante -->
     <div class="form-group">
-      <label class="form-label">Destinataire <span style="font-size:9px;color:var(--muted);letter-spacing:0;text-transform:none;font-weight:400">(optionnel sur mobile)</span></label>
-      <input type="email" id="email-recipient" class="form-input" placeholder="exemple@mail.com" autocomplete="email" inputmode="email">
+      <label class="form-label">Destinataire</label>
+      <select id="email-recipient-select" class="form-select" onchange="_onRecipientChange(this)">
+        <option value="">— Choisir un destinataire —</option>
+      </select>
+      <!-- Champ manuel affiché si "Autre" sélectionné -->
+      <input type="email" id="email-recipient" class="form-input" placeholder="Adresse mail manuelle"
+        autocomplete="email" inputmode="email"
+        style="display:none;margin-top:8px">
     </div>
     <!-- Champ objet -->
     <div class="form-group">
@@ -3425,10 +3431,9 @@ body::before{
         <span id="email-send-label">✉️ Envoyer</span>
       </button>
     </div>
-    <!-- Info partage natif -->
+    <!-- Info expéditeur -->
     <div style="margin-top:10px;padding:9px 12px;border-radius:10px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);font-size:11px;color:var(--green);line-height:1.5">
-      📱 Sur mobile : ouvre directement la feuille de partage (Mail, WhatsApp, Teams…) avec le fichier joint.<br>
-      🖥️ Sur PC : télécharge le fichier et ouvre votre client mail.
+      📨 Envoyé depuis <strong>ncvrddetect@gmail.com</strong> avec le rapport .docx en pièce jointe.
     </div>
   </div>
 </div>
@@ -3483,13 +3488,37 @@ body::before{
 //  Créez un compte sur https://www.emailjs.com
 //  puis un service + un template
 // ════════════════════════════════════════════
-const EMAILJS_CONFIG = {
-  publicKey:  'VOTRE_PUBLIC_KEY',       // Account > API Keys (emailjs.com)
-  serviceId:  'service_c7sciuo',         // Email Services (Gmail ncvrddetect)
-  templateId: 'VOTRE_TEMPLATE_ID',      // Email Templates
-  fromEmail:  'ncvrddetect@gmail.com',  // Adresse expéditeur
-  fromName:   'NCVRD Detect',           // Nom affiché dans les mails
-};
+// ════════════════════════════════════════════
+//  GOOGLE APPS SCRIPT — Envoi mail avec pièce jointe
+//  Expéditeur : ncvrddetect@gmail.com
+// ════════════════════════════════════════════
+const GAS_MAIL_URL = 'https://script.google.com/macros/s/AKfycbyJtptglqHz386yfvz-iV1h7VOBSfzXwnEMWrQCTg0p3ibgPmb17P4mxZpUGPSguzP4Sg/exec';
+
+// ════════════════════════════════════════════
+//  CONTACTS GROUPE NCVRD
+//  Prénom affiché → email réel
+// ════════════════════════════════════════════
+const NCVRD_CONTACTS = [
+  { prenom:'Rachid',        email:'rachid.andouri@neoconceptvrd.fr',       agence:'Paris Ouest' },
+  { prenom:'Jordan',        email:'jordan.clodine@neoconceptvrd.fr',        agence:'Paris Ouest' },
+  { prenom:'Stephan',       email:'stephan.esteves@neoconceptvrd.fr',       agence:'Paris Ouest' },
+  { prenom:'Muhammad',      email:'F.muhammad@neoconceptvrd.fr',            agence:'Paris Ouest' },
+  { prenom:'Anissa',        email:'secretariat@neoconceptvrd.fr',           agence:'Paris Ouest' },
+  { prenom:'Jeanne-Debora', email:'jeanne-debora.koff@neoconceptvrd.fr',    agence:'Paris Ouest' },
+  { prenom:'Vinh Loi',      email:'vinh.loi.nguyen@neoconceptvrd.fr',       agence:'Paris Ouest' },
+  { prenom:'Maxime',        email:'maxime.bourre@neoconceptvrd.fr',         agence:'Paris Est'   },
+  { prenom:'Clément',       email:'clement.bourre@neoconceptvrd.fr',        agence:'Paris Est'   },
+  { prenom:'Alexandre',     email:'a.breuzard@neoconceptvrd.fr',            agence:'Paris Est'   },
+  { prenom:'Jean-Paul',     email:'jp.goodridge@neoconceptvrd.fr',          agence:'Paris Est'   },
+  { prenom:'Souleymane',    email:'Souleymane.mekboul@neoconceptvrd.fr',    agence:'Paris Est'   },
+  { prenom:'Aimé',          email:'aimen.goara@neoconceptvrd.fr',           agence:'Paris Est'   },
+  { prenom:'Florian',       email:'florian.b@neoconceptvrd.fr',             agence:'Grand Est'   },
+  { prenom:'Grégoire',      email:'gregoire.m@neoconceptvrd.fr',            agence:'Grand Est'   },
+  { prenom:'Lucas',         email:'lucas.s@neoconceptvrd.fr',               agence:'Grand Est'   },
+  { prenom:'Stéphane',      email:'stephane.s@neoconceptvrd.fr',            agence:'Grand Est'   },
+  { prenom:'Mathieu',       email:'mathieu.c@neoconceptvrd.fr',             agence:'Grand Est'   },
+  { prenom:'Noah',          email:'noah.s@neoconceptvrd.fr',                agence:'Grand Est'   },
+];
 
 const FIREBASE_CONFIG = {
   apiKey:            "AIzaSyBSYpQzMenjr7sghERSTs8ABwE9ZrN96VQ",
@@ -11007,77 +11036,114 @@ function openEmailSendModal(blobFn, docLabel, fname, defaultSubject){
   document.getElementById('email-doc-name').textContent = docLabel;
   document.getElementById('email-subject').value = defaultSubject || docLabel;
   document.getElementById('email-recipient').value = '';
+  document.getElementById('email-recipient').style.display = 'none';
   document.getElementById('email-send-label').textContent = '✉️ Envoyer';
   document.getElementById('email-send-btn').disabled = false;
 
-  const notCfg = document.getElementById('emailjs-not-configured');
-  const configured = EMAILJS_CONFIG.publicKey && EMAILJS_CONFIG.publicKey !== 'VOTRE_PUBLIC_KEY';
-  notCfg.style.display = configured ? 'none' : 'block';
+  // Remplir la liste déroulante groupée par agence
+  _buildRecipientSelect();
 
   openModal('m-email-send');
-  setTimeout(()=>document.getElementById('email-recipient').focus(), 300);
+  setTimeout(()=>document.getElementById('email-recipient-select').focus(), 300);
+}
+
+function _buildRecipientSelect(){
+  const sel = document.getElementById('email-recipient-select');
+  sel.innerHTML = '<option value="">— Choisir un destinataire —</option>';
+
+  // Grouper par agence
+  const agences = [...new Set(NCVRD_CONTACTS.map(c=>c.agence))];
+  agences.forEach(agence=>{
+    const grp = document.createElement('optgroup');
+    grp.label = '📍 ' + agence;
+    NCVRD_CONTACTS.filter(c=>c.agence===agence).forEach(c=>{
+      const opt = document.createElement('option');
+      opt.value = c.email;
+      opt.textContent = c.prenom;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  });
+
+  // Option "Autre" pour saisie manuelle
+  const sep = document.createElement('option');
+  sep.disabled = true; sep.textContent = '──────────────';
+  sel.appendChild(sep);
+  const autre = document.createElement('option');
+  autre.value = '__autre__';
+  autre.textContent = '✏️ Autre adresse…';
+  sel.appendChild(autre);
+}
+
+function _onRecipientChange(sel){
+  const manualInput = document.getElementById('email-recipient');
+  if(sel.value === '__autre__'){
+    manualInput.style.display = 'block';
+    manualInput.value = '';
+    setTimeout(()=>manualInput.focus(), 100);
+  } else {
+    manualInput.style.display = 'none';
+  }
 }
 
 async function _doSendEmail(){
+  const sel = document.getElementById('email-recipient-select');
+  let recipient = sel.value === '__autre__'
+    ? document.getElementById('email-recipient').value.trim()
+    : sel.value;
   const subject = document.getElementById('email-subject').value.trim() || 'Rapport NCVRD Detect';
   const message = document.getElementById('email-message').value.trim() ||
     'Bonjour,\nVeuillez trouver le rapport NCVRD Detect en pièce jointe.\n\nCordialement.';
 
+  if(!recipient || recipient === '__autre__' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)){
+    toast('⚠️ Veuillez choisir un destinataire'); return;
+  }
+
+  // Récupérer le prénom pour le toast
+  const contact = NCVRD_CONTACTS.find(c=>c.email===recipient);
+  const prenom = contact ? contact.prenom : recipient;
+
   const btn = document.getElementById('email-send-btn');
   const lbl = document.getElementById('email-send-label');
   btn.disabled = true;
-  lbl.textContent = '⏳ Génération…';
+  lbl.textContent = '⏳ Génération du rapport…';
 
   try {
     // 1 — Générer le blob .docx
     const blob = await _emailPendingBlob();
     if(!blob) throw new Error('Impossible de générer le document');
 
-    const mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-    const file = new File([blob], _emailPendingFname, { type: mimeType });
+    lbl.textContent = '⏳ Envoi en cours…';
 
-    // 2 — Web Share API natif (iOS/Android) — priorité absolue, supporte les fichiers
-    if(navigator.canShare && navigator.canShare({ files:[file] })){
-      lbl.textContent = '📤 Partage…';
-      await navigator.share({
-        title:   subject,
-        text:    message,
-        files:   [file],
-      });
-      toast('✅ Rapport partagé avec succès !');
-      closeModal('m-email-send');
-      return;
-    }
+    // 2 — Convertir en base64
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload  = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = () => reject(new Error('Lecture fichier échouée'));
+      reader.readAsDataURL(blob);
+    });
 
-    // 3 — Fallback : Web Share sans fichier (ouvre l'app mail avec sujet/corps)
-    if(navigator.share){
-      lbl.textContent = '📤 Partage…';
-      await navigator.share({ title: subject, text: message + '\n\n[Fichier joint séparément]' });
-      toast('✅ Partagé ! Joignez le fichier manuellement.');
-      closeModal('m-email-send');
-      return;
-    }
+    // 3 — Envoyer via Google Apps Script (ncvrddetect@gmail.com)
+    const resp = await fetch(GAS_MAIL_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        to_email:        recipient,
+        subject:         subject,
+        message:         message,
+        attachment_name: _emailPendingFname,
+        attachment_data: base64,
+      }),
+    });
 
-    // 4 — Fallback bureau : téléchargement + mailto
-    const recipient = document.getElementById('email-recipient').value.trim();
-    // Télécharge le fichier
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = _emailPendingFname;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(url), 500);
-    // Ouvre le client mail
-    if(recipient){
-      const mailBody = encodeURIComponent(message + '\n\n[Veuillez joindre le fichier téléchargé : ' + _emailPendingFname + ']');
-      window.location.href = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${mailBody}`;
-    }
-    toast('📥 Fichier téléchargé — joignez-le à votre mail');
+    const result = await resp.json();
+    if(result.status !== 'ok') throw new Error(result.message || 'Erreur serveur');
+
+    toast('✅ Rapport envoyé à ' + prenom);
     closeModal('m-email-send');
 
   } catch(err){
-    if(err?.name === 'AbortError'){ btn.disabled=false; lbl.textContent='✉️ Envoyer'; return; }
     console.error('[Email]', err);
-    toast('❌ Erreur : ' + (err?.message || err));
+    toast('❌ Erreur envoi : ' + (err?.message || err));
     lbl.textContent = '✉️ Envoyer';
     btn.disabled = false;
   }
