@@ -7917,14 +7917,14 @@ async function doWordDocx(){
       if(!dataUrl){ console.warn('[Word] toJpegForDocx → null pour:', originalSrc); return null; }
       const p=parseImg(dataUrl);
       if(!p){ console.warn('[Word] parseImg → null, type:', dataUrl.substring(0,40)); return null; }
-      // Paysage : 7cm × 5cm fixes (198×142pt). Portrait : 5cm × 7cm fixes (142×198pt).
-      let w=198,h=142;
+      // Paysage : 8cm × 6cm fixes (227×170pt). Portrait : 6cm × 8cm fixes (170×227pt).
+      let w=227,h=170;
       try{
         const dims=await imgDims(dataUrl);
         if(dims.w&&dims.h){
           const ratio=dims.w/dims.h;
-          if(ratio<1){ w=142; h=198; } // portrait
-          // paysage (ratio>=1) : w=198, h=142 (défaut)
+          if(ratio<1){ w=170; h=227; } // portrait
+          // paysage (ratio>=1) : w=227, h=170 (défaut)
         }
       }catch(e){}
       _imgTotal++; _imgOk++;
@@ -7939,14 +7939,14 @@ async function doWordDocx(){
       if(!dataUrl){ console.warn('[Word] toJpegForDocx (half) → null pour:', originalSrc); return null; }
       const p=parseImg(dataUrl);
       if(!p){ console.warn('[Word] parseImg (half) → null, type:', dataUrl.substring(0,40)); return null; }
-      // Paysage : 8cm × 6cm fixes (227×170pt). Portrait : 6cm × 8cm fixes (170×227pt).
-      let w=227,h=170;
+      // Paysage : 9cm × 7cm fixes (255×198pt). Portrait : 7cm × 9cm fixes (198×255pt).
+      let w=255,h=198;
       try{
         const dims=await imgDims(dataUrl);
         if(dims.w&&dims.h){
           const ratio=dims.w/dims.h;
-          if(ratio<1){ w=170; h=227; } // portrait
-          // paysage (ratio>=1) : w=227, h=170 (défaut)
+          if(ratio<1){ w=198; h=255; } // portrait
+          // paysage (ratio>=1) : w=255, h=198 (défaut)
         }
       }catch(e){}
       return new ImageRun({type:p.type,data:p.data,transformation:{width:w,height:h},altText:{title:'Photo',description:'Photo',name:'Photo'}});
