@@ -1699,7 +1699,7 @@ body::before{
             <span style="font-size:13px;color:var(--muted)">📍 Appuyer pour ajouter le plan de situation</span>
           </div>
           <input type="file" id="plan-input" accept="image/*" style="display:none" onchange="handlePlanInput(this)">
-          <input type="file" id="photo-gallery-rapport" accept="image/*" style="display:none" onchange="handleRapportGallery(this)">
+          <input type="file" id="photo-gallery-rapport" accept="image/*" multiple style="display:none" onchange="handleRapportGallery(this)">
         </div>
       </div>
     </div>
@@ -3167,7 +3167,7 @@ body::before{
         style="width:100%;background:var(--input);border:1.5px dashed var(--inputborder);border-radius:10px;padding:13px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
         📷 Ajouter une photo
       </button>
-      <input type="file" id="net-photo-input" accept="image/*" style="display:none" onchange="handleNetModalPhoto(this)">
+      <input type="file" id="net-photo-input" accept="image/*" multiple style="display:none" onchange="handleNetModalPhoto(this)">
     </div>
     <div class="form-group"><label class="form-label">Appareil de détection</label>
       <input class="form-input" id="net-methode" placeholder="Ex: Radiodétection en 50Hz et GEORADAR…" autocomplete="off"></div>
@@ -3208,7 +3208,7 @@ body::before{
 
 <!-- Global photo inputs (camera + gallery) -->
 <input type="file" id="photo-src-camera" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoSrcInput(this)">
-<input type="file" id="photo-src-gallery" accept="image/*" style="display:none" onchange="handlePhotoSrcInput(this)">
+<input type="file" id="photo-src-gallery" accept="image/*" multiple style="display:none" onchange="handlePhotoSrcInput(this)">
 
 <!-- Modal: Collaborateurs -->
 <div class="modal" id="m-collab" onclick="if(event.target===this)closeModal('m-collab')">
@@ -5923,60 +5923,82 @@ function choosePhotoGallery(){
 }
 
 async function handleRapportGallery(input){
-  if(!input.files[0]) return;
-  try {
-    const compressed = await compressImage(input.files[0]);
-    await savePhoto(compressed);
-  } catch(e){
-    Logger.error('Photos', 'Erreur ajout photo galerie', e?.message);
-    toast('❌ Erreur lors de l\'ajout de la photo');
+  if(!input.files.length) return;
+  const files = Array.from(input.files);
+  let ok=0, ko=0;
+  for(const file of files){
+    try {
+      const compressed = await compressImage(file);
+      await savePhoto(compressed);
+      ok++;
+    } catch(e){
+      Logger.error('Photos', 'Erreur ajout photo galerie', e?.message);
+      ko++;
+    }
   }
   input.value='';
+  if(ko>0) toast('⚠️ '+ok+' photo(s) ajoutée(s), '+ko+' erreur(s)');
+  else if(ok>1) toast('📷 '+ok+' photos ajoutées');
 }
 
 async function handlePhotoSrcInput(input){
-  if(!input.files[0]) return;
+  if(!input.files.length) return;
   const ctx = photoSourceCtx;
   const maxW = (ctx==='plan') ? 1200 : 900;
-  try {
-    const compressed = await compressImage(input.files[0], maxW);
-    input.value = '';
-
-    if(ctx === 'plan'){
-      S.currentRapport.planSituation = compressed;
-      const wrap = document.getElementById('plan-situation-img-wrap');
-      wrap.innerHTML = '<img src="'+compressed+'" style="width:100%;border-radius:8px;max-height:200px;object-fit:contain">';
-      wrap.style.display = 'block';
-      rapportChanged();
-      clearTimeout(saveTimer); S.currentRapport.updatedAt=Date.now(); db.put('rapports',S.currentRapport).catch(()=>{});
-      toast('📍 Plan de situation ajouté');
-    } else if(ctx === 'netModal'){
-      netModalPhotos.push(compressed);
-      renderNetModalPhotos();
-    } else if(ctx === 'conclusion'){
-      if(!S.currentRapport.conclusionPhotos) S.currentRapport.conclusionPhotos=[];
-      S.currentRapport.conclusionPhotos.push(compressed);
-      rapportChanged();
-      clearTimeout(saveTimer); S.currentRapport.updatedAt=Date.now(); db.put('rapports',S.currentRapport).catch(()=>{});
-      renderConclusionPhotos();
-      toast('📷 Photo de conclusion ajoutée');
-    } else if(ctx && ctx.startsWith('net:')){
-      const netId = ctx.substring(4);
-      const n = S.currentRapport.networks.find(x => x.id === netId);
-      if(n){
-        if(!n.photos){ n.photos = n.photo ? [n.photo] : []; delete n.photo; }
-        n.photos.push(compressed);
+  // Plan de situation : une seule photo (remplace l'existante)
+  const files = (ctx==='plan') ? [input.files[0]] : Array.from(input.files);
+  input.value = '';
+  let ok=0;
+  for(const file of files){
+    try {
+      const compressed = await compressImage(file, maxW);
+      if(ctx === 'plan'){
+        S.currentRapport.planSituation = compressed;
+        const wrap = document.getElementById('plan-situation-img-wrap');
+        wrap.innerHTML = '<img src="'+compressed+'" style="width:100%;border-radius:8px;max-height:200px;object-fit:contain">';
+        wrap.style.display = 'block';
         rapportChanged();
         clearTimeout(saveTimer); S.currentRapport.updatedAt=Date.now(); db.put('rapports',S.currentRapport).catch(()=>{});
-        renderNetworks();
-        toast('📷 Photo ajoutée — 📍 GPS en cours…');
-        captureGPSForNetwork(n.nature);
+        toast('📍 Plan de situation ajouté');
+      } else if(ctx === 'netModal'){
+        netModalPhotos.push(compressed);
+        renderNetModalPhotos();
+        ok++;
+      } else if(ctx === 'conclusion'){
+        if(!S.currentRapport.conclusionPhotos) S.currentRapport.conclusionPhotos=[];
+        S.currentRapport.conclusionPhotos.push(compressed);
+        rapportChanged();
+        clearTimeout(saveTimer); S.currentRapport.updatedAt=Date.now(); db.put('rapports',S.currentRapport).catch(()=>{});
+        renderConclusionPhotos();
+        ok++;
+      } else if(ctx && ctx.startsWith('net:')){
+        const netId = ctx.substring(4);
+        const n = S.currentRapport.networks.find(x => x.id === netId);
+        if(n){
+          if(!n.photos){ n.photos = n.photo ? [n.photo] : []; delete n.photo; }
+          n.photos.push(compressed);
+          rapportChanged();
+          clearTimeout(saveTimer); S.currentRapport.updatedAt=Date.now(); db.put('rapports',S.currentRapport).catch(()=>{});
+          renderNetworks();
+          ok++;
+        }
       }
+    } catch(e){
+      Logger.error('Photos', `Erreur traitement photo (ctx: ${ctx})`, e?.message);
     }
-  } catch(e){
-    Logger.error('Photos', `Erreur traitement photo (ctx: ${ctx})`, e?.message);
-    toast('❌ Erreur lors du traitement de la photo');
-    input.value = '';
+  }
+  // Toast groupé pour sélection multiple
+  if(ctx !== 'plan' && ok > 0){
+    if(ctx === 'conclusion'){
+      toast(ok===1 ? '📷 Photo de conclusion ajoutée' : '📷 '+ok+' photos de conclusion ajoutées');
+    } else if(ctx === 'netModal'){
+      toast(ok===1 ? '📷 Photo ajoutée' : '📷 '+ok+' photos ajoutées');
+    } else if(ctx && ctx.startsWith('net:')){
+      toast(ok===1 ? '📷 Photo ajoutée — 📍 GPS en cours…' : '📷 '+ok+' photos ajoutées — 📍 GPS en cours…');
+      const netId = ctx.substring(4);
+      const n = S.currentRapport.networks.find(x => x.id === netId);
+      if(n) captureGPSForNetwork(n.nature);
+    }
   }
 }
 
@@ -6125,15 +6147,20 @@ function pickNetModalPhoto(){
 
 
 async function handleNetModalPhoto(input){
-  if(!input.files[0]) return;
-  try {
-    const compressed=await compressImage(input.files[0],900);
-    netModalPhotos.push(compressed);
-    renderNetModalPhotos();
-  } catch(e){
-    Logger.error('Photos', 'Erreur compression photo réseau modal', e?.message);
-    toast('❌ Erreur traitement photo');
+  if(!input.files.length) return;
+  const files = Array.from(input.files);
+  let ok=0;
+  for(const file of files){
+    try {
+      const compressed=await compressImage(file,900);
+      netModalPhotos.push(compressed);
+      ok++;
+    } catch(e){
+      Logger.error('Photos', 'Erreur compression photo réseau modal', e?.message);
+    }
   }
+  renderNetModalPhotos();
+  if(ok>1) toast('📷 '+ok+' photos ajoutées');
   input.value='';
 }
 
@@ -7919,13 +7946,14 @@ async function doWordDocx(){
       if(!dataUrl){ console.warn('[Word] toJpegForDocx (half) → null pour:', originalSrc); return null; }
       const p=parseImg(dataUrl);
       if(!p){ console.warn('[Word] parseImg (half) → null, type:', dataUrl.substring(0,40)); return null; }
+      // Paysage : 8cm × 6cm fixes (227×170pt). Portrait : 6cm × 8cm fixes (170×227pt).
       let w=227,h=170;
       try{
         const dims=await imgDims(dataUrl);
         if(dims.w&&dims.h){
           const ratio=dims.w/dims.h;
-          if(ratio>=1){ w=227; h=Math.round(227/ratio); }
-          else { h=170; w=Math.round(170*ratio); if(w>227){w=227;h=Math.round(227/ratio);} }
+          if(ratio<1){ w=170; h=227; } // portrait
+          // paysage (ratio>=1) : w=227, h=170 (défaut)
         }
       }catch(e){}
       return new ImageRun({type:p.type,data:p.data,transformation:{width:w,height:h},altText:{title:'Photo',description:'Photo',name:'Photo'}});
