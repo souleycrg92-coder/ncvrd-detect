@@ -1438,12 +1438,12 @@ body::before{
 <!-- ─── LEFT NAV ──────────────────────────── -->
 <div id="bottom-nav" style="display:none">
   <button class="nav-btn active" id="nav-home" onclick="showScreen('screen-home')">🏗️<br>Accueil</button>
-  <button class="nav-btn" id="nav-dossier" onclick="showScreen('s-dossier')">📂<br>Docs</button>
-  <button class="nav-btn" id="nav-consignes" onclick="showScreen('s-consignes')">📋<br>Consignes</button>
   <button class="nav-btn" id="nav-ouvrages" onclick="showScreen('s-ouvrages')">🔩<br>Ouvrages</button>
+  <button class="nav-btn" id="nav-sresst" onclick="showScreen('s-sresst');loadSRESSTScreen()">🦺<br>SRESST</button>
+  <button class="nav-btn" id="nav-consignes" onclick="showScreen('s-consignes')">📋<br>Consignes</button>
+  <button class="nav-btn" id="nav-dossier" onclick="showScreen('s-dossier')">📂<br>Docs</button>
   <button class="nav-btn" id="nav-profil" onclick="showScreen('s-profil')">👤<br>Profil</button>
   <button class="nav-btn" id="nav-admin" onclick="openAdmin()" style="display:none">⚙️<br>Admin</button>
-  <button class="nav-btn" id="nav-sresst" onclick="showScreen('s-sresst');loadSRESSTScreen()">🦺<br>SRESST</button>
 </div>
 
 <!-- ─── APP CONTAINER ─────────────────────── -->
@@ -2108,11 +2108,17 @@ body::before{
     </div>
     <div style="padding:14px 14px 0;display:flex;gap:8px">
       <button onclick="openNewOuvrage()" style="flex:1;padding:13px;background:linear-gradient(135deg,var(--accent),#0070cc);color:#fff;border:none;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit">➕ Nouvel ouvrage</button>
-      <button onclick="exportAllOuvrages()" style="padding:13px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--text);border-radius:14px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit" title="Exporter tous les ouvrages en Word">📥 Word</button>
-      <button onclick="emailRapportOuvrages()" style="padding:13px 16px;background:rgba(45,212,191,.08);border:1px solid rgba(45,212,191,.3);color:#2dd4bf;border-radius:14px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit" title="Envoyer par mail">✉️</button>
     </div>
     <div id="ouvrages-count" style="padding:8px 16px 0;font-size:12px;color:var(--muted)"></div>
-    <div id="ouvrages-list" style="padding:10px 14px 20px"></div>
+    <div id="ouvrages-list" style="padding:10px 14px 4px"></div>
+    <!-- § Export -->
+    <div style="padding:0 14px 10px">
+      <div class="sec-hdr">Export des ouvrages</div>
+      <div class="btn-row">
+        <button class="btn-big btn-card" style="flex:1;background:var(--blue);color:#fff;border-color:var(--blue)" onclick="exportAllOuvrages()">📝 Word</button>
+        <button class="btn-big" style="flex:0 0 auto;padding:0 16px;background:rgba(45,212,191,.08);border:1.5px solid rgba(45,212,191,.3);color:#2dd4bf;border-radius:14px" onclick="emailRapportOuvrages()" title="Envoyer par mail">✉️</button>
+      </div>
+    </div>
   </div>
 
   <!-- ══════════════════ SCREEN OUVRAGE FORMULAIRE ══════════════════ -->
@@ -2121,6 +2127,7 @@ body::before{
     <div style="padding:12px 14px;display:flex;gap:8px;border-bottom:1px solid var(--border);background:var(--card)">
       <button onclick="saveOuvrage()" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--accent),#0070cc);color:#fff;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit">💾 Enregistrer</button>
       <button onclick="exportSingleOuvrage()" style="padding:12px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--text);border-radius:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit" title="Exporter en Word">📥 Word</button>
+      <button onclick="emailSingleOuvrage()" style="padding:12px 14px;background:rgba(45,212,191,.08);border:1px solid rgba(45,212,191,.3);color:#2dd4bf;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit" title="Envoyer par mail">✉️</button>
       <button onclick="_currentOuvrage&&deleteOuvrage(_currentOuvrage.id)" style="padding:12px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit" title="Supprimer cet ouvrage">🗑️</button>
     </div>
 
@@ -11228,6 +11235,18 @@ function emailRapportOuvrages(){
     'Rapport Ouvrages',
     'Rapport_Ouvrages_NCVRD.docx',
     'Rapport Ouvrages — NCVRD Detect'
+  );
+}
+function emailSingleOuvrage(){
+  const o = _currentOuvrage;
+  if(!o){ toast('❌ Aucun ouvrage ouvert'); return; }
+  const num = o.numeroOuvrage || 'Ouvrage';
+  const fname = 'Ouvrage_'+num.replace(/[^a-zA-Z0-9_-]/g,'_')+'.docx';
+  openEmailSendModal(
+    ()=> _captureBlob(()=>_generateOuvragesWord([o], num)),
+    'Fiche Ouvrage — '+num,
+    fname,
+    'Fiche ouvrage '+num+' — NCVRD Detect'
   );
 }
 function emailRapportSRESST(){
