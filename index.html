@@ -7912,7 +7912,7 @@ async function doWordDocx(){
         children:[new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:0},children:[mkRun('CLASSE '+L,{size:20,bold:true,color:WHITE,tracking:60})]})]
       });
     }
-    // ── Encart bleu marine fond + texte blanc justifié (conclusions) ──
+    // ── Encart conclusions : fond gris clair + texte navy justifié ──
     function darkCallout(text){
       const lines = String(text||'').split(/\n+/).filter(s=>s.trim());
       return new Table({
@@ -7921,12 +7921,12 @@ async function doWordDocx(){
         rows:[new TableRow({children:[new TableCell({
           width:{size:CW,type:WidthType.DXA},
           borders:noBorders,
-          shading:{type:ShadingType.CLEAR,fill:NAVY},
-          margins:{top:280,bottom:280,left:340,right:340},
+          shading:{type:ShadingType.CLEAR,fill:'F2F2F2'},
+          margins:{top:320,bottom:320,left:380,right:380},
           children: lines.map((l,i)=>new Paragraph({
-            spacing:{before:i?80:0,after:0},
+            spacing:{before:i?100:0,after:0},
             alignment:AlignmentType.JUSTIFIED,
-            children:[mkRun(l,{size:20,color:WHITE})]
+            children:[mkRun(l,{size:20,color:NAVY})]
           }))
         })]})]
       });
@@ -8334,9 +8334,9 @@ async function doWordDocx(){
     // La bannière est rendue automatiquement via le Header (cf. _BANNER_V2_B64 en bas).
     // Layout : tagline caps espacée → trait orange → italique RCS → titre géant → encart chantier → coordonnées.
     children.push(sp(400));
-    // Tagline : "NEOCONCEPT VRD GRAND EST" en caps espacées centrées
+    // Tagline : "NEOCONCEPT VRD GRAND EST" en caps avec tracking modéré
     children.push(new Paragraph({spacing:{before:0,after:60},alignment:AlignmentType.CENTER,children:[
-      mkRun(caps(_ent.nom),{size:22,bold:true,color:NAVY,tracking:80})
+      mkRun(String(_ent.nom||'').toUpperCase(),{size:24,bold:true,color:TEXT_DARK,tracking:60})
     ]}));
     // Trait orange court centré
     children.push(new Paragraph({
@@ -8605,7 +8605,7 @@ async function doWordDocx(){
           borders:noBorders,
           verticalAlign:VerticalAlign.CENTER,
           margins:{top:200,bottom:200,left:180,right:180},
-          children:[new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:0},children:[mkRun(caps(n.nature||'-'),{size:18,bold:true,color:NAVY,tracking:80})]})]
+          children:[new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:0},children:[mkRun(String(n.nature||'-').toUpperCase(),{size:20,bold:true,color:NAVY,tracking:40})]})]
         });
         const cellAppareil = new TableCell({
           width:{size:colW[1],type:WidthType.DXA},
