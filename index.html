@@ -7908,8 +7908,8 @@ async function doWordDocx(){
         shading:{type:ShadingType.CLEAR,fill},
         borders:noBorders,
         verticalAlign:VerticalAlign.CENTER,
-        margins:{top:160,bottom:160,left:60,right:60},
-        children:[new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:0},children:[mkRun('CLASSE '+L,{size:20,bold:true,color:WHITE,tracking:60})]})]
+        margins:{top:160,bottom:160,left:40,right:40},
+        children:[new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:0},children:[mkRun('CLASSE '+L,{size:18,bold:true,color:WHITE,tracking:20})]})]
       });
     }
     // ── Encart conclusions : fond gris clair + texte navy justifié ──
@@ -7955,15 +7955,16 @@ async function doWordDocx(){
     }
     // ── Card "Impact sur la classe" : libellé en cellule navy + texte italique à droite ──
     function impactCard(text){
+      const leftW = Math.round(CW*0.32);
       const left = new TableCell({
-        width:{size:Math.round(CW*0.28),type:WidthType.DXA},borders:noBorders,
+        width:{size:leftW,type:WidthType.DXA},borders:noBorders,
         shading:{type:ShadingType.CLEAR,fill:NAVY},
         verticalAlign:VerticalAlign.CENTER,
-        margins:{top:200,bottom:200,left:200,right:200},
-        children:[new Paragraph({spacing:{before:0,after:0},children:[mkRun('IMPACT SUR LA CLASSE',{size:16,bold:true,color:WHITE,tracking:40})]})]
+        margins:{top:200,bottom:200,left:140,right:140},
+        children:[new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:0},children:[mkRun('IMPACT SUR LA CLASSE',{size:14,bold:true,color:WHITE})]})]
       });
       const right = new TableCell({
-        width:{size:CW-Math.round(CW*0.28),type:WidthType.DXA},borders:noBorders,
+        width:{size:CW-leftW,type:WidthType.DXA},borders:noBorders,
         shading:{type:ShadingType.CLEAR,fill:CARDBG},
         verticalAlign:VerticalAlign.CENTER,
         margins:{top:200,bottom:200,left:280,right:280},
@@ -7971,7 +7972,7 @@ async function doWordDocx(){
       });
       return new Table({
         width:{size:CW,type:WidthType.DXA},
-        columnWidths:[Math.round(CW*0.28),CW-Math.round(CW*0.28)],
+        columnWidths:[leftW,CW-leftW],
         borders:noBorders,
         rows:[new TableRow({children:[left,right]})]
       });
@@ -11607,6 +11608,7 @@ async function _doSendEmail(){
     });
 
     // 3 — Envoyer via Google Apps Script (ncvrddetect@gmail.com)
+    console.log('[Email] → destinataire:', recipient, '| objet:', subject, '| pièce:', _emailPendingFname);
     const resp = await fetch(GAS_MAIL_URL, {
       method: 'POST',
       body: JSON.stringify({
@@ -11618,8 +11620,14 @@ async function _doSendEmail(){
       }),
     });
 
-    const result = await resp.json();
-    if(result.status !== 'ok') throw new Error(result.message || 'Erreur serveur');
+    // Lire la réponse en texte pour pouvoir afficher la cause si parsing JSON échoue
+    const rawText = await resp.text();
+    console.log('[Email] HTTP', resp.status, '— réponse GAS :', rawText);
+    let result;
+    try { result = JSON.parse(rawText); }
+    catch(_){ throw new Error('Réponse GAS invalide (HTTP '+resp.status+') : '+rawText.slice(0,160)); }
+
+    if(result.status !== 'ok') throw new Error(result.message || ('Statut GAS : '+result.status));
 
     toast('✅ Rapport envoyé à ' + prenom);
     closeModal('m-email-send');
