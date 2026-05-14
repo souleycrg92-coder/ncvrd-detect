@@ -7713,35 +7713,293 @@ async function doWordDocx(){
       ShadingType, PageBreak, PageNumber, TabStopType, VerticalAlign
     } = window.docx;
 
-    // ── Palette BTP ──
+    // ── Palette template v2 (extraite du docx source) ──
     const NAVY='0E2841', STEEL='0E2841', ORANGE='E8620A';
+    const CYAN='0B769F';                  // numéros section, sous-titres
+    const TEXT_DARK='0F172A';             // corps texte foncé (Slate 900)
+    const TEXT_MID='475569';              // corps secondaire (Slate 600)
+    const TEXT_LIGHT='94A3B8';            // labels caps, footer (Slate 400)
+    const CARDBG='F8FAFC';                // fond cards
+    const WARMBG='FFF7ED';                // encart observations
+    const COVERBG='F2F2F2';               // fond encart chantier (cover)
+    const CLA='059669', CLB='D97706', CLC='DC2626'; // badges classe
     const LGRAY='F4F6F9', MGRAY='D1D5DB', DGRAY='374151';
-    const WHITE='FFFFFF', FONT='Calibri';
+    const WHITE='FFFFFF';
+    const FONT='Aptos';                   // police Office 365 (fallback Calibri auto)
     const CW=9638; // A4 marges 1134 (0.79")
 
     const brd=(color,size=4)=>({style:BorderStyle.SINGLE,size,color:color||MGRAY});
+    const noBrd={style:BorderStyle.NONE,size:0,color:'FFFFFF'};
     const borders={top:brd(MGRAY),left:brd(MGRAY),bottom:brd(MGRAY),right:brd(MGRAY)};
+    const noBorders={top:noBrd,left:noBrd,bottom:noBrd,right:noBrd,insideH:noBrd,insideV:noBrd};
     const brdObs={top:brd(ORANGE,8),left:brd(ORANGE,16),bottom:brd(ORANGE,8),right:brd(MGRAY)};
 
     function mkRun(text,o={}){
-      return new TextRun({text:String(text??''),font:FONT,size:o.size??22,bold:!!o.bold,italics:!!o.italics,color:o.color??DGRAY});
+      return new TextRun({text:String(text??''),font:FONT,size:o.size??22,bold:!!o.bold,italics:!!o.italics,color:o.color??TEXT_DARK,characterSpacing:o.tracking});
     }
+    // MAJUSCULES espacées (libellés tracking-wide)
+    function caps(s){return String(s||'').toUpperCase().split('').join(' ');}
     function sp(after=100){return new Paragraph({spacing:{after},children:[]});}
 
+    // ── Section header v2 : numéro géant cyan + titre majuscule navy + trait orange court ──
+    // Rendu via une table 2-col sans bordures pour aligner le grand numéro à gauche du titre.
     function sectionTitle(num,text){
-      return new Paragraph({
-        spacing:{before:280,after:0},
-        shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},
-        border:{bottom:{style:BorderStyle.SINGLE,size:14,color:NAVY}},
-        children:[mkRun('  '+num+'  ',{size:26,bold:true,color:NAVY}),mkRun(text.toUpperCase(),{size:26,bold:true,color:NAVY})]
+      const numCell = new TableCell({
+        width:{size:1400,type:WidthType.DXA},
+        borders:noBorders,
+        verticalAlign:VerticalAlign.CENTER,
+        margins:{top:0,bottom:0,left:0,right:120},
+        children:[new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.LEFT,children:[mkRun(num,{size:84,bold:true,color:CYAN})]})]
+      });
+      const titleCell = new TableCell({
+        width:{size:CW-1400,type:WidthType.DXA},
+        borders:noBorders,
+        verticalAlign:VerticalAlign.CENTER,
+        margins:{top:0,bottom:0,left:0,right:0},
+        children:[
+          new Paragraph({spacing:{before:120,after:60},children:[mkRun(text.toUpperCase(),{size:36,bold:true,color:NAVY})]}),
+          new Paragraph({spacing:{before:0,after:0},border:{bottom:{style:BorderStyle.SINGLE,size:18,color:ORANGE}},indent:{right:Math.round((CW-1400)*0.55)},children:[mkRun(' ',{size:2})]})
+        ]
+      });
+      return new Table({
+        width:{size:CW,type:WidthType.DXA},
+        columnWidths:[1400,CW-1400],
+        borders:noBorders,
+        rows:[new TableRow({children:[numCell,titleCell]})]
       });
     }
+    // ── Sous-titre underline noir ──
     function subTitle(text){
       return new Paragraph({
-        spacing:{before:160,after:80},
-        border:{left:{style:BorderStyle.SINGLE,size:16,color:NAVY,space:8}},
-        indent:{left:180},
-        children:[mkRun(text,{size:24,bold:true,color:NAVY})]
+        spacing:{before:200,after:120},
+        border:{bottom:{style:BorderStyle.SINGLE,size:8,color:NAVY}},
+        children:[mkRun(text.toUpperCase(),{size:24,bold:true,color:NAVY})]
+      });
+    }
+    // ── Card avec accent bar à gauche (4px), fond gris clair, label caps + valeur ──
+    // accentColor : NAVY (défaut) ou ORANGE
+    // value peut être un string ou un array de TextRun (pour styliser la valeur)
+    function accentCard(label,value,opt={}){
+      const accent = opt.accent||NAVY;
+      const labelTxt = String(label||'');
+      const valueRuns = Array.isArray(value)
+        ? value
+        : [mkRun(String(value||'-'),{size:opt.valueSize||22,bold:true,color:opt.valueColor||TEXT_DARK})];
+      // Col 1 = bar 4px (accent), Col 2 = contenu
+      const bar = new TableCell({
+        width:{size:60,type:WidthType.DXA},borders:noBorders,
+        shading:{type:ShadingType.CLEAR,fill:accent},
+        margins:{top:0,bottom:0,left:0,right:0},
+        children:[new Paragraph({spacing:{before:0,after:0},children:[mkRun(' ',{size:2})]})]
+      });
+      const body = new TableCell({
+        width:{size:(opt.width||CW)-60,type:WidthType.DXA},borders:noBorders,
+        shading:{type:ShadingType.CLEAR,fill:CARDBG},
+        margins:{top:140,bottom:140,left:200,right:160},
+        verticalAlign:VerticalAlign.CENTER,
+        children:[
+          new Paragraph({spacing:{before:0,after:40},children:[mkRun(caps(labelTxt),{size:14,color:TEXT_LIGHT,bold:true})]}),
+          new Paragraph({spacing:{before:0,after:0},children:valueRuns})
+        ]
+      });
+      return new Table({
+        width:{size:opt.width||CW,type:WidthType.DXA},
+        columnWidths:[60,(opt.width||CW)-60],
+        borders:noBorders,
+        rows:[new TableRow({children:[bar,body]})]
+      });
+    }
+    // ── Grille 2 colonnes de cards (alignées). items = [{label,value,accent?},...] ──
+    function cardsGrid2(items){
+      const colW = Math.floor((CW-160)/2); // 160 = gap entre cols
+      const rows = [];
+      for(let i=0;i<items.length;i+=2){
+        const left = items[i];
+        const right = items[i+1];
+        const mkCardCell = (it)=>{
+          if(!it) return new TableCell({width:{size:colW,type:WidthType.DXA},borders:noBorders,children:[new Paragraph({})]});
+          const accent = it.accent||NAVY;
+          const bar = new TableCell({
+            width:{size:50,type:WidthType.DXA},borders:noBorders,
+            shading:{type:ShadingType.CLEAR,fill:accent},
+            margins:{top:0,bottom:0,left:0,right:0},
+            children:[new Paragraph({spacing:{before:0,after:0},children:[mkRun(' ',{size:2})]})]
+          });
+          const body = new TableCell({
+            width:{size:colW-50,type:WidthType.DXA},borders:noBorders,
+            shading:{type:ShadingType.CLEAR,fill:CARDBG},
+            margins:{top:130,bottom:130,left:180,right:140},
+            verticalAlign:VerticalAlign.CENTER,
+            children:[
+              new Paragraph({spacing:{before:0,after:40},children:[mkRun(caps(it.label||''),{size:14,color:TEXT_LIGHT,bold:true})]}),
+              new Paragraph({spacing:{before:0,after:0},children:[mkRun(String(it.value||'-'),{size:22,bold:true,color:TEXT_DARK})]})
+            ]
+          });
+          return new TableCell({
+            width:{size:colW,type:WidthType.DXA},borders:noBorders,
+            margins:{top:0,bottom:0,left:0,right:0},
+            children:[new Table({width:{size:colW,type:WidthType.DXA},columnWidths:[50,colW-50],borders:noBorders,rows:[new TableRow({children:[bar,body]})]})]
+          });
+        };
+        const gap = new TableCell({width:{size:160,type:WidthType.DXA},borders:noBorders,children:[new Paragraph({})]});
+        rows.push(new TableRow({children:[mkCardCell(left),gap,mkCardCell(right)]}));
+        // ligne d'espace entre rangées
+        if(i+2<items.length) rows.push(new TableRow({children:[
+          new TableCell({width:{size:colW,type:WidthType.DXA},borders:noBorders,children:[new Paragraph({spacing:{before:0,after:0},children:[mkRun(' ',{size:8})]})]}),
+          new TableCell({width:{size:160,type:WidthType.DXA},borders:noBorders,children:[new Paragraph({})]}),
+          new TableCell({width:{size:colW,type:WidthType.DXA},borders:noBorders,children:[new Paragraph({spacing:{before:0,after:0},children:[mkRun(' ',{size:8})]})]})
+        ]}));
+      }
+      return new Table({
+        width:{size:CW,type:WidthType.DXA},
+        columnWidths:[colW,160,colW],
+        borders:noBorders,
+        rows
+      });
+    }
+    // ── Card "personne" : nom bold + rôle italique + (tel orange) ──
+    function personCard(nom,role,tel){
+      const runs = [];
+      runs.push(new Paragraph({spacing:{before:0,after:30},children:[mkRun(String(nom||'-'),{size:22,bold:true,color:TEXT_DARK})]}));
+      if(role) runs.push(new Paragraph({spacing:{before:0,after:tel?30:0},children:[mkRun(role,{size:18,italics:true,color:TEXT_MID})]}));
+      if(tel)  runs.push(new Paragraph({spacing:{before:0,after:0},children:[mkRun(tel,{size:20,bold:true,color:ORANGE})]}));
+      const bar = new TableCell({
+        width:{size:60,type:WidthType.DXA},borders:noBorders,
+        shading:{type:ShadingType.CLEAR,fill:NAVY},
+        margins:{top:0,bottom:0,left:0,right:0},
+        children:[new Paragraph({spacing:{before:0,after:0},children:[mkRun(' ',{size:2})]})]
+      });
+      const body = new TableCell({
+        width:{size:CW-60,type:WidthType.DXA},borders:noBorders,
+        shading:{type:ShadingType.CLEAR,fill:CARDBG},
+        margins:{top:140,bottom:140,left:200,right:160},
+        children:runs
+      });
+      return new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[60,CW-60],borders:noBorders,rows:[new TableRow({children:[bar,body]})]});
+    }
+    // ── Card "matériel" : nom bold + libellé caps petit + valeur orange (n° série / éditeur) ──
+    function materielCard(nom,label,valeur,accent){
+      const bar = new TableCell({
+        width:{size:60,type:WidthType.DXA},borders:noBorders,
+        shading:{type:ShadingType.CLEAR,fill:accent||NAVY},
+        margins:{top:0,bottom:0,left:0,right:0},
+        children:[new Paragraph({spacing:{before:0,after:0},children:[mkRun(' ',{size:2})]})]
+      });
+      const body = new TableCell({
+        width:{size:CW-60,type:WidthType.DXA},borders:noBorders,
+        shading:{type:ShadingType.CLEAR,fill:CARDBG},
+        margins:{top:140,bottom:140,left:200,right:160},
+        children:[
+          new Paragraph({spacing:{before:0,after:30},children:[mkRun(String(nom||'-'),{size:22,bold:true,color:TEXT_DARK})]}),
+          new Paragraph({spacing:{before:0,after:0},children:[
+            mkRun(caps(label||'')+'  ',{size:14,color:TEXT_LIGHT,bold:true}),
+            mkRun(String(valeur||'-'),{size:20,bold:true,color:ORANGE})
+          ]})
+        ]
+      });
+      return new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[60,CW-60],borders:noBorders,rows:[new TableRow({children:[bar,body]})]});
+    }
+    // ── Badge Classe coloré (cellule pour tableau synthèse) ──
+    function classBadgeCell(letter,width){
+      const L = String(letter||'').toUpperCase().replace(/^CLASSE\s*/,'').trim();
+      const fill = L==='A'?CLA : (L==='B'?CLB : (L==='C'?CLC : TEXT_LIGHT));
+      return new TableCell({
+        width:{size:width||1400,type:WidthType.DXA},
+        shading:{type:ShadingType.CLEAR,fill},
+        borders:noBorders,
+        verticalAlign:VerticalAlign.CENTER,
+        margins:{top:160,bottom:160,left:60,right:60},
+        children:[new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:0},children:[mkRun('CLASSE '+L,{size:20,bold:true,color:WHITE,tracking:60})]})]
+      });
+    }
+    // ── Encart bleu marine fond + texte blanc justifié (conclusions) ──
+    function darkCallout(text){
+      const lines = String(text||'').split(/\n+/).filter(s=>s.trim());
+      return new Table({
+        width:{size:CW,type:WidthType.DXA},
+        borders:noBorders,
+        rows:[new TableRow({children:[new TableCell({
+          width:{size:CW,type:WidthType.DXA},
+          borders:noBorders,
+          shading:{type:ShadingType.CLEAR,fill:NAVY},
+          margins:{top:280,bottom:280,left:340,right:340},
+          children: lines.map((l,i)=>new Paragraph({
+            spacing:{before:i?80:0,after:0},
+            alignment:AlignmentType.JUSTIFIED,
+            children:[mkRun(l,{size:20,color:WHITE})]
+          }))
+        })]})]
+      });
+    }
+    // ── Puce ▶ orange (limites d'utilisation) ──
+    function bulletOrange(text){
+      return new Paragraph({
+        spacing:{before:40,after:0},
+        indent:{left:360,hanging:240},
+        children:[mkRun('▸  ',{size:20,bold:true,color:ORANGE}),mkRun(text,{size:20,color:TEXT_DARK})]
+      });
+    }
+    // ── Card header titre (bandeau bleu marine type "Plan de situation") ──
+    function bannerTitle(text){
+      return new Table({
+        width:{size:CW,type:WidthType.DXA},
+        borders:noBorders,
+        rows:[new TableRow({children:[new TableCell({
+          width:{size:CW,type:WidthType.DXA},
+          borders:noBorders,
+          shading:{type:ShadingType.CLEAR,fill:NAVY},
+          margins:{top:140,bottom:140,left:200,right:200},
+          children:[new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:0},children:[mkRun(text.toUpperCase(),{size:22,bold:true,color:WHITE,tracking:40})]})]
+        })]})]
+      });
+    }
+    // ── Card "Impact sur la classe" : libellé en cellule navy + texte italique à droite ──
+    function impactCard(text){
+      const left = new TableCell({
+        width:{size:Math.round(CW*0.28),type:WidthType.DXA},borders:noBorders,
+        shading:{type:ShadingType.CLEAR,fill:NAVY},
+        verticalAlign:VerticalAlign.CENTER,
+        margins:{top:200,bottom:200,left:200,right:200},
+        children:[new Paragraph({spacing:{before:0,after:0},children:[mkRun(caps('Impact sur la classe'),{size:16,bold:true,color:WHITE})]})]
+      });
+      const right = new TableCell({
+        width:{size:CW-Math.round(CW*0.28),type:WidthType.DXA},borders:noBorders,
+        shading:{type:ShadingType.CLEAR,fill:CARDBG},
+        verticalAlign:VerticalAlign.CENTER,
+        margins:{top:200,bottom:200,left:280,right:280},
+        children:[new Paragraph({alignment:AlignmentType.JUSTIFIED,spacing:{before:0,after:0},children:[mkRun(String(text||''),{size:19,italics:true,color:TEXT_DARK})]})]
+      });
+      return new Table({
+        width:{size:CW,type:WidthType.DXA},
+        columnWidths:[Math.round(CW*0.28),CW-Math.round(CW*0.28)],
+        borders:noBorders,
+        rows:[new TableRow({children:[left,right]})]
+      });
+    }
+    // ── Annexe header avec lettre géante (A/B/C) au lieu du chiffre ──
+    function annexHeader(letter,text){
+      const numCell = new TableCell({
+        width:{size:1400,type:WidthType.DXA},
+        borders:noBorders,
+        verticalAlign:VerticalAlign.CENTER,
+        margins:{top:0,bottom:0,left:0,right:120},
+        children:[new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.LEFT,children:[mkRun(letter,{size:84,bold:true,color:CYAN})]})]
+      });
+      const titleCell = new TableCell({
+        width:{size:CW-1400,type:WidthType.DXA},
+        borders:noBorders,
+        verticalAlign:VerticalAlign.CENTER,
+        margins:{top:0,bottom:0,left:0,right:0},
+        children:[
+          new Paragraph({spacing:{before:120,after:60},children:[mkRun(text.toUpperCase(),{size:32,bold:true,color:NAVY})]}),
+          new Paragraph({spacing:{before:0,after:0},border:{bottom:{style:BorderStyle.SINGLE,size:18,color:ORANGE}},indent:{right:Math.round((CW-1400)*0.55)},children:[mkRun(' ',{size:2})]})
+        ]
+      });
+      return new Table({
+        width:{size:CW,type:WidthType.DXA},
+        columnWidths:[1400,CW-1400],
+        borders:noBorders,
+        rows:[new TableRow({children:[numCell,titleCell]})]
       });
     }
     function para(text,o={}){
@@ -8072,47 +8330,86 @@ async function doWordDocx(){
     };
     const _ent = _ENTITES[r.entite||'idf'] || _ENTITES['idf'];
 
-    // ─── PAGE DE COUVERTURE ───
-    // (Logo retiré : déjà présent dans l'en-tête Bannière.png)
-    children.push(sp(600));
-    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun('  ',{size:48})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.nom,{size:60,bold:true,color:'0E2841'})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.sous,{size:26,color:'0E2841',italics:true})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:'0E2841'},children:[mkRun('  ',{size:18})]}));
-    children.push(sp(600));
-    children.push(para('COMPTE RENDU DE DÉTECTION',{align:AlignmentType.CENTER,bold:true,size:44,color:NAVY,before:0,after:60}));
-    children.push(para('DES RÉSEAUX ENTERRÉS',{align:AlignmentType.CENTER,bold:true,size:44,color:NAVY,before:0,after:200}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:LGRAY},border:{top:brd(MGRAY),left:brd('0E2841',20),bottom:brd(MGRAY),right:brd('0E2841',20)},children:[mkRun(((c.name||r.adresse||c.address||'Chantier').toUpperCase()),{size:26,color:NAVY,bold:true})]}));
-    children.push(sp(500));
-    children.push(new Paragraph({spacing:{before:0,after:0},shading:{type:ShadingType.CLEAR,fill:'0E2841'},children:[mkRun('  ',{size:10})]}));
-    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},children:[mkRun(_ent.adresse+'   |   Tél : '+_ent.tel+'   |   '+_ent.email,{size:18,color:'0E2841'})]}));
+    // ─── PAGE DE COUVERTURE (v2) ───
+    // La bannière est rendue automatiquement via le Header (cf. _BANNER_V2_B64 en bas).
+    // Layout : tagline caps espacée → trait orange → italique RCS → titre géant → encart chantier → coordonnées.
+    children.push(sp(400));
+    // Tagline : "NEOCONCEPT VRD GRAND EST" en caps espacées centrées
+    children.push(new Paragraph({spacing:{before:0,after:60},alignment:AlignmentType.CENTER,children:[
+      mkRun(caps(_ent.nom),{size:22,bold:true,color:NAVY,tracking:80})
+    ]}));
+    // Trait orange court centré
+    children.push(new Paragraph({
+      spacing:{before:0,after:140},alignment:AlignmentType.CENTER,
+      border:{bottom:{style:BorderStyle.SINGLE,size:8,color:ORANGE}},
+      indent:{left:3200,right:3200},
+      children:[mkRun(' ',{size:2})]
+    }));
+    // Italique RCS / capital
+    children.push(new Paragraph({spacing:{before:0,after:600},alignment:AlignmentType.CENTER,children:[
+      mkRun(_ent.sous,{size:20,italics:true,color:TEXT_MID})
+    ]}));
+    // Titre géant 2 lignes
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,children:[mkRun('COMPTE RENDU',{size:64,bold:true,color:NAVY})]}));
+    children.push(new Paragraph({spacing:{before:0,after:80},alignment:AlignmentType.CENTER,children:[mkRun('DE DÉTECTION',{size:64,bold:true,color:NAVY})]}));
+    // Sous-titre cyan
+    children.push(new Paragraph({spacing:{before:0,after:480},alignment:AlignmentType.CENTER,children:[mkRun(caps('Des réseaux enterrés'),{size:30,bold:true,color:CYAN,tracking:60})]}));
+    // Encart chantier (table 1 col, bordures haut+bas navy, fond gris très clair)
+    const _chantierName = (c.name||r.adresse||c.address||'Nouveau chantier');
+    const _chantierDate = r.dateDebut || dateGen;
+    children.push(new Table({
+      width:{size:CW,type:WidthType.DXA},
+      borders:noBorders,
+      rows:[new TableRow({children:[new TableCell({
+        width:{size:CW,type:WidthType.DXA},
+        shading:{type:ShadingType.CLEAR,fill:COVERBG},
+        borders:{top:{style:BorderStyle.SINGLE,size:14,color:NAVY},bottom:{style:BorderStyle.SINGLE,size:14,color:NAVY},left:noBrd,right:noBrd},
+        margins:{top:280,bottom:280,left:300,right:300},
+        children:[
+          new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:60},children:[mkRun(caps('Chantier'),{size:18,bold:true,color:NAVY,tracking:80})]}),
+          new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:60},children:[mkRun(String(_chantierName).toUpperCase(),{size:36,bold:true,color:NAVY})]}),
+          new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:0},children:[mkRun('[ '+_chantierDate+' ]',{size:22,bold:true,color:CYAN})]})
+        ]
+      })]})]
+    }));
+    children.push(sp(700));
+    // Coordonnées agence (séparateur |)
+    children.push(new Paragraph({spacing:{before:0,after:0},alignment:AlignmentType.CENTER,children:[
+      mkRun(_ent.adresse,{size:18,color:TEXT_MID}),
+      mkRun('   |   ',{size:18,color:TEXT_LIGHT}),
+      mkRun('Tél : '+_ent.tel,{size:18,color:TEXT_MID}),
+      mkRun('   |   ',{size:18,color:TEXT_LIGHT}),
+      mkRun(_ent.email,{size:18,color:TEXT_MID})
+    ]}));
     children.push(new Paragraph({children:[new PageBreak()]}));
 
     // ─── §1 INFORMATIONS GÉNÉRALES ───
     _updateExportProgress('Section 1 - Informations…', 25);
     await new Promise(r=>setTimeout(r,0)); // libérer le thread UI
     children.push(sectionTitle('01','Informations Générales'));
-    children.push(sp(100));
-    children.push(makeInfoTable([
-      ["Client / Donneur d'ordre",r.client||c.client||'-'],
-      ['Nature des opérations',r.natureOperations||'-'],
-      ['Adresse du chantier',r.adresse||c.address||'-'],
-      ["Date d'intervention",r.dateDebut||'-'],
-      ['Date déclaration DT',r.dtDate||'-'],
-      ['Numéro DT',r.dtNum||'-'],
-      ['Date de rédaction',dateGen],
-      ['Rédacteur',currentUserProfile?(currentUserProfile.displayName||currentUserProfile.email):'-'],
-    ],[3800,5838]));
-    children.push(sp(160));
+    children.push(sp(220));
+    // Grille 2 colonnes de cards (ordre : alternance client/date pour matcher le template)
+    children.push(cardsGrid2([
+      {label:"Client / Donneur d'ordre",  value:r.client||c.client||'-'},
+      {label:"Date d'intervention",       value:r.dateDebut||'-'},
+      {label:'Nature des opérations',     value:r.natureOperations||'-'},
+      {label:'Date déclaration DT',       value:r.dtDate||'-'},
+      {label:'Adresse du chantier',       value:r.adresse||c.address||'-'},
+      {label:'Numéro DT',                 value:r.dtNum||'-'},
+      {label:'Date de rédaction',         value:dateGen},
+      {label:'Rédacteur',                 value:currentUserProfile?(currentUserProfile.displayName||currentUserProfile.email):'-'},
+    ]));
+    children.push(sp(280));
 
     // ─── Plan de situation ───
     if(r.planSituation){
-      children.push(subTitle('Plan de situation'));
+      children.push(bannerTitle('Plan de situation'));
+      children.push(sp(120));
       const planSrc = await toJpegForDocx(await ensureDataUrl(r.planSituation));
       const planImg = parseImg(planSrc);
       if(planImg){
         children.push(new Paragraph({
-          spacing:{before:60,after:60},
+          spacing:{before:0,after:60},
           alignment:AlignmentType.CENTER,
           children:[new ImageRun({type:planImg.type,data:planImg.data,transformation:{width:454,height:284},altText:{title:'Plan de situation',description:'Plan de situation',name:'plan'}})]
         }));
@@ -8124,35 +8421,66 @@ async function doWordDocx(){
     _updateExportProgress('Section 2 - Moyens humains…', 35);
     await new Promise(r=>setTimeout(r,0));
     children.push(sectionTitle('02','Moyens Humains'));
-    children.push(sp(100));
+    children.push(sp(220));
     const opDet=r.opDetection||[],opGeo=r.opGeo||[];
+    // Responsable de projet
     children.push(subTitle('Responsable de projet'));
-    children.push(makeTable(['NOM & PRÉNOM','POSTE','CONTACT'],[[r.respNom||'-',r.respPoste||'-',r.respContact||'-']],[3400,3200,3038]));
-    children.push(sp(120));
+    children.push(personCard(r.respNom||'-', r.respPoste||'', r.respContact||''));
+    children.push(sp(160));
+    // Opérateurs de détection
     children.push(subTitle('Opérateurs de détection'));
-    if(opDet.length)children.push(makeTable(['NOM & PRÉNOM','POSTE'],opDet.map(o=>[o.nom,o.poste||'-']),[4819,4819]));
-    else children.push(para('-',{color:DGRAY,size:22}));
-    children.push(sp(120));
+    if(opDet.length){
+      opDet.forEach((o,i)=>{
+        children.push(personCard(o.nom||'-', o.poste||'', ''));
+        if(i<opDet.length-1) children.push(sp(40));
+      });
+    } else {
+      children.push(para('Aucun opérateur renseigné.',{color:TEXT_MID,size:20,italics:true}));
+    }
+    children.push(sp(160));
+    // Opérateurs de géoréférencement
     children.push(subTitle('Opérateurs de géoréférencement'));
-    if(opGeo.length)children.push(makeTable(['NOM & PRÉNOM','POSTE'],opGeo.map(o=>[o.nom,o.poste||'-']),[4819,4819]));
-    else children.push(para('-',{color:DGRAY,size:22}));
-    children.push(sp(200));
+    if(opGeo.length){
+      opGeo.forEach((o,i)=>{
+        children.push(personCard(o.nom||'-', o.poste||'', ''));
+        if(i<opGeo.length-1) children.push(sp(40));
+      });
+    } else {
+      children.push(para('Aucun opérateur renseigné.',{color:TEXT_MID,size:20,italics:true}));
+    }
+    children.push(sp(220));
 
     // ─── §3 MOYENS MATÉRIELS ───
     _updateExportProgress('Section 3 - Matériels…', 42);
     await new Promise(r=>setTimeout(r,0));
     children.push(sectionTitle('03','Moyens Matériels'));
-    children.push(sp(100));
+    children.push(sp(220));
     const mats=r.materiels||[];
+    // Matériels utilisés
     children.push(subTitle('Matériels utilisés'));
-    if(mats.length)children.push(makeTable(['TYPE DE MATÉRIEL','N° DE SÉRIE'],mats.map(m=>[m.type,m.serie||'-']),[Math.round(CW*0.62),Math.round(CW*0.38)]));
-    else children.push(para('Aucun matériel renseigné.',{color:DGRAY,size:22}));
-    children.push(sp(120));
+    if(mats.length){
+      mats.forEach((m,i)=>{
+        // Alterner accent navy/orange pour le rythme visuel du template
+        const accent = (i%2===1) ? ORANGE : NAVY;
+        children.push(materielCard(m.type||'-','N° série',m.serie||'-',accent));
+        if(i<mats.length-1) children.push(sp(60));
+      });
+    } else {
+      children.push(para('Aucun matériel renseigné.',{color:TEXT_MID,size:20,italics:true}));
+    }
+    children.push(sp(220));
+    // Logiciels utilisés
     const logs=r.logiciels||[];
     children.push(subTitle('Logiciels utilisés'));
-    if(logs.length)children.push(makeTable(['TYPE DE LOGICIEL','ÉDITEUR'],logs.map(l=>[l.type,l.marque||'-']),[5819,3819]));
-    else children.push(para('Aucun logiciel renseigné.',{color:DGRAY,size:22}));
-    children.push(sp(200));
+    if(logs.length){
+      logs.forEach((l,i)=>{
+        children.push(materielCard(l.type||'-','Éditeur',l.marque||'-',NAVY));
+        if(i<logs.length-1) children.push(sp(60));
+      });
+    } else {
+      children.push(para('Aucun logiciel renseigné.',{color:TEXT_MID,size:20,italics:true}));
+    }
+    children.push(sp(240));
 
     // ─── §4 DOCUMENTATION PHOTOGRAPHIQUE ───
     _updateExportProgress('Section 4 - Photos (peut prendre du temps)…', 50);
@@ -8180,21 +8508,43 @@ async function doWordDocx(){
       const items=np.map((src,i)=>({url:src,caption:'Photo '+(i+1)}));
       const tbl=await photoTable(items);
       tbl.forEach(el=>children.push(el));
-      // Méthodologie + Classe + Observations - compact
+      // Bloc APPAREIL / CLASSE / OBSERVATION (libellés caps espacés, valeurs en gras navy/orange)
+      children.push(sp(60));
       children.push(new Paragraph({
-        spacing:{before:20,after:10},
-        alignment:AlignmentType.CENTER,
+        spacing:{before:0,after:60},
         children:[
-          mkRun('Appareil : ',{bold:true,size:18,color:NAVY}),
-          mkRun(n.methode||'-',{size:18,color:DGRAY}),
-          mkRun('   |   ',{size:18,color:MGRAY}),
-          mkRun('Classe : ',{bold:true,size:18,color:NAVY}),
-          mkRun(n.classe||'-',{size:18,color:DGRAY}),
+          mkRun(caps('Appareil')+'   ',{size:14,bold:true,color:TEXT_LIGHT}),
+          mkRun(n.methode||'-',{size:20,color:TEXT_DARK})
         ]
       }));
-      if(n.remarques) children.push(para('Obs : '+n.remarques,{size:16,color:'6B7280',italics:true,before:0,after:10,align:AlignmentType.CENTER}));
-      if(n.includeLimites) children.push(para('LIMITES : Cette méthode ne permet pas l\'identification des réseaux détectés. Seule une analyse des plans de récolement et une ouverture de fouille pourra confirmer leur nature.',{size:16,color:'E8620A',italics:true,before:0,after:10,align:AlignmentType.CENTER}));
-      children.push(sp(40));
+      children.push(new Paragraph({
+        spacing:{before:0,after:80},
+        children:[
+          mkRun(caps('Classe')+'   ',{size:14,bold:true,color:TEXT_LIGHT}),
+          mkRun(String(n.classe||'-').replace(/^Classe\s*/i,'Classe '),{size:20,bold:true,color:NAVY})
+        ]
+      }));
+      if(n.remarques){
+        // Encart observation : fond très clair + bordure orange à gauche
+        children.push(new Table({
+          width:{size:CW,type:WidthType.DXA},borders:noBorders,
+          rows:[new TableRow({children:[new TableCell({
+            width:{size:CW,type:WidthType.DXA},
+            borders:{top:noBrd,left:brd(ORANGE,16),bottom:noBrd,right:noBrd},
+            shading:{type:ShadingType.CLEAR,fill:CARDBG},
+            margins:{top:160,bottom:160,left:240,right:200},
+            children:[new Paragraph({alignment:AlignmentType.JUSTIFIED,spacing:{before:0,after:0},children:[
+              mkRun(caps('Observation')+'   :   ',{size:14,bold:true,color:TEXT_LIGHT}),
+              mkRun(n.remarques,{size:20,italics:true,color:TEXT_DARK})
+            ]})]
+          })]})]
+        }));
+      }
+      if(n.includeLimites){
+        children.push(sp(60));
+        children.push(para('LIMITES : Cette méthode ne permet pas l\'identification des réseaux détectés. Seule une analyse des plans de récolement et une ouverture de fouille pourra confirmer leur nature.',{size:18,color:ORANGE,italics:true,before:0,after:0}));
+      }
+      children.push(sp(120));
     }
     if(!rapPhotos.length&&!activeNets.some(n=>(n.photos&&n.photos.length)||n.photo))
       children.push(para('[Photos du chantier à insérer]',{italics:true,color:'9CA3AF',size:22}));
@@ -8204,32 +8554,100 @@ async function doWordDocx(){
     _updateExportProgress('Section 5 - Conclusions…', 70);
     await new Promise(r=>setTimeout(r,0));
     children.push(sectionTitle('05','Conclusions / Écart'));
-    children.push(sp(100));
+    children.push(sp(220));
     const concl=r.conclusions||"L'ensemble des réseaux géolocalisés à l'aide du géoradar et de l'appareil de radiodétection ont été relevés par notre géomètre à l'aide d'une tablette Panasonic Toughbook FZ-G1, d'une station totale TS13 et/ou d'une antenne GPS GG04 Plus.\n\nCes données ont ensuite été reportées sous format AUTOCAD/COVADIS, dont le plan est joint au présent rapport.";
-    concl.split('\n\n').filter(Boolean).forEach(blk=>children.push(para(blk,{size:22,after:80})));
-    // Photos conclusion
+    // Encart bleu marine fond + texte blanc justifié
+    children.push(darkCallout(concl));
+    children.push(sp(160));
+    // Photos conclusion (centrées)
     const concluPhotos=r.conclusionPhotos||[];
     if(concluPhotos.length){
       const items=concluPhotos.map(src=>({url:src,caption:''}));
       const tbl=await photoTable(items);
       tbl.forEach(el=>children.push(el));
+      children.push(sp(120));
     }
-    children.push(sp(120));
-    // Observations
+    // Observations (encart orange clair ⚠️)
     const obsLines=[];
     if(r.observations)r.observations.split('\n').filter(l=>l.trim()).forEach(l=>obsLines.push(l.replace(/^[-–•]\s*/,'')));
     if(!obsLines.length)obsLines.push('Sans objet.');
     children.push(makeObsBox(obsLines));
-    children.push(sp(200));
+    children.push(sp(240));
 
     // ─── §6 SYNTHÈSE DES RÉSEAUX DÉTECTÉS ───
     _updateExportProgress('Section 6 - Synthèse…', 78);
     await new Promise(r=>setTimeout(r,0));
     children.push(sectionTitle('06','Synthèse des Réseaux Détectés'));
-    children.push(sp(100));
-    if(activeNets.length)children.push(makeTable(['NATURE DU RÉSEAU','APPAREIL DE DÉTECTION','CLASSE','OBSERVATIONS'],activeNets.map(n=>[n.nature,n.methode||'-',n.classe||'-',n.remarques||'-']),[1900,3000,1200,3538]));
-    else children.push(para('Aucun réseau actif renseigné.',{color:DGRAY,size:22}));
-    children.push(sp(200));
+    children.push(sp(220));
+    if(activeNets.length){
+      // Tableau synthèse : header bleu marine fond + texte blanc, badges classe colorés
+      const colW = [1900, 3000, 1400, CW-1900-3000-1400]; // total = CW
+      const mkSynthCell = (txt,o={})=>new TableCell({
+        width:{size:o.w,type:WidthType.DXA},
+        shading:{type:ShadingType.CLEAR,fill:o.fill||WHITE},
+        borders:noBorders,
+        verticalAlign:VerticalAlign.CENTER,
+        margins:{top:o.padY||140,bottom:o.padY||140,left:o.padX||180,right:o.padX||180},
+        children:[new Paragraph({alignment:o.align||AlignmentType.LEFT,spacing:{before:0,after:0},children:[mkRun(String(txt||'-'),{size:o.size||20,bold:!!o.bold,color:o.color||TEXT_DARK,tracking:o.tracking})]})]
+      });
+      const header = new TableRow({tableHeader:true,children:[
+        mkSynthCell('RÉSEAU',                 {w:colW[0],fill:NAVY,color:WHITE,bold:true,size:18,tracking:60,align:AlignmentType.CENTER}),
+        mkSynthCell('APPAREIL DE DÉTECTION',  {w:colW[1],fill:NAVY,color:WHITE,bold:true,size:18,tracking:60,align:AlignmentType.CENTER}),
+        mkSynthCell('CLASSE',                 {w:colW[2],fill:NAVY,color:WHITE,bold:true,size:18,tracking:60,align:AlignmentType.CENTER}),
+        mkSynthCell('OBSERVATIONS',           {w:colW[3],fill:NAVY,color:WHITE,bold:true,size:18,tracking:60,align:AlignmentType.CENTER})
+      ]});
+      const dataRows = activeNets.map((n,i)=>{
+        const fill = i%2===0 ? WHITE : CARDBG;
+        // Cellule réseau : caps espacé navy
+        const cellReseau = new TableCell({
+          width:{size:colW[0],type:WidthType.DXA},
+          shading:{type:ShadingType.CLEAR,fill},
+          borders:noBorders,
+          verticalAlign:VerticalAlign.CENTER,
+          margins:{top:200,bottom:200,left:180,right:180},
+          children:[new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:0},children:[mkRun(caps(n.nature||'-'),{size:18,bold:true,color:NAVY,tracking:80})]})]
+        });
+        const cellAppareil = new TableCell({
+          width:{size:colW[1],type:WidthType.DXA},
+          shading:{type:ShadingType.CLEAR,fill},
+          borders:noBorders,
+          verticalAlign:VerticalAlign.CENTER,
+          margins:{top:200,bottom:200,left:200,right:200},
+          children:[new Paragraph({spacing:{before:0,after:0},children:[mkRun(n.methode||'-',{size:20,color:TEXT_DARK})]})]
+        });
+        // Cellule CLASSE : badge centré (avec padding pour aérer)
+        const cellClasse = new TableCell({
+          width:{size:colW[2],type:WidthType.DXA},
+          shading:{type:ShadingType.CLEAR,fill},
+          borders:noBorders,
+          verticalAlign:VerticalAlign.CENTER,
+          margins:{top:160,bottom:160,left:160,right:160},
+          children:[new Table({
+            width:{size:colW[2]-320,type:WidthType.DXA},
+            borders:noBorders,
+            rows:[new TableRow({children:[classBadgeCell(n.classe||'',colW[2]-320)]})]
+          })]
+        });
+        const cellObs = new TableCell({
+          width:{size:colW[3],type:WidthType.DXA},
+          shading:{type:ShadingType.CLEAR,fill},
+          borders:noBorders,
+          verticalAlign:VerticalAlign.CENTER,
+          margins:{top:200,bottom:200,left:200,right:200},
+          children:[new Paragraph({alignment:AlignmentType.JUSTIFIED,spacing:{before:0,after:0},children:[mkRun(n.remarques||'-',{size:18,italics:true,color:TEXT_DARK})]})]
+        });
+        return new TableRow({children:[cellReseau,cellAppareil,cellClasse,cellObs]});
+      });
+      children.push(new Table({
+        width:{size:CW,type:WidthType.DXA},
+        columnWidths:colW,
+        borders:noBorders,
+        rows:[header,...dataRows]
+      }));
+    } else {
+      children.push(para('Aucun réseau actif renseigné.',{color:TEXT_MID,size:20,italics:true}));
+    }
+    children.push(sp(240));
 
     // ─── SIGNATURES ───
     children.push(subTitle('Signatures'));
@@ -8400,107 +8818,140 @@ async function doWordDocx(){
       },
     };
 
-    // Helper : paragraphe bullet pour les limites
-    function mkBullet(text){
-      return new Paragraph({
-        spacing:{before:40,after:0},
-        indent:{left:360,hanging:200},
-        children:[
-          mkRun('• ',{size:20,bold:true,color:NAVY}),
-          mkRun(text,{size:20,color:DGRAY}),
-        ]
-      });
-    }
-
     // ─── ANNEXE A - Récap DT ───
     children.push(new Paragraph({pageBreakBefore:true,spacing:{before:0,after:0},children:[]}));
-    children.push(sectionTitle('ANNEXE','Annexes'));
-    children.push(sp(140));
-
-    children.push(subTitle('Annexe A - Récapitulatif des DT reçues'));
-    children.push(sp(60));
+    children.push(annexHeader('A','Récapitulatif des DT reçues'));
+    children.push(sp(180));
     const recapDT = (r.recapDT||'').trim();
     if(recapDT){
       recapDT.split('\n').filter(Boolean).forEach(line=>{
-        children.push(new Paragraph({spacing:{before:40,after:0},indent:{left:200},children:[mkRun(line,{size:20,color:DGRAY})]}));
+        children.push(new Paragraph({spacing:{before:40,after:0},indent:{left:200},children:[mkRun(line,{size:20,color:TEXT_DARK})]}));
       });
     } else {
-      children.push(new Paragraph({spacing:{before:40,after:0},children:[mkRun('- Aucun récapitulatif DT renseigné -',{size:20,italics:true,color:'9CA3AF'})]}));
+      children.push(new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:40,after:0},children:[mkRun('- Aucun récapitulatif DT renseigné -',{size:20,italics:true,color:TEXT_LIGHT})]}));
     }
-    children.push(sp(180));
+    children.push(sp(280));
 
     // ─── ANNEXE B - Récap linéaires ───
-    children.push(subTitle('Annexe B - Récapitulatif des linéaires de réseaux détectés'));
-    children.push(sp(60));
+    children.push(annexHeader('B','Récapitulatif des linéaires'));
+    children.push(sp(180));
     const recapLin = (r.recapLin||'').trim();
     if(recapLin){
       recapLin.split('\n').filter(Boolean).forEach(line=>{
-        children.push(new Paragraph({spacing:{before:40,after:0},indent:{left:200},children:[mkRun(line,{size:20,color:DGRAY})]}));
+        children.push(new Paragraph({spacing:{before:40,after:0},indent:{left:200},children:[mkRun(line,{size:20,color:TEXT_DARK})]}));
       });
     } else {
-      children.push(new Paragraph({spacing:{before:40,after:0},children:[mkRun('- Aucun récapitulatif linéaires renseigné -',{size:20,italics:true,color:'9CA3AF'})]}));
+      children.push(new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:40,after:0},children:[mkRun('- Aucun récapitulatif linéaires renseigné -',{size:20,italics:true,color:TEXT_LIGHT})]}));
     }
-    children.push(sp(180));
+    children.push(sp(280));
 
     // ─── ANNEXE C - Limites de mesure des appareils ───
-    children.push(subTitle('Annexe C - Limites de mesure des appareils utilisés'));
-    children.push(sp(60));
-    children.push(new Paragraph({spacing:{before:0,after:80},children:[
-      mkRun('Cette annexe présente les limites métrologiques et opérationnelles des appareils utilisés lors de cette opération, conformément à la norme NF S70-003 et à l\'arrêté du 15 février 2012 relatif à la prévention des dommages aux réseaux (DT-DICT). Source : Annexe-Limites-Mesures_V01 - NEOCONCEPT VRD.',{size:19,italics:true,color:DGRAY})
-    ]}));
-    children.push(sp(60));
-
-    // Rappel classes de précision
-    children.push(new Paragraph({spacing:{before:0,after:60},children:[mkRun('Rappel des classes de précision (arrêté du 15/02/2012)',{size:21,bold:true,color:NAVY})]}));
-    children.push(makeTable(
-      ['CLASSE','TOLÉRANCE PLANIMÉTRIQUE ET ALTIMÉTRIQUE'],
-      [
-        ['Classe A','Incertitude maximale de localisation ≤ 40 cm (réseaux rigides) / ≤ 50 cm (réseaux flexibles)'],
-        ['Classe B','Incertitude maximale de localisation ≤ 1,50 m'],
-        ['Classe C','Incertitude > 1,50 m, ou réseau localisé sans précision suffisante'],
-      ],
-      [1200, Math.round(CW-1200)]
-    ));
+    children.push(annexHeader('C','Limites de mesure des appareils'));
     children.push(sp(180));
+    children.push(new Paragraph({alignment:AlignmentType.JUSTIFIED,spacing:{before:0,after:120},children:[
+      mkRun('Cette annexe présente les limites métrologiques et opérationnelles des appareils utilisés lors de cette opération, conformément à la norme NF S70-003 et à l\'arrêté du 15 février 2012 relatif à la prévention des dommages aux réseaux (DT-DICT). Source : Annexe-Limites-Mesures_V01 - NEOCONCEPT VRD.',{size:18,italics:true,color:TEXT_MID})
+    ]}));
 
-    // Une section par appareil utilisé (types uniques)
+    // Rappel classes de précision : titre underline + 3 lignes "badge + définition"
+    children.push(subTitle('Rappel des classes de précision (Arrêté du 15/02/2012)'));
+    children.push(sp(80));
+    const _classeDefs = [
+      ['A', 'Incertitude maximale de localisation ≤ 40 cm (réseaux rigides) / ≤ 50 cm (réseaux flexibles).'],
+      ['B', 'Incertitude maximale de localisation ≤ 1,50 m.'],
+      ['C', 'Incertitude > 1,50 m, ou réseau localisé sans précision suffisante.']
+    ];
+    _classeDefs.forEach(([letter,def],i)=>{
+      const badgeW = 1500;
+      const badge = classBadgeCell('CLASSE '+letter,badgeW);
+      const defCell = new TableCell({
+        width:{size:CW-badgeW,type:WidthType.DXA},
+        shading:{type:ShadingType.CLEAR,fill:CARDBG},
+        borders:noBorders,
+        verticalAlign:VerticalAlign.CENTER,
+        margins:{top:160,bottom:160,left:280,right:200},
+        children:[new Paragraph({alignment:AlignmentType.JUSTIFIED,spacing:{before:0,after:0},children:[mkRun(def,{size:20,color:TEXT_DARK})]})]
+      });
+      children.push(new Table({
+        width:{size:CW,type:WidthType.DXA},
+        columnWidths:[badgeW,CW-badgeW],
+        borders:noBorders,
+        rows:[new TableRow({children:[badge,defCell]})]
+      }));
+      if(i<_classeDefs.length-1) children.push(sp(40));
+    });
+    children.push(sp(240));
+
+    // Une fiche par type d'appareil utilisé (1 page par appareil)
     const typesUtilises=[...new Set((r.materiels||[]).map(m=>m.type).filter(Boolean))];
     if(typesUtilises.length){
-      typesUtilises.forEach(type=>{
+      typesUtilises.forEach((type,idx)=>{
         const info = LIMITES_APPAREILS[type];
         if(!info) return;
-        // Titre appareil
-        children.push(new Paragraph({
-          spacing:{before:160,after:60},
-          shading:{type:ShadingType.CLEAR,fill:'EFF6FF'},
-          border:{left:{style:BorderStyle.SINGLE,size:16,color:NAVY,space:8}},
-          indent:{left:160},
-          children:[mkRun(info.modele,{size:22,bold:true,color:NAVY})]
-        }));
+        if(idx>0) children.push(new Paragraph({pageBreakBefore:true,spacing:{before:0,after:0},children:[]}));
         // N° de série utilisés
         const seriesUtilisees=(r.materiels||[]).filter(m=>m.type===type&&m.serie).map(m=>m.serie);
-        if(seriesUtilisees.length){
-          children.push(new Paragraph({spacing:{before:20,after:60},indent:{left:200},children:[
-            mkRun('N° de série utilisé(s) : ',{size:19,bold:true,color:DGRAY}),
-            mkRun(seriesUtilisees.join(', '),{size:19,color:DGRAY}),
-          ]}));
-        }
-        // Tableau des caractéristiques
-        children.push(makeTable(
-          ['PARAMÈTRE','VALEUR CONSTRUCTEUR'],
-          info.specs,
-          [Math.round(CW*0.38), Math.round(CW*0.62)]
-        ));
-        children.push(sp(80));
-        // Limites
-        children.push(new Paragraph({spacing:{before:60,after:30},children:[mkRun('Limites d\'utilisation :',{size:20,bold:true,color:NAVY})]}));
-        info.limites.forEach(l=>children.push(mkBullet(l)));
-        // Impact classe
-        children.push(new Paragraph({spacing:{before:80,after:0},children:[mkRun('Impact sur la classe : ',{size:19,bold:true,color:DGRAY}),mkRun(info.classe,{size:19,italics:true,color:DGRAY})]}));
-        children.push(sp(120));
+        const serieRuns = seriesUtilisees.length
+          ? [mkRun(info.modele,{size:22,bold:true,color:TEXT_DARK}),mkRun('\n',{size:8}),mkRun(caps('N° série')+'  :  ',{size:14,bold:true,color:TEXT_LIGHT}),mkRun(seriesUtilisees.join(', '),{size:20,bold:true,color:ORANGE})]
+          : [mkRun(info.modele,{size:22,bold:true,color:TEXT_DARK})];
+        // Card titre appareil (accent bar navy + nom + n° série)
+        children.push(new Table({
+          width:{size:CW,type:WidthType.DXA},
+          columnWidths:[60,CW-60],
+          borders:noBorders,
+          rows:[new TableRow({children:[
+            new TableCell({width:{size:60,type:WidthType.DXA},borders:noBorders,shading:{type:ShadingType.CLEAR,fill:NAVY},margins:{top:0,bottom:0,left:0,right:0},children:[new Paragraph({spacing:{before:0,after:0},children:[mkRun(' ',{size:2})]})]}),
+            new TableCell({
+              width:{size:CW-60,type:WidthType.DXA},borders:noBorders,
+              shading:{type:ShadingType.CLEAR,fill:CARDBG},
+              margins:{top:180,bottom:180,left:240,right:200},
+              children:seriesUtilisees.length
+                ? [
+                    new Paragraph({spacing:{before:0,after:60},children:[mkRun(info.modele,{size:22,bold:true,color:TEXT_DARK})]}),
+                    new Paragraph({spacing:{before:0,after:0},children:[mkRun(caps('N° série')+'  :  ',{size:14,bold:true,color:TEXT_LIGHT}),mkRun(seriesUtilisees.join(', '),{size:20,bold:true,color:ORANGE})]})
+                  ]
+                : [new Paragraph({spacing:{before:0,after:0},children:[mkRun(info.modele,{size:22,bold:true,color:TEXT_DARK})]})]
+            })
+          ]})]
+        }));
+        children.push(sp(180));
+        // Tableau Paramètre / Valeur constructeur (header navy + lignes alternées gris/blanc)
+        const specsColW = [Math.round(CW*0.40), CW-Math.round(CW*0.40)];
+        const mkSpecCell = (txt,o={})=>new TableCell({
+          width:{size:o.w,type:WidthType.DXA},
+          shading:{type:ShadingType.CLEAR,fill:o.fill||WHITE},
+          borders:noBorders,
+          verticalAlign:VerticalAlign.CENTER,
+          margins:{top:120,bottom:120,left:200,right:200},
+          children:[new Paragraph({spacing:{before:0,after:0},children:[mkRun(String(txt||''),{size:o.size||20,bold:!!o.bold,color:o.color||TEXT_DARK,tracking:o.tracking})]})]
+        });
+        const specHeader = new TableRow({tableHeader:true,children:[
+          mkSpecCell('PARAMÈTRE',{w:specsColW[0],fill:NAVY,color:WHITE,bold:true,size:18,tracking:60}),
+          mkSpecCell('VALEUR CONSTRUCTEUR',{w:specsColW[1],fill:NAVY,color:WHITE,bold:true,size:18,tracking:60})
+        ]});
+        const specRows = info.specs.map((row,i)=>{
+          const fill = i%2===0 ? WHITE : CARDBG;
+          return new TableRow({children:[
+            mkSpecCell(row[0],{w:specsColW[0],fill,color:TEXT_DARK,size:20}),
+            mkSpecCell(row[1],{w:specsColW[1],fill,color:TEXT_DARK,size:20,bold:true})
+          ]});
+        });
+        children.push(new Table({
+          width:{size:CW,type:WidthType.DXA},
+          columnWidths:specsColW,
+          borders:noBorders,
+          rows:[specHeader,...specRows]
+        }));
+        children.push(sp(220));
+        // Limites d'utilisation (sous-titre underline + puces orange ▶)
+        children.push(subTitle('Limites d\'utilisation'));
+        info.limites.forEach(l=>children.push(bulletOrange(l)));
+        children.push(sp(220));
+        // Card "Impact sur la classe" (label navy bloc + texte italique à droite)
+        children.push(impactCard(info.classe));
+        children.push(sp(160));
       });
     } else {
-      children.push(new Paragraph({spacing:{before:40,after:0},children:[mkRun('Aucun appareil renseigné dans les moyens matériels.',{size:20,italics:true,color:'9CA3AF'})]}));
+      children.push(new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:40,after:0},children:[mkRun('Aucun appareil renseigné dans les moyens matériels.',{size:20,italics:true,color:TEXT_LIGHT})]}));
     }
     children.push(sp(200));
 
