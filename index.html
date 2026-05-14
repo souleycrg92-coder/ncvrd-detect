@@ -11971,8 +11971,9 @@ async function doSRESSTWordDocx(){
 
     // Ligne de cases à cocher — chaque option sur sa propre ligne dans la cellule
     // Cases cochées en navy bold, non cochées en TEXT_LIGHT
+    // Largeurs alignées sur row2 (35/65) pour cohérence intra-tableau
     const makeCheckRow=(label,values,selected,cols=1)=>new TableRow({children:[
-      cell(String(label||'').toUpperCase(),{fill:CARDBG,bold:true,color:TEXT_LIGHT,sz:14,w:Math.round(CW*0.3),valign:VerticalAlign.TOP,tracking:40}),
+      cell(String(label||'').toUpperCase(),{fill:CARDBG,bold:true,color:TEXT_LIGHT,sz:14,w:Math.round(CW*0.35),valign:VerticalAlign.TOP,tracking:40}),
       cellP(
         cols===2
           ? (()=>{
@@ -11992,9 +11993,16 @@ async function doSRESSTWordDocx(){
               const checked=selected.includes?selected.includes(v):selected===v;
               return new Paragraph({children:[new TextRun({text:(checked?'☑ ':'☐ ')+v,font:FONT,size:18,bold:checked,color:checked?NAVY:TEXT_LIGHT})]});
             }),
-        {w:Math.round(CW*0.7)}
+        {w:Math.round(CW*0.65)}
       )
     ]});
+
+    // Helper : table label/valeur 35/65 pleine largeur (force le tableau à prendre 100% du CW)
+    const formTable = (rows) => new Table({
+      width:{size:CW,type:WidthType.DXA},
+      columnWidths:[Math.round(CW*0.35), Math.round(CW*0.65)],
+      rows
+    });
 
     const doc = new Document({
       sections:[{
@@ -12044,7 +12052,7 @@ async function doSRESSTWordDocx(){
           sp(80),
 
           // ── Encadré avertissement — style makeObsBox du rapport détection (FFF7ED + brdObs)
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
+          new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[CW],rows:[new TableRow({children:[
             cellP([
               new Paragraph({children:[mkRun('⚠  POURQUOI REMONTER ?',{bold:true,color:ORANGE,size:20})]}),
               new Paragraph({spacing:{before:40,after:40},indent:{left:200},children:[mkRun('Chaque presqu\'accident ou situation dangereuse signalé permet de prévenir un accident futur. Votre vigilance protège vos collègues.',{color:DGRAY,size:20})]}),
@@ -12058,7 +12066,8 @@ async function doSRESSTWordDocx(){
 
           // §1
           sectionHdr(1,'Identification du déclarant'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
+          sp(80),
+          new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[Math.round(CW*0.35),Math.round(CW*0.65)],rows:[
             row2('Déclaration anonyme ?',chk('Oui',ev.anonyme==='Oui')+'   '+chk('Non',ev.anonyme==='Non')),
             ...(ev.anonyme!=='Oui'?[
               row2('Nom – Prénom',ev.nomPrenom),
@@ -12073,7 +12082,8 @@ async function doSRESSTWordDocx(){
 
           // §2
           sectionHdr(2,"Nature de l'événement"),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
+          sp(80),
+          new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[Math.round(CW*0.35),Math.round(CW*0.65)],rows:[
             makeCheckRow("Type d'événement",Object.values(TYPE_LABELS),[TYPE_LABELS[ev.typeEvenement]||'']),
             row2('Salarié(s) concerné(s)',ev.salariesConcernes||'-'),
             makeCheckRow('Gravité potentielle estimée',Object.values(gravLabels),[gravLabels[ev.gravite]||'']),
@@ -12082,13 +12092,23 @@ async function doSRESSTWordDocx(){
 
           // §3
           sectionHdr(3,'Lieu, date et contexte'),
-          new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[Math.round(CW*0.5),Math.round(CW*0.5)],rows:[
-            new TableRow({children:[
-              cell('Date de l\'événement',{fill:LGRAY,bold:true,color:NAVY,sz:18,w:Math.round(CW*0.25)}),
-              cell(ev.dateEvenement||'-',{fill:WHITE,color:DGRAY,sz:20,w:Math.round(CW*0.25)}),
-              cell('Heure',{fill:LGRAY,bold:true,color:NAVY,sz:18,w:Math.round(CW*0.2)}),
-              cell(ev.heureEvenement||'-',{fill:WHITE,color:DGRAY,sz:20,w:Math.round(CW*0.3)}),
-            ]}),
+          sp(80),
+          // Sous-table 1 : date/heure en 4 cols pleine largeur
+          (()=>{
+            const c1=Math.round(CW*0.35), c2=Math.round(CW*0.15), c3=Math.round(CW*0.25), c4=CW-c1-c2-c3;
+            return new Table({
+              width:{size:CW,type:WidthType.DXA},
+              columnWidths:[c1,c2,c3,c4],
+              rows:[new TableRow({children:[
+                cell('Date de l\'événement',{fill:CARDBG,bold:true,w:c1}),
+                cell(ev.dateEvenement||'-',{fill:WHITE,color:NAVY,bold:true,sz:20,w:c2}),
+                cell('Heure',{fill:CARDBG,bold:true,w:c3}),
+                cell(ev.heureEvenement||'-',{fill:WHITE,color:NAVY,bold:true,sz:20,w:c4}),
+              ]})]
+            });
+          })(),
+          // Sous-table 2 : reste des champs en 35/65
+          new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[Math.round(CW*0.35),Math.round(CW*0.65)],rows:[
             row2('Lieu / Chantier',ev.lieuChantier||'-'),
             row2('Commune - Departement',ev.communeDept||'-'),
             makeCheckRow('Activité en cours',['Détection réseaux','Topographie','Études / MOE','SIG / Cartographie','Chantier (terrain)','Déplacement','Bureau','Autre'],[ev.activite||''],2),
@@ -12106,40 +12126,49 @@ async function doSRESSTWordDocx(){
 
           // §5
           sectionHdr(5,'Dangers / Risques identifiés'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
+          sp(80),
+          // Grille de dangers (pleine largeur, 1 col)
+          new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[CW],rows:[
             new TableRow({children:[
               cellP((()=>{
                 const dangers=['Chute de plain-pied','Chute de hauteur','Heurt / collision véhicule','Risque routier','Manutention manuelle','Manutention mécanique','Électrique','Risque chimique','Bruit','Vibrations','Effondrement / éboulement','Ensevelissement (tranchée)','Réseau enterré','Ligne aérienne','Espace confiné','Atmosphère ATEX / H2S','Outil portatif / coupant','Engin de chantier','Incendie / explosion','Postural / TMS','Agression / incivilité','Psychosocial / stress','Biologique','Autre'];
                 const paras=[];
                 for(let i=0;i<dangers.length;i+=3){
                   const row=dangers.slice(i,i+3);
-                  paras.push(new Paragraph({children:row.map(d=>new TextRun({text:((ev.dangers||[]).includes(d)?'☑ ':'☐ ')+d+'          ',font:FONT,size:17}))}));
+                  paras.push(new Paragraph({spacing:{before:30,after:30},children:row.map(d=>{
+                    const checked=(ev.dangers||[]).includes(d);
+                    return new TextRun({text:(checked?'☑ ':'☐ ')+d+'          ',font:FONT,size:17,bold:checked,color:checked?NAVY:TEXT_LIGHT});
+                  })}));
                 }
                 return paras;
-              })(),{w:CW})
+              })(),{w:CW,fill:WHITE})
             ]}),
+          ]}),
+          // Autre danger en 35/65
+          new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[Math.round(CW*0.35),Math.round(CW*0.65)],rows:[
             row2('Autre danger',ev.dangerAutre||''),
           ]}),
           sp(),
 
           // §6
           sectionHdr(6,'Causes immédiates supposées (méthode 5M)'),
+          sp(80),
           ...(()=>{
             const mRow=(label,items,autre)=>{
               const all=[...(items||[])];
               if(autre) all.push('Autre : '+autre);
               const paras = all.length
-                ? all.map(t=>new Paragraph({spacing:{before:30,after:30},indent:{left:160},children:[mkRun('–  '+t,{size:18,color:DGRAY})]}))
-                : [new Paragraph({children:[mkRun('-',{size:18,color:MGRAY})]})];
+                ? all.map(t=>new Paragraph({spacing:{before:30,after:30},indent:{left:160},children:[mkRun(t,{size:20,color:TEXT_DARK})]}))
+                : [new Paragraph({children:[mkRun('—',{size:18,color:TEXT_LIGHT})]})];
               return new TableRow({children:[
-                cell(label,{fill:LGRAY,bold:true,color:NAVY,sz:18,w:Math.round(CW*0.28)}),
-                new TableCell({borders,width:{size:Math.round(CW*0.72),type:WidthType.DXA},
+                cell(label,{fill:CARDBG,bold:true,w:Math.round(CW*0.35)}),
+                new TableCell({borders,width:{size:Math.round(CW*0.65),type:WidthType.DXA},
                   children:paras,
-                  margins:{top:80,bottom:80,left:120,right:120}
+                  margins:{top:120,bottom:120,left:200,right:160}
                 })
               ]});
             };
-            return [new Table({width:{size:CW,type:WidthType.DXA},rows:[
+            return [new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[Math.round(CW*0.35),Math.round(CW*0.65)],rows:[
               mRow('MILIEU\n(env., lieu)',ev.causeMilieuItems,ev.causeMilieuAutre),
               mRow('MATÉRIEL\n(équipements)',ev.causeMaterielItems,ev.causeMaterielAutre),
               mRow('MÉTHODE\n(procédure)',ev.causeMethodeItems,ev.causeMethodeAutre),
@@ -12180,11 +12209,11 @@ async function doSRESSTWordDocx(){
           ]}),
           sp(120),
           // Tableau G / P / C
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
+          new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[Math.round(CW/3),Math.round(CW/3),CW-2*Math.round(CW/3)],rows:[
             new TableRow({tableHeader:true,children:[
               cell('Gravité G (1-5)',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW/3),align:AlignmentType.CENTER}),
               cell('Probabilité P (1-5)',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW/3),align:AlignmentType.CENTER}),
-              cell('Criticité C = G × P',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW/3),align:AlignmentType.CENTER}),
+              cell('Criticité C = G × P',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:CW-2*Math.round(CW/3),align:AlignmentType.CENTER}),
             ]}),
             new TableRow({children:[
               cell('',{fill:WHITE,w:Math.round(CW/3)}),
@@ -12196,31 +12225,33 @@ async function doSRESSTWordDocx(){
 
           // §10
           sectionHdr(10,"Plan d'action"),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
+          sp(80),
+          (()=>{const c1=400,c2=Math.round(CW*0.42),c3=Math.round(CW*0.2),c4=Math.round(CW*0.16),c5=CW-c1-c2-c3-c4;return new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[c1,c2,c3,c4,c5],rows:[
             new TableRow({tableHeader:true,children:[
-              cell('N°',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:400,align:AlignmentType.CENTER}),
-              cell('Action corrective / préventive',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW*0.42)}),
-              cell('Responsable',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW*0.2),align:AlignmentType.CENTER}),
-              cell('Échéance',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW*0.16),align:AlignmentType.CENTER}),
-              cell('Statut',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW*0.14),align:AlignmentType.CENTER}),
+              cell('N°',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:c1,align:AlignmentType.CENTER}),
+              cell('Action corrective / préventive',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:c2}),
+              cell('Responsable',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:c3,align:AlignmentType.CENTER}),
+              cell('Échéance',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:c4,align:AlignmentType.CENTER}),
+              cell('Statut',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:c5,align:AlignmentType.CENTER}),
             ]}),
             ...[1,2,3].map((n,i)=>new TableRow({children:[
-              cell(String(n),{fill:i%2===0?WHITE:LGRAY,sz:20,bold:true,color:NAVY,w:400,align:AlignmentType.CENTER}),
-              cellP([new Paragraph({children:[mkRun(' ',{size:20})]}),new Paragraph({children:[mkRun(' ',{size:20})]}),new Paragraph({children:[mkRun(' ',{size:20})]})],{fill:i%2===0?WHITE:LGRAY,w:Math.round(CW*0.42)}),
-              cellP([new Paragraph({children:[mkRun(' ',{size:20})]})],{fill:i%2===0?WHITE:LGRAY,w:Math.round(CW*0.2)}),
-              cellP([new Paragraph({children:[mkRun(' ',{size:20})]})],{fill:i%2===0?WHITE:LGRAY,w:Math.round(CW*0.16)}),
+              cell(String(n),{fill:i%2===0?WHITE:CARDBG,sz:20,bold:true,color:NAVY,w:c1,align:AlignmentType.CENTER}),
+              cellP([new Paragraph({children:[mkRun(' ',{size:20})]}),new Paragraph({children:[mkRun(' ',{size:20})]}),new Paragraph({children:[mkRun(' ',{size:20})]})],{fill:i%2===0?WHITE:CARDBG,w:c2}),
+              cellP([new Paragraph({children:[mkRun(' ',{size:20})]})],{fill:i%2===0?WHITE:CARDBG,w:c3}),
+              cellP([new Paragraph({children:[mkRun(' ',{size:20})]})],{fill:i%2===0?WHITE:CARDBG,w:c4}),
               cellP([
-                new Paragraph({children:[mkRun('☐ À faire',{size:17})]}),
-                new Paragraph({children:[mkRun('☐ En cours',{size:17})]}),
-                new Paragraph({children:[mkRun('☐ Soldée',{size:17})]}),
-              ],{fill:i%2===0?WHITE:LGRAY,w:Math.round(CW*0.14)}),
+                new Paragraph({children:[mkRun('☐ À faire',{size:17,color:TEXT_MID})]}),
+                new Paragraph({children:[mkRun('☐ En cours',{size:17,color:TEXT_MID})]}),
+                new Paragraph({children:[mkRun('☐ Soldée',{size:17,color:TEXT_MID})]}),
+              ],{fill:i%2===0?WHITE:CARDBG,w:c5}),
             ]}))
-          ]}),
+          ]});})(),
           sp(),
 
           // §11
           sectionHdr(11,'Décisions de traitement'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
+          sp(80),
+          new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[Math.round(CW*0.35),Math.round(CW*0.65)],rows:[
             row2('Mise à jour DUERP ?','☐ Oui  ☐ Non   Unité de travail : '),
             row2('Diffusion REX ?','☐ Oui  ☐ Non   ☐ ¼h sécurité  ☐ Note interne  ☐ Affichage'),
             row2('Analyse approfondie ?','☐ Non requise  ☐ 5 Pourquoi  ☐ Arbre des causes  ☐ Ishikawa'),
