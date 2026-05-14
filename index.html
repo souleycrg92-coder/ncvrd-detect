@@ -7960,7 +7960,7 @@ async function doWordDocx(){
         shading:{type:ShadingType.CLEAR,fill:NAVY},
         verticalAlign:VerticalAlign.CENTER,
         margins:{top:200,bottom:200,left:200,right:200},
-        children:[new Paragraph({spacing:{before:0,after:0},children:[mkRun(caps('Impact sur la classe'),{size:16,bold:true,color:WHITE})]})]
+        children:[new Paragraph({spacing:{before:0,after:0},children:[mkRun('IMPACT SUR LA CLASSE',{size:16,bold:true,color:WHITE,tracking:40})]})]
       });
       const right = new TableCell({
         width:{size:CW-Math.round(CW*0.28),type:WidthType.DXA},borders:noBorders,
