@@ -11797,19 +11797,25 @@ async function doSRESSTWordDocx(){
       ShadingType, PageNumber, VerticalAlign, HeadingLevel
     } = window.docx;
 
-    // ── Palette identique au rapport de détection ──────────────────────────
+    // ── Palette template v2 (alignée sur le rapport de détection) ──
     const NAVY='0E2841', ORANGE='E8620A';
-    const LGRAY='F4F6F9', MGRAY='D1D5DB', DGRAY='374151';
-    const WHITE='FFFFFF', FONT='Calibri';
+    const CYAN='0B769F';                   // numéros section §1-§12
+    const TEXT_DARK='0F172A';              // corps texte foncé
+    const TEXT_MID='475569';               // corps secondaire
+    const TEXT_LIGHT='94A3B8';             // labels caps espacés
+    const CARDBG='F8FAFC';                 // fond labels
+    const LGRAY='F4F6F9', MGRAY='D1D5DB', DGRAY='374151'; // legacy
+    const WHITE='FFFFFF';
+    const FONT='Aptos';                    // Office 365 (fallback Calibri auto)
     const CW=9638; // A4, marges 1134
 
     const brd=(color,size=4)=>({style:BorderStyle.SINGLE,size,color:color||MGRAY});
     const borders={top:brd(MGRAY),left:brd(MGRAY),bottom:brd(MGRAY),right:brd(MGRAY)};
     const brdObs={top:brd(ORANGE,8),left:brd(ORANGE,16),bottom:brd(ORANGE,8),right:brd(MGRAY)};
 
-    // mkRun — identique au rapport de détection
+    // mkRun (couleur par défaut TEXT_DARK pour cohérence charte v2)
     function mkRun(text,o={}){
-      return new TextRun({text:String(text??''),font:FONT,size:o.size??22,bold:!!o.bold,italics:!!o.italics,color:o.color??DGRAY});
+      return new TextRun({text:String(text??''),font:FONT,size:o.size??22,bold:!!o.bold,italics:!!o.italics,color:o.color??TEXT_DARK,characterSpacing:o.tracking});
     }
 
     // Cellule standard
@@ -11819,10 +11825,10 @@ async function doSRESSTWordDocx(){
       verticalAlign: opts.valign||VerticalAlign.CENTER,
       width:{size:opts.w||CW,type:WidthType.DXA},
       columnSpan: opts.span||1,
-      margins:{top:80,bottom:80,left:140,right:140},
+      margins:{top:100,bottom:100,left:160,right:160},
       children:[new Paragraph({
         alignment: opts.align||AlignmentType.LEFT,
-        children:[new TextRun({text:String(text||''),font:FONT,size:opts.sz||20,bold:!!opts.bold,color:opts.color||(opts.header?WHITE:DGRAY),italics:!!opts.italic})]
+        children:[new TextRun({text:String(text||''),font:FONT,size:opts.sz||20,bold:!!opts.bold,color:opts.color||(opts.header?WHITE:TEXT_DARK),italics:!!opts.italic,characterSpacing:opts.tracking})]
       })]
     });
 
@@ -11833,28 +11839,44 @@ async function doSRESSTWordDocx(){
       verticalAlign: opts.valign||VerticalAlign.TOP,
       width:{size:opts.w||CW,type:WidthType.DXA},
       columnSpan: opts.span||1,
-      margins:{top:80,bottom:80,left:140,right:140},
+      margins:{top:100,bottom:100,left:160,right:160},
       children: paragraphs
     });
 
-    // En-tête de section — même style que sectionTitle() du rapport de détection
-    // Paragraph fond F9F9F9 + bordure basse NAVY + numéro orange
-    const sectionHdr=(num,title)=>new Paragraph({
-      spacing:{before:280,after:0},
-      shading:{type:ShadingType.CLEAR,fill:'F9F9F9'},
-      border:{bottom:{style:BorderStyle.SINGLE,size:14,color:NAVY}},
-      children:[
-        mkRun(`  §${num}  `,{size:26,bold:true,color:ORANGE}),
-        mkRun(title.toUpperCase(),{size:24,bold:true,color:NAVY}),
-      ]
-    });
+    // En-tête de section v2 : numéro cyan + titre majuscule navy + trait orange court
+    // Compact (numéro size 36 au lieu de 84) car SRESST = formulaire dense §1-§12
+    const sectionHdr=(num,title)=>{
+      const numCell = new TableCell({
+        width:{size:900,type:WidthType.DXA},
+        borders:{top:{style:BorderStyle.NONE},bottom:{style:BorderStyle.NONE},left:{style:BorderStyle.NONE},right:{style:BorderStyle.NONE}},
+        verticalAlign:VerticalAlign.CENTER,
+        margins:{top:0,bottom:0,left:0,right:80},
+        children:[new Paragraph({spacing:{before:0,after:0},children:[mkRun(`§${num}`,{size:36,bold:true,color:CYAN})]})]
+      });
+      const titleCell = new TableCell({
+        width:{size:CW-900,type:WidthType.DXA},
+        borders:{top:{style:BorderStyle.NONE},bottom:{style:BorderStyle.NONE},left:{style:BorderStyle.NONE},right:{style:BorderStyle.NONE}},
+        verticalAlign:VerticalAlign.CENTER,
+        margins:{top:0,bottom:0,left:0,right:0},
+        children:[
+          new Paragraph({spacing:{before:120,after:60},children:[mkRun(title.toUpperCase(),{size:22,bold:true,color:NAVY})]}),
+          new Paragraph({spacing:{before:0,after:0},border:{bottom:{style:BorderStyle.SINGLE,size:12,color:ORANGE}},indent:{right:Math.round((CW-900)*0.55)},children:[mkRun(' ',{size:2})]})
+        ]
+      });
+      return new Table({
+        width:{size:CW,type:WidthType.DXA},
+        columnWidths:[900,CW-900],
+        borders:{top:{style:BorderStyle.NONE},bottom:{style:BorderStyle.NONE},left:{style:BorderStyle.NONE},right:{style:BorderStyle.NONE},insideH:{style:BorderStyle.NONE},insideV:{style:BorderStyle.NONE}},
+        rows:[new TableRow({children:[numCell,titleCell]})]
+      });
+    };
 
     const chk=(val,checked)=>(checked?'☑ ':'☐ ')+val;
 
-    // row2 — label LGRAY+NAVY, valeur WHITE+DGRAY (comme makeInfoTable du rapport détection)
+    // row2 — label CARDBG en caps espacés gris clair, valeur blanche en navy bold
     const row2=(label,value)=>new TableRow({children:[
-      cell(label,{fill:LGRAY,bold:true,color:NAVY,sz:18,w:Math.round(CW*0.35)}),
-      cell(value||'-',{fill:WHITE,color:DGRAY,sz:20,w:Math.round(CW*0.65)})
+      cell(String(label||'').toUpperCase(),{fill:CARDBG,bold:true,color:TEXT_LIGHT,sz:14,w:Math.round(CW*0.35),tracking:40}),
+      cell(value||'-',{fill:WHITE,color:NAVY,sz:20,bold:true,w:Math.round(CW*0.65)})
     ]});
 
     const sp=(after=100)=>new Paragraph({spacing:{after},children:[]});
@@ -11872,8 +11894,9 @@ async function doSRESSTWordDocx(){
     const gravLabels={1:'1 – Mineure',2:'2 – Modérée',3:'3 – Sérieuse',4:'4 – Grave',5:'5 – Très grave'};
 
     // Ligne de cases à cocher — chaque option sur sa propre ligne dans la cellule
+    // Cases cochées en navy bold, non cochées en TEXT_LIGHT
     const makeCheckRow=(label,values,selected,cols=1)=>new TableRow({children:[
-      cell(label,{fill:LGRAY,bold:true,color:NAVY,sz:18,w:Math.round(CW*0.3),valign:VerticalAlign.TOP}),
+      cell(String(label||'').toUpperCase(),{fill:CARDBG,bold:true,color:TEXT_LIGHT,sz:14,w:Math.round(CW*0.3),valign:VerticalAlign.TOP,tracking:40}),
       cellP(
         cols===2
           ? (()=>{
@@ -11883,15 +11906,15 @@ async function doSRESSTWordDocx(){
                 const isA=selected.includes?selected.includes(a):selected===a;
                 const isB=b&&(selected.includes?selected.includes(b):selected===b);
                 paras.push(new Paragraph({children:[
-                  new TextRun({text:(isA?'☑ ':'☐ ')+a,font:FONT,size:18}),
-                  ...(b?[new TextRun({text:'        '+(isB?'☑ ':'☐ ')+b,font:FONT,size:18})]:[])
+                  new TextRun({text:(isA?'☑ ':'☐ ')+a,font:FONT,size:18,bold:isA,color:isA?NAVY:TEXT_LIGHT}),
+                  ...(b?[new TextRun({text:'        '+(isB?'☑ ':'☐ ')+b,font:FONT,size:18,bold:isB,color:isB?NAVY:TEXT_LIGHT})]:[])
                 ]}));
               }
               return paras;
             })()
           : values.map(v=>{
               const checked=selected.includes?selected.includes(v):selected===v;
-              return new Paragraph({children:[new TextRun({text:(checked?'☑ ':'☐ ')+v,font:FONT,size:18})]});
+              return new Paragraph({children:[new TextRun({text:(checked?'☑ ':'☐ ')+v,font:FONT,size:18,bold:checked,color:checked?NAVY:TEXT_LIGHT})]});
             }),
         {w:Math.round(CW*0.7)}
       )
@@ -11916,10 +11939,10 @@ async function doSRESSTWordDocx(){
           // ── Bandeau de synthèse — style makeTable du rapport détection (F9F9F9 + NAVY)
           new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[Math.round(CW*0.28),Math.round(CW*0.24),Math.round(CW*0.24),Math.round(CW*0.24)],rows:[
             new TableRow({tableHeader:true,children:[
-              cell('Type d\'événement',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW*0.28),align:AlignmentType.CENTER}),
-              cell('Gravité estimée',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW*0.24),align:AlignmentType.CENTER}),
-              cell('Date de l\'événement',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW*0.24),align:AlignmentType.CENTER}),
-              cell('Agence',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW*0.24),align:AlignmentType.CENTER}),
+              cell('Type d\'événement',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW*0.28),align:AlignmentType.CENTER}),
+              cell('Gravité estimée',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW*0.24),align:AlignmentType.CENTER}),
+              cell('Date de l\'événement',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW*0.24),align:AlignmentType.CENTER}),
+              cell('Agence',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW*0.24),align:AlignmentType.CENTER}),
             ]}),
             new TableRow({children:[
               cell(TYPE_LABELS[ev.typeEvenement]||ev.typeEvenement||'-',{fill:WHITE,sz:20,bold:true,color:ORANGE,w:Math.round(CW*0.28),align:AlignmentType.CENTER}),
@@ -12074,9 +12097,9 @@ async function doSRESSTWordDocx(){
           new Table({width:{size:CW,type:WidthType.DXA},rows:[
             row2('Barème','1-4 Faible · 5-9 Modéré · 10-15 Élevé · 16-25 Critique'),
             new TableRow({tableHeader:true,children:[
-              cell('Gravité G (1-5)',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW/3),align:AlignmentType.CENTER}),
-              cell('Probabilité P (1-5)',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW/3),align:AlignmentType.CENTER}),
-              cell('Criticité C = G × P',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW/3),align:AlignmentType.CENTER}),
+              cell('Gravité G (1-5)',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW/3),align:AlignmentType.CENTER}),
+              cell('Probabilité P (1-5)',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW/3),align:AlignmentType.CENTER}),
+              cell('Criticité C = G × P',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW/3),align:AlignmentType.CENTER}),
             ]}),
             new TableRow({children:[
               cell('',{fill:WHITE,w:Math.round(CW/3)}),
@@ -12090,11 +12113,11 @@ async function doSRESSTWordDocx(){
           sectionHdr(10,"Plan d'action"),
           new Table({width:{size:CW,type:WidthType.DXA},rows:[
             new TableRow({tableHeader:true,children:[
-              cell('N°',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:400,align:AlignmentType.CENTER}),
-              cell('Action corrective / préventive',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW*0.42)}),
-              cell('Responsable',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW*0.2),align:AlignmentType.CENTER}),
-              cell('Échéance',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW*0.16),align:AlignmentType.CENTER}),
-              cell('Statut',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW*0.14),align:AlignmentType.CENTER}),
+              cell('N°',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:400,align:AlignmentType.CENTER}),
+              cell('Action corrective / préventive',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW*0.42)}),
+              cell('Responsable',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW*0.2),align:AlignmentType.CENTER}),
+              cell('Échéance',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW*0.16),align:AlignmentType.CENTER}),
+              cell('Statut',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW*0.14),align:AlignmentType.CENTER}),
             ]}),
             ...[1,2,3].map((n,i)=>new TableRow({children:[
               cell(String(n),{fill:i%2===0?WHITE:LGRAY,sz:20,bold:true,color:NAVY,w:400,align:AlignmentType.CENTER}),
@@ -12123,9 +12146,9 @@ async function doSRESSTWordDocx(){
           sectionHdr(12,'Validations et signatures'),
           new Table({width:{size:CW,type:WidthType.DXA},rows:[
             new TableRow({tableHeader:true,children:[
-              cell('Déclarant',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW/3),align:AlignmentType.CENTER}),
-              cell('Responsable hiérarchique',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW/3),align:AlignmentType.CENTER}),
-              cell('Responsable QHSE',{fill:'F9F9F9',bold:true,color:NAVY,sz:18,w:Math.round(CW/3),align:AlignmentType.CENTER}),
+              cell('Déclarant',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW/3),align:AlignmentType.CENTER}),
+              cell('Responsable hiérarchique',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW/3),align:AlignmentType.CENTER}),
+              cell('Responsable QHSE',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW/3),align:AlignmentType.CENTER}),
             ]}),
             new TableRow({children:[
               cellP([
