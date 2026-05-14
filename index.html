@@ -7003,16 +7003,23 @@ async function _generateOuvragesWord(ouvrages, filename){
   if(!window.docx){ toast('❌ docx.js non disponible'); return; }
 
   const {Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun,
-         Header, AlignmentType, WidthType, ImageRun, PageBreak,
-         BorderStyle, ShadingType} = window.docx;
+         Header, Footer, AlignmentType, WidthType, ImageRun, PageBreak,
+         PageNumber, TabStopType, BorderStyle, ShadingType} = window.docx;
 
-  // ── Couleurs ODT ──
-  const C_YELLOW = '0E2841'; // Titre "CARACTERISTIQUE OUVRAGE" — fond bleu foncé
-  const C_BLUE   = '0E2841'; // Sections REPRESENTATION / OBSERVATION / CANALISATION — fond bleu foncé
-  const C_LBLUE  = 'BDD6EE'; // Labels / en-têtes colonnes — bleu clair
-  const C_WHITE  = 'FFFFFF';
-  const C_BLACK  = '000000';
-  const C_NAVY   = '0E2841'; // Texte bleu foncé pour labels
+  // ── Palette template v2 (alignée sur le rapport de détection) ──
+  const NAVY       = '0E2841'; // titres section, headers tableaux
+  const CYAN       = '0B769F'; // accents (futur usage si numéros section)
+  const ORANGE     = 'E8620A'; // trait sous-titre + accents
+  const TEXT_DARK  = '0F172A'; // corps texte foncé (Slate 900)
+  const TEXT_MID   = '475569'; // corps secondaire (Slate 600)
+  const TEXT_LIGHT = '94A3B8'; // labels caps espacés (Slate 400)
+  const CARDBG     = 'F8FAFC'; // fond cards / labels
+  const C_WHITE    = 'FFFFFF';
+  // Alias rétro-compat avec l'ancien code (les vieilles couleurs pointent vers la charte v2)
+  const C_YELLOW = NAVY, C_BLUE = NAVY, C_LBLUE = CARDBG, C_NAVY = NAVY, C_BLACK = TEXT_DARK;
+  // Cases observation : couleurs charte v2 (Classe A/B/C + slate 400)
+  const OBS_GREEN = '059669', OBS_AMBER = 'D97706', OBS_RED = 'DC2626', OBS_GRAY = TEXT_LIGHT;
+  const FONT = 'Aptos'; // Office 365 (fallback Calibri auto)
 
   // ── Largeurs colonnes (DXA, extraites de l'ODT) ──
   const COLS = [1453, 1063, 1063, 930, 797, 1706, 820, 1195];
@@ -7035,7 +7042,7 @@ async function _generateOuvragesWord(ouvrages, filename){
     const cellOpts = {
       children:   children_arr,
       shading:    { fill, type:ShadingType.SOLID, color:fill },
-      margins:    { top:55, bottom:55, left:100, right:100 },
+      margins:    { top:110, bottom:110, left:160, right:160 },
       borders:    cellBorders,
       width:      { size:w, type:WidthType.DXA },
     };
@@ -7044,19 +7051,39 @@ async function _generateOuvragesWord(ouvrages, filename){
   }
 
   // ── Helper : cellule texte simple ──
+  // - bold=true : libellé (fond CARDBG, caps petits espacés TEXT_LIGHT)
+  // - bold=false : valeur (fond blanc, navy bold)
   function txtC(text, fill, w, span, bold=false, size=18){
+    const isLabel = bold && fill === CARDBG;
+    const txt = isLabel ? String(text||'').toUpperCase() : String(text||'');
     return mkC(fill, [
-      mkP([new TextRun({ text:String(text||''), bold, size, font:'Calibri', color:bold?C_NAVY:C_BLACK })])
+      mkP([new TextRun({
+        text: txt,
+        bold,
+        size: isLabel ? 14 : size,
+        font: FONT,
+        color: isLabel ? TEXT_LIGHT : (bold ? NAVY : TEXT_DARK),
+        characterSpacing: isLabel ? 40 : undefined
+      })])
     ], w, span);
   }
 
   // ── Helper : cellule titre pleine largeur (8 colonnes) ──
+  // Style v2 : fond navy, texte blanc bold majuscules avec tracking, padding aéré
   function titleRow(text, fill){
     return new TableRow({ children:[
-      mkC(fill, [
-        mkP([new TextRun({text, bold:true, size:20, font:'Calibri', color:C_WHITE})],
-            {alignment:AlignmentType.CENTER})
-      ], TW, 8)
+      new TableCell({
+        children:[mkP([new TextRun({
+          text: String(text||'').toUpperCase(),
+          bold: true, size: 22, font: FONT, color: C_WHITE,
+          characterSpacing: 60
+        })], {alignment:AlignmentType.CENTER})],
+        shading: { fill, type:ShadingType.SOLID, color:fill },
+        margins: { top:200, bottom:200, left:160, right:160 },
+        borders: cellBorders,
+        width: { size: TW, type: WidthType.DXA },
+        columnSpan: 8
+      })
     ]});
   }
 
@@ -7068,27 +7095,28 @@ async function _generateOuvragesWord(ouvrages, filename){
   const W_RVAL = COLS[6]+COLS[7];
   function dataRow2(l1,v1,l2,v2){
     return new TableRow({ children:[
-      txtC(l1, C_LBLUE, W_LLBL, 2, true),
+      txtC(l1, CARDBG,  W_LLBL, 2, true),
       txtC(v1, C_WHITE, W_LVAL, 2),
-      txtC(l2, C_LBLUE, W_RLBL, 2, true),
+      txtC(l2, CARDBG,  W_RLBL, 2, true),
       txtC(v2, C_WHITE, W_RVAL, 2),
     ]});
   }
 
   // ── Helper : ligne observation avec cases à cocher ──
+  // Couleurs charte v2 : vert (Bon), orange (Correcte), rouge (Mauvaise), gris (Non visible)
   const OBS_OPTS  = ['Bon','Correcte','Mauvaise','Non visible'];
-  const OBS_COLS  = { 'Bon':'00B050', 'Correcte':'FFC000', 'Mauvaise':'FF0000', 'Non visible':'595959' };
+  const OBS_COLS  = { 'Bon':OBS_GREEN, 'Correcte':OBS_AMBER, 'Mauvaise':OBS_RED, 'Non visible':OBS_GRAY };
   function obsRow(label, val){
     const runs = OBS_OPTS.flatMap(v => {
       const active = v === val;
-      const col    = active ? (OBS_COLS[v]||'000000') : '808080';
+      const col    = active ? (OBS_COLS[v]||TEXT_DARK) : TEXT_LIGHT;
       return [
-        new TextRun({ text:active?'☑ ':'☐ ', size:18, font:'Calibri', color:col, bold:active }),
-        new TextRun({ text:v+'    ',          size:18, font:'Calibri', color:col, bold:active }),
+        new TextRun({ text:active?'☑ ':'☐ ', size:20, font:FONT, color:col, bold:active }),
+        new TextRun({ text:v+'    ',          size:18, font:FONT, color:col, bold:active }),
       ];
     });
     return new TableRow({ children:[
-      txtC(label, C_LBLUE, W_LLBL, 2, true),
+      txtC(label, CARDBG, W_LLBL, 2, true),
       mkC(C_WHITE, [mkP(runs)], W_LVAL+W_RLBL+W_RVAL, 6),
     ]});
   }
@@ -7143,7 +7171,7 @@ async function _generateOuvragesWord(ouvrages, filename){
       })
     ];
   } else {
-    hdrChildren = [mkP([new TextRun({text:'NeoConceptVRD - NCVRD Detect', bold:true, size:20, font:'Calibri'})])];
+    hdrChildren = [mkP([new TextRun({text:'NeoConceptVRD - NCVRD Detect', bold:true, size:20, font:FONT, color:NAVY})])];
   }
   const pageHeader = new Header({ children: hdrChildren });
 
@@ -7197,8 +7225,8 @@ async function _generateOuvragesWord(ouvrages, filename){
         } catch(_){}
       }
       photoRowCells.push(mkC(C_WHITE, [
-        mkP([new TextRun({text:label, bold:true, size:18, font:'Calibri'})], {spacing:{after:40}}),
-        mkP(imgRun ? [imgRun] : [new TextRun({text:'(Aucune photo)', size:16, italics:true, color:'808080'})]),
+        mkP([new TextRun({text:String(label||'').toUpperCase(), bold:true, size:14, font:FONT, color:TEXT_LIGHT, characterSpacing:40})], {spacing:{after:60}}),
+        mkP(imgRun ? [imgRun] : [new TextRun({text:'(Aucune photo)', size:18, font:FONT, italics:true, color:TEXT_LIGHT})]),
       ], PHALF, 4));
     }
     t1rows.push(new TableRow({children: photoRowCells}));
@@ -7225,8 +7253,8 @@ async function _generateOuvragesWord(ouvrages, filename){
     t2rows.push(obsRow('Niveau d\'encombrement',  o.etatEncombrement));
     if(o.observation){
       t2rows.push(new TableRow({ children:[
-        txtC('Observations', C_LBLUE, W_LLBL, 2, true),
-        mkC(C_WHITE, [mkP([new TextRun({text:o.observation, size:18, font:'Calibri', italics:true})])],
+        txtC('Observations', CARDBG, W_LLBL, 2, true),
+        mkC(C_WHITE, [mkP([new TextRun({text:o.observation, size:20, font:FONT, italics:true, color:TEXT_DARK})])],
             W_LVAL+W_RLBL+W_RVAL, 6),
       ]}));
     }
@@ -7251,16 +7279,31 @@ async function _generateOuvragesWord(ouvrages, filename){
     }));
   }
 
+  // ── Footer : ligne grise fine + texte agence + Page N navy (cohérent rapport détection) ──
+  const pageFooter = new Footer({children:[new Paragraph({
+    spacing:{before:80,after:0},
+    border:{top:{style:BorderStyle.SINGLE,size:4,color:'D1D5DB'}},
+    tabStops:[{type:TabStopType.RIGHT,position:TW}],
+    children:[
+      new TextRun({text:'NeoConceptVRD  –  Fiches d\'ouvrages',size:16,font:FONT,color:TEXT_LIGHT}),
+      new TextRun({text:'\t',size:16}),
+      new TextRun({text:'Page ',size:16,font:FONT,color:TEXT_LIGHT}),
+      new TextRun({children:[PageNumber.CURRENT],size:16,font:FONT,color:NAVY,bold:true})
+    ]
+  })]});
+
   // ── Génération du fichier ──
   const doc = new Document({
     sections:[{
       headers:    { default: pageHeader },
+      footers:    { default: pageFooter },
       properties: { page:{ margin:{
         header: 0,    // bannière collée au bord haut de la page (0 espace avant)
         top:    3592, // corps commence après la bannière (149px ≈ 2235 DXA + marge)
         bottom: 1440,
         left:   1440,
         right:  1440,
+        footer: 600,
       }}},
       children:   docChildren,
     }]
