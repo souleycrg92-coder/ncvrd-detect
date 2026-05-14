@@ -6975,6 +6975,11 @@ async function deleteOuvrage(id){
 // ──────── Export Word ────────
 
 async function exportSingleOuvrage(id){
+  // Si on est sur la fiche en cours d'édition, capter les valeurs DOM avant export
+  // (évite les valeurs vides si l'utilisateur n'a pas cliqué "Enregistrer" avant "Word")
+  if(_currentOuvrage && (!id || _currentOuvrage.id === id)){
+    try { await saveOuvrage(); } catch(_){}
+  }
   const o = id ? (S_ouvrages.find(x=>x.id===id) || await db._idb.get('ouvrages',id).catch(()=>null)) : _currentOuvrage;
   if(!o){ toast('❌ Ouvrage introuvable'); return; }
   toast('⏳ Génération Word…');
@@ -7180,6 +7185,12 @@ async function _generateOuvragesWord(ouvrages, filename){
   // ══════════════════════════════════════════════
   const docChildren = [];
 
+  // Contexte chantier parent (fallback pour les champs Chantier/Commune qui ne sont
+  // pas stockés sur l'objet ouvrage — saisis sur le chantier parent)
+  const _ctxChantier = (typeof S !== 'undefined' && S)
+    ? (S.currentChantier || (S.chantiers && S.chantiers.find(x=>x.id===S.activeChantier)) || {})
+    : {};
+
   for(let idx=0; idx<ouvrages.length; idx++){
     const o = ouvrages[idx];
     const canals = (o.canalisations && o.canalisations.length)
@@ -7194,9 +7205,13 @@ async function _generateOuvragesWord(ouvrages, filename){
     // Titre
     t1rows.push(titleRow('CARACTERISTIQUE OUVRAGE', C_YELLOW));
 
+    // Fallback Chantier/Commune depuis le chantier parent
+    const chantierVal = o.chantier || _ctxChantier.name    || '';
+    const communeVal  = o.commune  || _ctxChantier.commune || _ctxChantier.address || '';
+
     // Champs identification : 2 paires par ligne
     const fields = [
-      ['Chantier',          o.chantier||'',     'Commune',        o.commune||''],
+      ['Chantier',          chantierVal,        'Commune',        communeVal],
       ['Nature du réseau',  o.natureReseau||'', 'Type d\'ouvrage',o.typeOuvrage||''],
       ['Numéro d\'ouvrage', o.numeroOuvrage||'','Classe / Marque',o.classeMarque||''],
       ['Dimensions',        o.dimensions||'',   'Aération',       o.aeration||''],
