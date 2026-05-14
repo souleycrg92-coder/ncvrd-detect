@@ -7185,12 +7185,6 @@ async function _generateOuvragesWord(ouvrages, filename){
   // ══════════════════════════════════════════════
   const docChildren = [];
 
-  // Contexte chantier parent (fallback pour les champs Chantier/Commune qui ne sont
-  // pas stockés sur l'objet ouvrage — saisis sur le chantier parent)
-  const _ctxChantier = (typeof S !== 'undefined' && S)
-    ? (S.currentChantier || (S.chantiers && S.chantiers.find(x=>x.id===S.activeChantier)) || {})
-    : {};
-
   for(let idx=0; idx<ouvrages.length; idx++){
     const o = ouvrages[idx];
     const canals = (o.canalisations && o.canalisations.length)
@@ -7205,13 +7199,9 @@ async function _generateOuvragesWord(ouvrages, filename){
     // Titre
     t1rows.push(titleRow('CARACTERISTIQUE OUVRAGE', C_YELLOW));
 
-    // Fallback Chantier/Commune depuis le chantier parent
-    const chantierVal = o.chantier || _ctxChantier.name    || '';
-    const communeVal  = o.commune  || _ctxChantier.commune || _ctxChantier.address || '';
-
-    // Champs identification : 2 paires par ligne
+    // Champs identification : 2 paires par ligne (les champs Chantier/Commune sont
+    // intentionnellement retirés — non saisis dans l'UI fiche ouvrage)
     const fields = [
-      ['Chantier',          chantierVal,        'Commune',        communeVal],
       ['Nature du réseau',  o.natureReseau||'', 'Type d\'ouvrage',o.typeOuvrage||''],
       ['Numéro d\'ouvrage', o.numeroOuvrage||'','Classe / Marque',o.classeMarque||''],
       ['Dimensions',        o.dimensions||'',   'Aération',       o.aeration||''],
@@ -11834,18 +11824,33 @@ async function doSRESSTWordDocx(){
     }
 
     // Cellule standard
-    const cell=(text,opts={})=>new TableCell({
-      borders: opts.borders||borders,
-      shading:{type:ShadingType.CLEAR,fill:opts.fill||opts.shade||WHITE},
-      verticalAlign: opts.valign||VerticalAlign.CENTER,
-      width:{size:opts.w||CW,type:WidthType.DXA},
-      columnSpan: opts.span||1,
-      margins:{top:100,bottom:100,left:160,right:160},
-      children:[new Paragraph({
-        alignment: opts.align||AlignmentType.LEFT,
-        children:[new TextRun({text:String(text||''),font:FONT,size:opts.sz||20,bold:!!opts.bold,color:opts.color||(opts.header?WHITE:TEXT_DARK),italics:!!opts.italic,characterSpacing:opts.tracking})]
-      })]
-    });
+    // Auto-applique le style label (caps espacés gris clair sur fond CARDBG) quand
+    // bold=true + fill clair (LGRAY/CARDBG) → cohérence visuelle automatique.
+    const cell=(text,opts={})=>{
+      const fillIn = opts.fill||opts.shade||WHITE;
+      const isLabel = !!opts.bold && (fillIn === CARDBG || fillIn === LGRAY);
+      const txt = isLabel ? String(text||'').toUpperCase() : String(text||'');
+      return new TableCell({
+        borders: opts.borders||borders,
+        shading:{type:ShadingType.CLEAR,fill: isLabel ? CARDBG : fillIn},
+        verticalAlign: opts.valign||VerticalAlign.CENTER,
+        width:{size:opts.w||CW,type:WidthType.DXA},
+        columnSpan: opts.span||1,
+        margins:{top:100,bottom:100,left:160,right:160},
+        children:[new Paragraph({
+          alignment: opts.align||AlignmentType.LEFT,
+          children:[new TextRun({
+            text: txt,
+            font: FONT,
+            size: isLabel ? 14 : (opts.sz||20),
+            bold: !!opts.bold,
+            color: isLabel ? TEXT_LIGHT : (opts.color||(opts.header?WHITE:TEXT_DARK)),
+            italics: !!opts.italic,
+            characterSpacing: isLabel ? 40 : opts.tracking
+          })]
+        })]
+      });
+    };
 
     // Cellule multi-paragraphes (signatures, listes, champs libres)
     const cellP=(paragraphs,opts={})=>new TableCell({
