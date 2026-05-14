@@ -11799,7 +11799,7 @@ async function doSRESSTWordDocx(){
     const {
       Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
       ImageRun, Header, Footer, WidthType, AlignmentType, BorderStyle,
-      ShadingType, PageNumber, VerticalAlign, HeadingLevel
+      ShadingType, PageNumber, TabStopType, VerticalAlign, HeadingLevel
     } = window.docx;
 
     // ── Palette template v2 (alignée sur le rapport de détection) ──
@@ -11863,33 +11863,89 @@ async function doSRESSTWordDocx(){
       children: paragraphs
     });
 
-    // En-tête de section v2 : numéro cyan + titre majuscule navy + trait orange court
-    // Compact (numéro size 36 au lieu de 84) car SRESST = formulaire dense §1-§12
+    // En-tête de section v2 : numéro cyan géant + titre majuscule navy + trait orange court
+    const _noBorder = {style:BorderStyle.NONE,size:0,color:'FFFFFF'};
+    const _allNoBorders = {top:_noBorder,bottom:_noBorder,left:_noBorder,right:_noBorder,insideH:_noBorder,insideV:_noBorder};
     const sectionHdr=(num,title)=>{
       const numCell = new TableCell({
-        width:{size:900,type:WidthType.DXA},
-        borders:{top:{style:BorderStyle.NONE},bottom:{style:BorderStyle.NONE},left:{style:BorderStyle.NONE},right:{style:BorderStyle.NONE}},
+        width:{size:1100,type:WidthType.DXA},
+        borders:_allNoBorders,
         verticalAlign:VerticalAlign.CENTER,
-        margins:{top:0,bottom:0,left:0,right:80},
-        children:[new Paragraph({spacing:{before:0,after:0},children:[mkRun(`§${num}`,{size:36,bold:true,color:CYAN})]})]
+        margins:{top:0,bottom:0,left:0,right:120},
+        children:[new Paragraph({spacing:{before:0,after:0},children:[mkRun(String(num),{size:64,bold:true,color:CYAN})]})]
       });
       const titleCell = new TableCell({
-        width:{size:CW-900,type:WidthType.DXA},
-        borders:{top:{style:BorderStyle.NONE},bottom:{style:BorderStyle.NONE},left:{style:BorderStyle.NONE},right:{style:BorderStyle.NONE}},
+        width:{size:CW-1100,type:WidthType.DXA},
+        borders:_allNoBorders,
         verticalAlign:VerticalAlign.CENTER,
         margins:{top:0,bottom:0,left:0,right:0},
         children:[
-          new Paragraph({spacing:{before:120,after:60},children:[mkRun(title.toUpperCase(),{size:22,bold:true,color:NAVY})]}),
-          new Paragraph({spacing:{before:0,after:0},border:{bottom:{style:BorderStyle.SINGLE,size:12,color:ORANGE}},indent:{right:Math.round((CW-900)*0.55)},children:[mkRun(' ',{size:2})]})
+          new Paragraph({spacing:{before:160,after:80},children:[mkRun(title.toUpperCase(),{size:26,bold:true,color:NAVY,tracking:40})]}),
+          new Paragraph({spacing:{before:0,after:0},border:{bottom:{style:BorderStyle.SINGLE,size:14,color:ORANGE}},indent:{right:Math.round((CW-1100)*0.55)},children:[mkRun(' ',{size:2})]})
         ]
       });
       return new Table({
         width:{size:CW,type:WidthType.DXA},
-        columnWidths:[900,CW-900],
-        borders:{top:{style:BorderStyle.NONE},bottom:{style:BorderStyle.NONE},left:{style:BorderStyle.NONE},right:{style:BorderStyle.NONE},insideH:{style:BorderStyle.NONE},insideV:{style:BorderStyle.NONE}},
+        columnWidths:[1100,CW-1100],
+        borders:_allNoBorders,
         rows:[new TableRow({children:[numCell,titleCell]})]
       });
     };
+
+    // Helper : encart "card" avec barre gauche navy (style §4/§7/§8 — champs libres)
+    const cardCallout=(text)=>{
+      const txt = (text||'').toString().trim() || ' ';
+      return new Table({
+        width:{size:CW,type:WidthType.DXA},
+        borders:_allNoBorders,
+        rows:[new TableRow({children:[new TableCell({
+          width:{size:CW,type:WidthType.DXA},
+          borders:{top:_noBorder,bottom:_noBorder,right:_noBorder,left:{style:BorderStyle.SINGLE,size:24,color:NAVY}},
+          shading:{type:ShadingType.CLEAR,fill:CARDBG},
+          margins:{top:200,bottom:200,left:240,right:200},
+          children:[new Paragraph({alignment:AlignmentType.LEFT,spacing:{before:0,after:0},children:[mkRun(txt,{size:20,color:TEXT_DARK,italics:!text})]})]
+        })]})]
+      });
+    };
+
+    // Helper : encart QHSE bandeau navy plein + texte blanc caps espacés
+    const navyBanner=(text)=>new Table({
+      width:{size:CW,type:WidthType.DXA},
+      borders:_allNoBorders,
+      rows:[new TableRow({children:[new TableCell({
+        width:{size:CW,type:WidthType.DXA},
+        borders:_allNoBorders,
+        shading:{type:ShadingType.CLEAR,fill:NAVY},
+        margins:{top:240,bottom:240,left:200,right:200},
+        children:[new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:0},children:[mkRun(String(text||'').toUpperCase(),{size:18,bold:true,color:WHITE,tracking:60})]})]
+      })]})]
+    });
+
+    // Helper : cellule barème (cellule colorée avec libellé blanc caps)
+    const baremeCell=(label,fill,w)=>new TableCell({
+      width:{size:w,type:WidthType.DXA},
+      borders:_allNoBorders,
+      shading:{type:ShadingType.CLEAR,fill},
+      verticalAlign:VerticalAlign.CENTER,
+      margins:{top:160,bottom:160,left:80,right:80},
+      children:[new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:0},children:[mkRun(String(label||'').toUpperCase(),{size:16,bold:true,color:WHITE,tracking:40})]})]
+    });
+
+    // Helper : carte signature (style §12 avec barre top orange)
+    const signatureCard=(label,w)=>new TableCell({
+      width:{size:w,type:WidthType.DXA},
+      borders:{top:{style:BorderStyle.SINGLE,size:24,color:ORANGE},bottom:_noBorder,left:_noBorder,right:_noBorder},
+      shading:{type:ShadingType.CLEAR,fill:CARDBG},
+      verticalAlign:VerticalAlign.TOP,
+      margins:{top:240,bottom:240,left:200,right:200},
+      children:[
+        new Paragraph({spacing:{before:0,after:160},children:[mkRun(String(label||'').toUpperCase(),{size:14,bold:true,color:TEXT_LIGHT,tracking:60})]}),
+        new Paragraph({spacing:{before:0,after:80},border:{bottom:{style:BorderStyle.DOTTED,size:4,color:'CBD5E1'}},children:[mkRun('Nom :',{size:18,color:TEXT_DARK})]}),
+        new Paragraph({spacing:{before:80,after:80},border:{bottom:{style:BorderStyle.DOTTED,size:4,color:'CBD5E1'}},children:[mkRun('Date :',{size:18,color:TEXT_DARK})]}),
+        new Paragraph({spacing:{before:80,after:0},children:[mkRun('Signature :',{size:18,color:TEXT_MID})]}),
+        new Paragraph({children:[mkRun(' ',{size:40})]})
+      ]
+    });
 
     const chk=(val,checked)=>(checked?'☑ ':'☐ ')+val;
 
@@ -11947,14 +12003,28 @@ async function doSRESSTWordDocx(){
         }}},
         headers:{default:new Header({children:[bannerEl]})},
         footers:{default:new Footer({children:[new Paragraph({
-          alignment:AlignmentType.CENTER,
-          children:[new TextRun({text:'FORM-QHSE-001 | Version 02 | Neoconcept VRD | Page ',font:FONT,size:16,color:DGRAY}),
-                   new TextRun({children:[PageNumber.CURRENT],font:FONT,size:16,color:DGRAY})]
+          spacing:{before:80,after:0},
+          border:{top:{style:BorderStyle.SINGLE,size:4,color:'D1D5DB'}},
+          tabStops:[{type:TabStopType.RIGHT,position:CW}],
+          children:[
+            new TextRun({text:'FORM-QHSE-001',font:FONT,size:16,bold:true,color:NAVY}),
+            new TextRun({text:'  ·  ',font:FONT,size:16,color:TEXT_LIGHT}),
+            new TextRun({text:'Version 02',font:FONT,size:16,color:TEXT_MID}),
+            new TextRun({text:'  ·  ',font:FONT,size:16,color:TEXT_LIGHT}),
+            new TextRun({text:'Neoconcept VRD',font:FONT,size:16,color:TEXT_MID}),
+            new TextRun({text:'\t',size:16}),
+            new TextRun({text:'Page ',font:FONT,size:16,color:TEXT_LIGHT}),
+            new TextRun({children:[PageNumber.CURRENT],font:FONT,size:16,bold:true,color:NAVY}),
+            new TextRun({text:' / ',font:FONT,size:16,color:TEXT_LIGHT}),
+            new TextRun({children:[PageNumber.TOTAL_PAGES],font:FONT,size:16,color:TEXT_MID})
+          ]
         })]})},
         children:[
-          // ── Titre principal
-          new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:80},children:[new TextRun({text:'FICHE DE REMONTÉE DES ÉVÉNEMENTS SST',font:FONT,size:36,bold:true,color:NAVY})]}),
-          new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:160},children:[new TextRun({text:'Système de Remontée des Événements SST  ·  FORM-QHSE-001 v02',font:FONT,size:18,color:DGRAY,italics:true})]}),
+          // ── Titre principal (gros navy gauche, sous-titre italique + trait orange court)
+          new Paragraph({spacing:{before:80,after:60},children:[new TextRun({text:'FICHE DE REMONTÉE DES',font:FONT,size:52,bold:true,color:NAVY})]}),
+          new Paragraph({spacing:{before:0,after:160},children:[new TextRun({text:'ÉVÉNEMENTS SST',font:FONT,size:52,bold:true,color:NAVY})]}),
+          new Paragraph({alignment:AlignmentType.LEFT,spacing:{before:0,after:60},children:[new TextRun({text:'Système de Remontée des Événements SST  ·  FORM-QHSE-001 v02',font:FONT,size:18,color:TEXT_MID,italics:true})]}),
+          new Paragraph({spacing:{before:0,after:200},border:{bottom:{style:BorderStyle.SINGLE,size:14,color:ORANGE}},indent:{right:Math.round(CW*0.55)},children:[mkRun(' ',{size:2})]}),
 
           // ── Bandeau de synthèse — style makeTable du rapport détection (F9F9F9 + NAVY)
           new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[Math.round(CW*0.28),Math.round(CW*0.24),Math.round(CW*0.24),Math.round(CW*0.24)],rows:[
@@ -12030,13 +12100,8 @@ async function doSRESSTWordDocx(){
 
           // §4
           sectionHdr(4,'Description des faits'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
-            new TableCell({borders,shading:{type:ShadingType.CLEAR,fill:WHITE},width:{size:CW,type:WidthType.DXA},margins:{top:120,bottom:120,left:160,right:160},children:[
-              new Paragraph({children:[mkRun(ev.descriptionFaits||'',{size:20,color:DGRAY})]}),
-              new Paragraph({children:[mkRun(' ',{size:20})]}),
-              new Paragraph({children:[mkRun(' ',{size:20})]}),
-            ]})
-          ]})]}),
+          sp(60),
+          cardCallout(ev.descriptionFaits),
           sp(),
 
           // §5
@@ -12086,36 +12151,36 @@ async function doSRESSTWordDocx(){
 
           // §7
           sectionHdr(7,'Mesures immédiates prises'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
-            new TableCell({borders,shading:{type:ShadingType.CLEAR,fill:WHITE},width:{size:CW,type:WidthType.DXA},margins:{top:120,bottom:120,left:160,right:160},children:[
-              new Paragraph({children:[mkRun(ev.mesuresImmediates||'',{size:20,color:DGRAY})]}),
-              new Paragraph({children:[mkRun(' ',{size:20})]}),
-            ]})
-          ]})]}),
+          sp(60),
+          cardCallout(ev.mesuresImmediates),
           sp(),
 
           // §8
           sectionHdr(8,'Proposition du déclarant (facultatif)'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
-            new TableCell({borders,shading:{type:ShadingType.CLEAR,fill:WHITE},width:{size:CW,type:WidthType.DXA},margins:{top:120,bottom:120,left:160,right:160},children:[
-              new Paragraph({children:[mkRun(ev.propositionDeclarant||'',{size:20,color:DGRAY})]}),
-              new Paragraph({children:[mkRun(' ',{size:20})]}),
-            ]})
-          ]})]}),
+          sp(60),
+          cardCallout(ev.propositionDeclarant),
           sp(),
 
-          // ── Séparateur QHSE — style bande orange (comme makeObsBox)
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[new TableRow({children:[
-            cellP([new Paragraph({alignment:AlignmentType.CENTER,children:[
-              mkRun('⚠  PARTIE RÉSERVÉE À LA FONCTION QHSE / À L\'ENCADREMENT  ⚠',{bold:true,color:ORANGE,size:20}),
-            ]})],{fill:'FFF7ED',w:CW,borders:brdObs})
-          ]})]}),
+          // ── Séparateur QHSE : bandeau navy plein + texte blanc caps espacés
+          navyBanner('⚠   Partie réservée à la fonction QHSE / À l\'encadrement   ⚠'),
           sp(),
 
           // §9
           sectionHdr(9,'Évaluation du risque (matrice criticité)'),
+          sp(60),
+          // Ligne "BAREME" caps + 4 cellules colorées (vert/orange clair/orange/rouge)
+          new Paragraph({spacing:{before:0,after:60},children:[mkRun('BAREME',{size:14,bold:true,color:TEXT_LIGHT,tracking:60})]}),
+          new Table({width:{size:CW,type:WidthType.DXA},columnWidths:[Math.round(CW/4),Math.round(CW/4),Math.round(CW/4),CW-3*Math.round(CW/4)],borders:_allNoBorders,rows:[
+            new TableRow({children:[
+              baremeCell('1-4 Faible',  '059669', Math.round(CW/4)),
+              baremeCell('5-9 Modéré',  'F59E0B', Math.round(CW/4)),
+              baremeCell('10-15 Élevé', 'EA580C', Math.round(CW/4)),
+              baremeCell('16-25 Critique','DC2626', CW-3*Math.round(CW/4)),
+            ]})
+          ]}),
+          sp(120),
+          // Tableau G / P / C
           new Table({width:{size:CW,type:WidthType.DXA},rows:[
-            row2('Barème','1-4 Faible · 5-9 Modéré · 10-15 Élevé · 16-25 Critique'),
             new TableRow({tableHeader:true,children:[
               cell('Gravité G (1-5)',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW/3),align:AlignmentType.CENTER}),
               cell('Probabilité P (1-5)',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW/3),align:AlignmentType.CENTER}),
@@ -12162,35 +12227,26 @@ async function doSRESSTWordDocx(){
           ]}),
           sp(),
 
-          // §12
+          // §12 — 3 cartes signature côte à côte avec barre top orange
           sectionHdr(12,'Validations et signatures'),
-          new Table({width:{size:CW,type:WidthType.DXA},rows:[
-            new TableRow({tableHeader:true,children:[
-              cell('Déclarant',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW/3),align:AlignmentType.CENTER}),
-              cell('Responsable hiérarchique',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW/3),align:AlignmentType.CENTER}),
-              cell('Responsable QHSE',{fill:NAVY,bold:true,color:WHITE,sz:16,tracking:40,w:Math.round(CW/3),align:AlignmentType.CENTER}),
-            ]}),
-            new TableRow({children:[
-              cellP([
-                new Paragraph({children:[new TextRun({text:'Nom : ',font:FONT,size:18,bold:true}),new TextRun({text:'________________________',font:FONT,size:18})]}),
-                new Paragraph({children:[new TextRun({text:'Date : ',font:FONT,size:18,bold:true}),new TextRun({text:'________________________',font:FONT,size:18})]}),
-                new Paragraph({spacing:{before:400},children:[new TextRun({text:'Signature :',font:FONT,size:17,color:'888888'})]}),
-                new Paragraph({children:[new TextRun({text:' ',size:36})]}),
-              ],{w:Math.round(CW/3)}),
-              cellP([
-                new Paragraph({children:[new TextRun({text:'Nom : ',font:FONT,size:18,bold:true}),new TextRun({text:'________________________',font:FONT,size:18})]}),
-                new Paragraph({children:[new TextRun({text:'Date : ',font:FONT,size:18,bold:true}),new TextRun({text:'________________________',font:FONT,size:18})]}),
-                new Paragraph({spacing:{before:400},children:[new TextRun({text:'Signature :',font:FONT,size:17,color:'888888'})]}),
-                new Paragraph({children:[new TextRun({text:' ',size:36})]}),
-              ],{w:Math.round(CW/3)}),
-              cellP([
-                new Paragraph({children:[new TextRun({text:'Nom : ',font:FONT,size:18,bold:true}),new TextRun({text:'________________________',font:FONT,size:18})]}),
-                new Paragraph({children:[new TextRun({text:'Date : ',font:FONT,size:18,bold:true}),new TextRun({text:'________________________',font:FONT,size:18})]}),
-                new Paragraph({spacing:{before:400},children:[new TextRun({text:'Signature :',font:FONT,size:17,color:'888888'})]}),
-                new Paragraph({children:[new TextRun({text:' ',size:36})]}),
-              ],{w:Math.round(CW/3)}),
-            ]}),
-          ]}),
+          sp(120),
+          (()=>{
+            const gap = 200;
+            const cardW = Math.floor((CW - 2*gap) / 3);
+            const gapCell = ()=>new TableCell({width:{size:gap,type:WidthType.DXA},borders:_allNoBorders,children:[new Paragraph({})]});
+            return new Table({
+              width:{size:CW,type:WidthType.DXA},
+              columnWidths:[cardW,gap,cardW,gap,cardW],
+              borders:_allNoBorders,
+              rows:[new TableRow({children:[
+                signatureCard('Déclarant',cardW),
+                gapCell(),
+                signatureCard('Responsable hiérarchique',cardW),
+                gapCell(),
+                signatureCard('Responsable QHSE',cardW),
+              ]})]
+            });
+          })(),
         ]
       }]
     });
